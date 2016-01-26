@@ -341,6 +341,7 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
         Type, IDs, ID, Vals = List
     elif TypeOf == 'individual':
         Type, IDs, ID, Vals, DispD, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = List
+
     else:
         IDs = List
 
@@ -348,8 +349,7 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
         if TypeOf == 'tracer':
             return [IDs, Xs, Ys, xAge, t_In]
         elif TypeOf == 'individual':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList,
-                MaintList, N_RList, P_RList, C_RList, DispList, ADList]
+            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
         elif TypeOf == 'resource':
             return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
 
@@ -441,81 +441,6 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
 
 
 
-
-def predation(P_IDs, P_ID, P_Xs, P_Ys, P_t_In, I_xAge, Sp_IDs, Qs, I_IDs,
-        I_ID, I_t_In, I_Xs, I_Ys, w, h):
-
-    """ This function is currently under development """
-
-    I_Boxes, P_Boxes = [], []
-    if not len(P_IDs):
-        List = [P_IDs, P_ID, P_t_In, P_Xs, P_Ys, Sp_IDs, Qs]
-        List += [I_IDs, I_ID, I_t_In, I_Xs, I_Ys]
-        return List
-
-    I_Boxes, P_Boxes = [[list([]) for _ in xrange(w*h)]]*2
-
-    index = 0
-    for i, val in enumerate(I_IDs):
-        rX = int(round(I_Xs[i]))
-        rY = int(round(I_Ys[i]))
-
-        index = int(round(rX + (rY * w)))
-
-        if index > len(I_Boxes) - 1:
-            index = len(I_Boxes) - 1
-        elif index < 0:
-            index = 0
-        I_Boxes[index].append(val)
-
-    index = 0
-    for i, val in enumerate(P_IDs):
-        rX = int(round(P_Xs[i]))
-        rY = int(round(P_Ys[i]))
-
-        index = int(round(rX + (rY * w)))
-
-        if index > len(P_Boxes) - 1:
-            index = len(P_Boxes) - 1
-        elif index < 0:
-            index = 0
-        P_Boxes[index].append(val)
-
-
-    for i, P_Box in enumerate(P_Boxes):
-        if not len(P_Box): continue
-
-        I_Box = I_Boxes[i]
-
-        for P_ in P_Box:
-            if not len(I_Box): break
-
-            # The predator
-            P_Box.pop(0)
-
-            # The prey
-            I_ID = choice(I_Box)
-            index = I_Box.index(I_ID)
-            I_Box.pop(index)
-
-            j = I_IDs.index(I_ID)
-            Qs.pop(j)
-            I_xAge.append(I_t_In[j])
-            I_t_In.pop(j)
-            Sp_IDs.pop(j)
-            I_IDs.pop(j)
-            I_Xs.pop(j)
-            I_Ys.pop(j)
-            #GrowthList.pop(i)
-            #MaintList.pop(i)
-            #N_RList.pop(i)
-            #P_RList.pop(i)
-            #C_RList.pop(i)
-            #DispList.pop(i)
-
-    List = [P_IDs, P_ID, P_t_In, P_Xs, P_Ys, Sp_IDs, Qs, I_IDs]
-    List += [I_ID, I_t_In, I_Xs, I_Ys]
-    return List
 
 
 
@@ -936,91 +861,6 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                     elif newY > h: newY = h - limit
                     Ys.append(newY)
 
-
-    elif repro == 'sexual':
-
-        I_Boxes = []
-        spBoxes = []
-
-        I_Boxes = [list([]) for _ in xrange(w*h)]
-        spBoxes = [list([]) for _ in xrange(w*h)]
-
-        index = 0
-        for i, I_ID in enumerate(IDs):
-
-            spID = Sp_IDs[i]
-            rX = int(round(Xs[i]))
-            rY = int(round(Ys[i]))
-
-            index = int(round(rX + (rY * w)))
-
-            if index > len(I_Boxes) - 1:
-                index = len(I_Boxes) - 1
-            elif index < 0:
-                index = 0
-
-            I_Boxes[index].append(I_ID)
-            spBoxes[index].append(spID)
-
-        for i, box in enumerate(I_Boxes):
-            if len(box) < 2: continue
-
-            spbox = spBoxes[i]
-            while len(box) > 1:
-                # choose an individual at random
-                i1 = choice(range(len(box)))
-                ind1 = box.pop(i1)
-                # remove the speciesID
-                sp = spbox.pop(i1)
-
-                index1 = IDs.index(ind1)
-                q = Qs[index1]
-                q1 = np.mean(q)
-
-                p1 = np.random.binomial(1, q1)
-                # individual not large enough to reproduce
-                if p1 == 0: continue
-
-                # Find another of the same Sp_
-                if spbox.count(sp) > 1:
-
-                    QN = q[0]
-                    QP = q[1]
-                    QC = q[2]
-
-                    # choose an individual of the same Sp_
-                    i2 = spbox.index(sp)
-                    # remove the speciesID
-                    spbox.pop(i2)
-                    # remove the individual
-                    box.pop(i2)
-
-                    index2 = IDs.index(i2)
-                    q2 = Qs[index2]
-
-                    p2 = np.random.binomial(1, q2)
-                    # individual not large enough to reproduce
-                    if p2 == 0: continue
-
-                    Qs[i2] = q2/2.0
-                    Qs.append(q2/2.0)
-
-                    X = Xs[i2]
-                    Y = Ys[i2]
-
-                    newX = float(np.random.uniform(X-0.5, X+0.5, 1))
-                    if limit > newX: newX = 0
-                    if newX > w - limit: newX = w - limit
-
-                    newY = float(np.random.uniform(Y-0.5, Y+0.5, 1))
-                    if limit > newY: newY = 0
-                    elif newY > h: newY = h - limit
-
-                    ID += 1
-                    IDs.append(ID)
-                    t_In.append(0)
-                    Sp_IDs.append(sp)
-                    ADList.append('a')
 
     return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]

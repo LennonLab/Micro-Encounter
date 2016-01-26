@@ -16,8 +16,8 @@ def get_rand_params(fixed):
         rates = np.array([1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001])
 
         #motion = 'white_noise'
-        #motion = 'brown_noise'
-        motion = 'fluid'
+        motion = 'brown_noise'
+        #motion = 'fluid'
 
         #width = choice([5, 20, 5, 20])
         width = 10
@@ -62,8 +62,8 @@ def get_rand_params(fixed):
     elif fixed is False:
 
         #motion = choice(['fluid', 'white_noise']) # 'fluid', 'unidirectional'
-        motion = 'fluid'
-        #motion = 'white_noise'
+        #motion = 'fluid'
+        motion = 'brown_noise'
 
         if motion == 'white_noise':
             rates = np.array([0.00001])
