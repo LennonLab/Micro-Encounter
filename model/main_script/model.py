@@ -14,15 +14,15 @@ import time
 import psutil
 
 mydir = os.path.expanduser("~/")
-sys.path.append(mydir + "GitHub/simplex/tools/metrics")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/metrics")
 import metrics
-sys.path.append(mydir + "GitHub/simplex/tools/LBM")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/LBM")
 import LBM
-sys.path.append(mydir + "GitHub/simplex/tools/bide")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/bide")
 import bide
-sys.path.append(mydir + "GitHub/simplex/tools/randparams")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/randparams")
 import randparams as rp
-sys.path.append(mydir + "GitHub/simplex/tools/spatial")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/spatial")
 import spatial
 
 
@@ -39,28 +39,13 @@ or near line 66.
 # https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing
 # http://statsmodels.sourceforge.net/0.5.0/generated/statsmodels.tsa.stattools.adfuller.html
 
-GenPath = mydir + 'GitHub/simplex/results/simulated_data/'
 
-"""
-############## OPEN OUTPUT DATA FILE ###########################################
-OUT1 = open(GenPath + 'examples/SimData.csv','w')
-OUT2 = open(GenPath + 'examples/RADs.csv','w')
-OUT3 = open(GenPath + 'examples/Species.csv','w')
-OUT4 = open(GenPath + 'examples/IndRTD.csv','w')
-OUT5 = open(GenPath + 'examples/TracerRTD.csv','w')
-OUT6 = open(GenPath + 'examples/ResRTD.csv','w')
+GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
+OUT1 = open(GenPath + 'SimData.csv','w')
 
-# printing physical variables, residence times, community diversity properties
-# physiological values, trait values, resource values
 print>>OUT1, 'RowID, motion,ind.production,biomass.prod.N,biomass.prod.P,biomass.prod.C,res.inflow,N.types,P.types,C.types,max.res.val,max.growth.rate,max.met.maint,max.active.dispersal,barriers,logseries.a,starting.seed,flow.rate,width,height,viscosity,total.abundance,immigration.rate,resource.tau,particle.tau,individual.tau,resource.concentration,shannons.resource.diversity,resource.richness,species.richness,simpson.e,e.var,berger.parker,inv.simp.D,N.max,skew,tracer.particles,resource.particles,speciation,Whittakers.turnover,Jaccards.dissimilarity,Sorensens.dissimilarity,avg.per.capita.growth,avg.per.capita.maint,avg.per.capita.N.efficiency,avg.per.capita.P.efficiency,avg.per.capita.C.efficiency,avg.per.capita.active.dispersal,amplitude,flux,frequency,phase,disturbance,spec.growth,spec.disp,spec.maint,avg.dist,dorm.freq'
-
 OUT1.close()
-OUT2.close()
-OUT3.close()
-OUT4.close()
-OUT5.close()
-OUT6.close()
-"""
+
 
 def nextFrame(arg):
 
@@ -339,12 +324,7 @@ def nextFrame(arg):
             TRTD = str(TExitAge).strip('[]')
             RRTD = str(RExitAge).strip('[]')
 
-            OUT1 = open(GenPath + 'examples/SimData.csv','a')
-            OUT2 = open(GenPath + 'examples/RADs.csv','a')
-            OUT3 = open(GenPath + 'examples/Species.csv','a')
-            OUT4 = open(GenPath + 'examples/IndRTD.csv','a')
-            OUT5 = open(GenPath + 'examples/TracerRTD.csv','a')
-            OUT6 = open(GenPath + 'examples/ResRTD.csv','a')
+            OUT1 = open(GenPath + '/SimData.csv','a')
 
             #TTAUs = np.mean(TExitAge), np.mean(TTimeIn)
 
@@ -352,18 +332,7 @@ def nextFrame(arg):
             outlist = str(outlist).strip('[]')
 
             print>>OUT1, outlist
-            print>>OUT2, RADString
-            print>>OUT3, SString
-            print>>OUT4, ct1,',', sim,',', IndRTD
-            print>>OUT5, ct1,',', sim,',', TRTD
-            print>>OUT6, ct1,',', sim,',', RRTD
-
             OUT1.close()
-            OUT2.close()
-            OUT3.close()
-            OUT4.close()
-            OUT5.close()
-            OUT6.close()
 
             ct1 += 1
             ct = 0
@@ -390,7 +359,7 @@ def nextFrame(arg):
                     print "simplex finished"
                     sys.exit()
 
-                width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates = rp.get_rand_params(fixed)
+                width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates, pmax, mmax = rp.get_rand_params(fixed)
 
                 for i in range(barriers):
                     lefts.append(np.random.uniform(0.2, .8))
@@ -410,7 +379,7 @@ def nextFrame(arg):
 
 ################ DIMENSIONAL & MODEL CONSTANTS ##################################
 fixed = False
-width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates = rp.get_rand_params(fixed)
+width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates, pmax, mmax = rp.get_rand_params(fixed)
 lefts, bottoms = [], []
 
 for b in range(barriers):

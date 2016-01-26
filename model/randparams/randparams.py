@@ -49,13 +49,14 @@ def get_rand_params(fixed):
         alpha = 0.99
         barriers = 0
 
-        #r = choice([1, 10, 100])#resource particles flowing in per time step
+        #r = choice([1, 10, 100]) # max resource particles flowing in per time step
         r = 100
-        gmax = 0.9
-        rmax = 1000
-        dmax = 0.1
-        p_of_going_active = np.random.uniform(0.0001, 0.01)
-        maint_factor = np.random.uniform(1, 100)
+
+        gmax = 0.9 # max specific growth rate
+        rmax = 1000 # max resource particle size
+        dmax = 0.1 # max dispersal probability
+        pmax = 0.001 # max probability of going active
+        mmax = 0.001 # max maintenance factor
 
 
     elif fixed is False:
@@ -120,10 +121,12 @@ def get_rand_params(fixed):
         gmax = np.random.uniform(0.1, 0.5)
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
         maintmax = np.random.uniform(0.0005, 0.005) # maximum metabolic maintanence cost
+        pmax = np.random.uniform(0.0001, 0.01) # max probability of going active
+        mmax = np.random.uniform(1, 100) # max maintenance factor
 
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
     return [width, height, alpha, motion, reproduction, speciation, \
             seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, \
-            flux, pulse, phase, disturb, envgrads, barriers, rates]
+            flux, pulse, phase, disturb, envgrads, barriers, rates, pmax, mmax]
