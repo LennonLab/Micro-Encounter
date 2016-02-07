@@ -122,7 +122,7 @@ def get_rand_params(fixed):
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
         maintmax = np.random.uniform(0.0005, 0.005) # maximum metabolic maintanence cost
         pmax = np.random.uniform(0.0001, 0.01) # max probability of going active
-        mmax = np.random.uniform(1, 100) # max maintenance factor
+        mmax = np.random.uniform(10, 100) # max maintenance 'factor'
 
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS

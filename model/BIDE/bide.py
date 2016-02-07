@@ -122,7 +122,7 @@ def ResIn(motion, Type, Vals, Xs, Ys, ID, IDs, t_In, numr, rmax, nN, nP, nC, w, 
 
 
 
-def immigration(d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD,
+def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD, MFD, RPD,
         EnvD, envGs, GD, DispD, colorD, IDs, ID, t_In, Qs, N_RD, P_RD, C_RD,
         nN, nP, nC, u0, alpha, GList, MList, NList, PList, CList, DList, ADList):
 
@@ -174,6 +174,12 @@ def immigration(d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD,
                 # species maintenance
                 MD[prop] = np.random.uniform(m_max/10, m_max)
 
+                # species maintenance factor
+                MFD[prop] = np.random.uniform(1, mfmax)
+
+                # species RPF factor
+                RPD[prop] = np.random.uniform(0.001, 0.1)
+
                 # species active dispersal rate
                 DispD[prop] = np.random.uniform(d_max/10, d_max)
 
@@ -205,11 +211,13 @@ def immigration(d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD,
 
             means = MD[prop]
             i = GetIndParam(means)
+            j = GetIndParam(means)
+            k = GetIndParam(means)
+
             if state == 'a':
                 MList.append(i)
             if state == 'd':
                 MList.append(i/2.0)
-
 
             means = N_RD[prop]
             n = GetIndParam(means)
@@ -228,7 +236,7 @@ def immigration(d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD,
             DList.append(i)
 
 
-    return [Sp, Xs, Ys, MD, EnvD, GD, DispD, colorD, IDs, ID, t_In, Qs, N_RD,
+    return [Sp, Xs, Ys, MD, MFD, RPD, EnvD, GD, DispD, colorD, IDs, ID, t_In, Qs, N_RD,
             P_RD, C_RD, GList, MList, NList, PList, CList, DList, ADList]
 
 
@@ -446,7 +454,7 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
 
 
 
-def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, EnvD, IDs, t_In, Qs, GrowthList,
+def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs, GrowthList,
         MaintList, N_RList, P_RList, C_RList, DispList, ADList):
 
     if Sp_IDs == []:
@@ -489,8 +497,7 @@ def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, EnvD, IDs, t_In, Qs, GrowthLis
 
 
 
-def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList):
-
+def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
 
     if Sp_IDs == []:
         return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
@@ -499,22 +506,23 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList):
     for j in range(n):
 
         i = randint(0, len(IDs)-1)
+        spid = Sp_IDs[i]
         state = ADList[i]
 
         if state == 'd':
             #continue
-            x = np.random.binomial(1, 0.01) # make this probability a randomly chosen variable
+            x = np.random.binomial(1, RPD[spid]) # make this probability a randomly chosen variable
             if x == 1:
 
                 ADList[i] = 'a'
-                MaintList[i] = 100*MaintList[i]
+                MaintList[i] = MFD[spid]*MaintList[i]
 
         if state == 'a':
             #continue
             val = Qs[i]
-            if max(val) <= MaintList[i]*10:  # go dormant
+            if max(val) <= MaintList[i]*MFD[spid]:  # go dormant
 
-                MaintList[i] = MaintList[i]/100 # make this a randomly chosen variable
+                MaintList[i] = MaintList[i]/MFD[spid] # make this a randomly chosen variable
                 ADList[i] = 'd'
 
     return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
@@ -522,7 +530,7 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList):
 
 
 
-def decimate(Sp_IDs, Xs, Ys, xAge, colorD, MD, EnvD, IDs, t_In, Qs, GrowthList,
+def decimate(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs, GrowthList,
             MaintList, N_RList, P_RList, C_RList, DispList, ADList):
 
     if Sp_IDs == []:
@@ -701,7 +709,7 @@ def consume(R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, R_t_In, R_xAge, Sp_IDs,
 
 
 def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, EnvD, envGs, nN, nP, nC, GList, MList,
+        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
@@ -783,8 +791,10 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
 
                         # new speciesmaintenance
                         p = np.random.binomial(1, 0.25)
-                        if p == 1: MD[spID_new] = np.random.uniform(0.01, 0.1)
-                        else: MD[spID_new] = MD[spID]
+                        if p == 1:
+                            MD[spID_new] = np.random.uniform(0.01, 0.1)
+                        else:
+                            MD[spID_new] = MD[spID]
 
                         # species environmental gradient optima
                         glist = []
@@ -869,7 +879,7 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
 
 
 def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, EnvD, envGs, nN, nP, nC, GList, MList,
+        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
@@ -931,7 +941,7 @@ def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
 
 
 def density_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, EnvD, envGs, nN, nP, nC, GList, MList,
+        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
@@ -991,7 +1001,7 @@ def density_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys
 
 
 def nearest_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, EnvD, envGs, nN, nP, nC, GList, MList,
+        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
