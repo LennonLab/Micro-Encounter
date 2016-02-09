@@ -208,6 +208,8 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys,
 
             if state == 'a':
                 GList.append(i)
+            elif state == 'd':
+                GList.append(i)
 
             means = MD[prop]
             i = GetIndParam(means)
@@ -509,20 +511,22 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
         spid = Sp_IDs[i]
         state = ADList[i]
 
+        mfd = MFD[spid]
+
         if state == 'd':
             #continue
             x = np.random.binomial(1, RPD[spid]) # make this probability a randomly chosen variable
             if x == 1:
 
                 ADList[i] = 'a'
-                MaintList[i] = MFD[spid]*MaintList[i]
+                MaintList[i] = mfd*MaintList[i]
 
         if state == 'a':
             #continue
             val = Qs[i]
-            if max(val) <= MaintList[i]*MFD[spid]:  # go dormant
+            if max(val) <= MaintList[i]*mfd:  # go dormant
 
-                MaintList[i] = MaintList[i]/MFD[spid] # make this a randomly chosen variable
+                MaintList[i] = MaintList[i]/mfd # make this a randomly chosen variable
                 ADList[i] = 'd'
 
     return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
@@ -718,7 +722,6 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
 
     if repro == 'fission':
 
-
         n = len(IDs)
         for j in range(n):
 
@@ -778,10 +781,10 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                     if p == 1:
 
                         # speciate
-                        t = time.clock()
-                        spID_new = spID +' '+ str(t)
+                        #t = time.clock()
+                        spID_new = str(spID)# +' '+ str(t)
 
-                        # new speciescolor
+                        # new species color
                         colorD = get_color(spID_new, colorD)
 
                         # new species growth rate
@@ -789,7 +792,7 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                         if p == 1: GD[spID_new] = np.random.uniform(0.5, 1.0)
                         else: GD[spID_new] = GD[spID]
 
-                        # new speciesmaintenance
+                        # new species maintenance
                         p = np.random.binomial(1, 0.25)
                         if p == 1:
                             MD[spID_new] = np.random.uniform(0.01, 0.1)
@@ -807,15 +810,15 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                                 x = EnvD[spID][j][0]
                                 y = EnvD[spID][j][1]
 
-                            glist.append([x,y])
+                            glist.append([x, y])
                             EnvD[spID_new] = glist
 
-                        # new speciesactive dispersal rate
+                        # new species active dispersal rate
                         p = np.random.binomial(1, 0.25)
                         if p == 1: DispD[spID_new] = np.random.uniform(0.0, 0.1)
                         else: DispD[spID_new] = DispD[spID]
 
-                        # new speciesresource use efficiencies
+                        # new species resource use efficiencies
                         # Nitrogen
                         p = np.random.binomial(1, 0.25)
                         if p == 1: N_RD[spID_new] = np.random.uniform(0.01, 1.0, nN)
@@ -871,6 +874,13 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                     elif newY > h: newY = h - limit
                     Ys.append(newY)
 
+
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(t_In), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
+    if min(listlen) != max(listlen):
+        print 'In reproduce'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
     return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
