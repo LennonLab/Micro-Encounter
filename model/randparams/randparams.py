@@ -62,30 +62,30 @@ def get_rand_params(fixed):
     elif fixed is False:
 
         #motion = choice(['fluid', 'white_noise']) # 'fluid', 'unidirectional'
-        #motion = 'fluid'
-        motion = 'brown_noise'
+        motion = 'fluid'
+        #motion = 'brown_noise'
 
         if motion == 'white_noise':
             rates = np.array([0.00001])
         else:
-            #rate = choice([1.0, 0.8, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])
+            #rates = [choice([1.0, 0.8, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])]
 
-            rates = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])
-            #rates = np.array([1.0, 0.7, 0.4, 0.1, 0.07, 0.04, 0.01, 0.007])
-            #rates = np.array([1.0, 0.1, 0.01, 0.001])
+            #rates = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])
+            rates = np.array([1.0, 0.7, 0.4, 0.1, 0.07, 0.04, 0.01, 0.007])
+            #rates = np.array([1.0, 0.1])
 
             #rate = 1.001
             #rates = np.array([rate])
 
 
-        width = randint(6, 10)
-        #width = 5
+        #width = randint(6, 10)
+        width = 20
 
         #height = randint(10, 100)
-        height = 10
+        height = 20
 
-        barriers = randint(0, 2)
-        #barriers = 2
+        #barriers = randint(0, 2)
+        barriers = 0
 
         pulse = np.random.uniform(0.01, 1.0)
         flux = choice(['yes'])
@@ -118,9 +118,9 @@ def get_rand_params(fixed):
 
         #tp_max = np.random.uniform(0.001, 0.1) # maximum probability of transitioning at random from dormant to active (i.e., Scout hypothesis)
 
-        gmax = np.random.uniform(0.1, 0.5)
+        gmax = np.random.uniform(0.05, 0.5)
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
-        maintmax = np.random.uniform(0.0005, 0.005) # maximum metabolic maintanence cost
+        maintmax = np.random.uniform(0.0001*gmax, 0.001*gmax) # maximum metabolic maintanence cost
         pmax = np.random.uniform(0.0001, 0.01) # max probability of going active
         mmax = np.random.uniform(10, 100) # max maintenance 'factor'
 

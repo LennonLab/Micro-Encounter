@@ -58,22 +58,21 @@ def get_color(ID, colorD): # FUNCTION TO ASSIGN COLORS TO Sp_
 
 
 
-def NewTracers(numt, motion, IDs, Xs, Ys, t_In, w, h, u0):
+def NewTracers(motion, IDs, Xs, Ys, t_In, w, h, u0, ct):
 
-    for t in range(numt):
-        x = np.random.binomial(1, u0/2)
-
+    if ct == 1:
+        for i in range(200):
+            IDs.append(0)
+            t_In.append(0)
+            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+            Xs.append(float(np.random.uniform(0.1*w, 0.101*w)))
+    else:
+        x = np.random.binomial(1, u0)
         if x == 1:
             IDs.append(0)
             t_In.append(0)
-
-            if motion == 'brown_noise' or motion == 'white_noise':
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
-
-            else:
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.15*w)))
+            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+            Xs.append(float(np.random.uniform(0.1*w, 0.101*w)))
 
     return [IDs, t_In, Xs, Ys]
 
@@ -250,7 +249,7 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
     if TypeOf == 'resource':
         Type, IDs, ID, Vals = List
     elif TypeOf == 'individual':
-        Type, IDs, ID, Vals, DispD, GrowthList, MList, N_RList, P_RList, C_RList, DispList, ADList, Qs = List
+        Type, IDs, ID, Vals, DispD, GrowthList, MList, N_RList, P_RList, C_RList, DispList, ADList = List
     else:
         IDs = List
 
@@ -259,7 +258,7 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
             return [IDs, Xs, Ys, xAge, t_In]
         elif TypeOf == 'individual':
             return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList,
-                    MList, N_RList, P_RList, C_RList, DispList, ADList, Qs]
+                    MList, N_RList, P_RList, C_RList, DispList, ADList]
         elif TypeOf == 'resource':
             return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
 
@@ -285,11 +284,11 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
         k = 0
         if TypeOf == 'individual':
             # A cost for active dispersal
-            r1,r2,r3 = Qs[i]
+            r1,r2,r3 = Vals[i]
             r1 -= MList[i]*DispD[Type[i]]*r1
             r2 -= MList[i]*DispD[Type[i]]*r2
             r3 -= MList[i]*DispD[Type[i]]*r3
-            Qs[i] = [r1, r2, r3]
+            Vals[i] = [r1, r2, r3]
 
             k = np.random.binomial(1, DispD[Type[i]])
 
@@ -336,7 +335,7 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
         return [IDs, Xs, Ys, xAge, t_In]
     elif TypeOf == 'individual':
         return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MList,
-            N_RList, P_RList, C_RList, DispList, ADList, Qs]
+            N_RList, P_RList, C_RList, DispList, ADList]
     elif TypeOf == 'resource':
         return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
 
@@ -778,6 +777,7 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                     t_In.append(t_In[i])
 
                     p = np.random.binomial(1, spec)
+                    p = 0
                     if p == 1:
 
                         # speciate

@@ -234,13 +234,16 @@ def immigration(d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD,
 
 
 def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
+    sys.exit()
+
 
     Type, IDs, ID, Vals = [], [], int(), []
 
     if TypeOf == 'resource':
         Type, IDs, ID, Vals = List
     elif TypeOf == 'individual':
-        Type, IDs, ID, Vals, DispD, GrowthList, MList, N_RList, P_RList, C_RList, DispList, ADList, Qs = List
+        Type,       IDs,       ID, Vals,    DispD, GrowthList,     MList, N_RList, P_RList, C_RList, DispList, ADList = List
+        #SpeciesIDs, IndIDs, IndID,   Qs, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList
     else:
         IDs = List
 
@@ -248,10 +251,10 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
         if TypeOf == 'tracer':
             return [IDs, Xs, Ys, xAge, t_In]
         elif TypeOf == 'individual':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList,
-                    MList, N_RList, P_RList, C_RList, DispList, ADList, Qs]
+            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MList, N_RList, P_RList, C_RList, DispList, ADList]
         elif TypeOf == 'resource':
             return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
+
 
     ux = np.reshape(ux, (w*h)) # ux is the macroscopic x velocity
     uy = np.reshape(uy, (w*h)) # uy is the macroscopic y velocity
@@ -275,11 +278,11 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
         k = 0
         if TypeOf == 'individual':
             # A cost for active dispersal
-            r1,r2,r3 = Qs[i]
+            r1,r2,r3 = Vals[i]
             r1 -= MList[i]*DispD[Type[i]]*r1
             r2 -= MList[i]*DispD[Type[i]]*r2
             r3 -= MList[i]*DispD[Type[i]]*r3
-            Qs[i] = [r1, r2, r3]
+            Vals[i] = [r1, r2, r3]
 
             k = np.random.binomial(1, DispD[Type[i]])
 
@@ -326,7 +329,7 @@ def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
         return [IDs, Xs, Ys, xAge, t_In]
     elif TypeOf == 'individual':
         return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MList,
-            N_RList, P_RList, C_RList, DispList, ADList, Qs]
+            N_RList, P_RList, C_RList, DispList, ADList, Vals]
     elif TypeOf == 'resource':
         return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
 
