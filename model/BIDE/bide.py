@@ -8,9 +8,6 @@ import math
 #import decimal
 import time
 
-sys.path.append(mydir + "GitHub/Micro-Encounter/model/spatial")
-import spatial
-
 
 limit = 0.1
 
@@ -87,17 +84,14 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
         EnvD, envGs, GD, DispD, IDs, ID, Qs, N_RD, P_RD, C_RD, nN, nP, nC, u0, alpha, GList,
         MList, NList, PList, CList, DList, ADList, ct):
 
-    if u0 > 1.0:
-        u0 = 1.0
+    if ct > 1: seed = 1
 
     for m in range(seed):
         x = 0
 
-        if seed > 1:
-            x = 1
+        if seed > 1: x = 1
 
-        else:
-            x = np.random.binomial(1, u0*ip)
+        else: x = np.random.binomial(1, u0*ip)
 
         if x == 1:
             prop = str(float(np.random.logseries(alpha, 1)))
@@ -110,9 +104,9 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
             IDs.append(ID)
             ID += 1
 
-            Qn = float(np.random.uniform(0.01, 0.1))
-            Qp = float(np.random.uniform(0.01, 0.1))
-            Qc = float(np.random.uniform(0.01, 0.1))
+            Qn = float(np.random.uniform(0.05, 0.5))
+            Qp = float(np.random.uniform(0.05, 0.5))
+            Qc = float(np.random.uniform(0.05, 0.5))
             Qs.append([Qn, Qp, Qc])
 
             if prop not in GD:
@@ -148,24 +142,17 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
                 # species Carbon use efficiency
                 C_RD[prop] = np.random.uniform(0.1, 1.0, nC)
 
-            state = choice(['a','d'])
-            ADList.append(state)
+            ADList.append('a')
 
             means = GD[prop]
             i = GetIndParam(means)
 
-            if state == 'a':
-                GList.append(i)
-            elif state == 'd':
-                GList.append(i)
+            GList.append(i)
 
             means = MD[prop]
             i = GetIndParam(means)
 
-            if state == 'a':
-                MList.append(i)
-            if state == 'd':
-                MList.append(i/2.0)
+            MList.append(i)
 
             means = N_RD[prop]
             n = GetIndParam(means)
@@ -349,22 +336,20 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
         spid = Sp_IDs[i]
         state = ADList[i]
 
-        mfd = MFD[spid]
+        mfd = MFD[spid]  # multiplicative maintenance factor (is greater than 1)
 
         if state == 'd':
-            #continue
+
             x = np.random.binomial(1, RPD[spid]) # make this probability a randomly chosen variable
             if x == 1:
-
                 ADList[i] = 'a'
-                MaintList[i] = mfd*MaintList[i]
+                MaintList[i] = MaintList[i]*mfd # metabolic maintenance increases
 
         if state == 'a':
-            #continue
-            val = Qs[i]
-            if max(val) <= MaintList[i]*mfd:  # go dormant
 
-                MaintList[i] = MaintList[i]/mfd # make this a randomly chosen variable
+            Qvals = Qs[i]
+            if min(Qvals) <= MaintList[i]*mfd:  # go dormant
+                MaintList[i] = MaintList[i]/mfd # metabolic maintenance decreases
                 ADList[i] = 'd'
 
     return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
@@ -378,35 +363,46 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_
     P_RList, C_RList, DispList, ADList, enz_action = True):
 
 
-    if Sp_IDs == []:
-        return [Sp_IDs, I_IDs, Qs, GrowthList, MaintList, ADList]
+    if Sp_IDs == [] or R_IDs == []:
+        return [R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID, IXs,
+        IYs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
 
     n = len(I_IDs)
     for i in range(n):
 
+        state = ADList[i]
+        if state == 'd':
+            continue
+
+
         x1 = IXs[i]
         y1 = IYs[i]
 
-        r = len(R_IDs)
-        Try = r
+        Try = min([10, len(R_IDs)])
         ct = 0
 
-        while ct < Try:
+        while ct < Try and R_IDs != []:
             ct += 1
 
+            r = len(R_IDs)
+            Try = min([10, r])
             j = randint(0, r-1)
+
+            # The food
+            R_val = R_Vals[j]
             x2 = RXs[j]
             y2 = RYs[j]
 
             dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+            ind_radius = np.mean(Qs[i])
+            res_radius = R_val
 
-            if dist <= min(Qs[i]) * 1000:
-                state = ADList[i]
-                if state == 'd':
-                    ADList[i] == 'a'
+            if dist <= ind_radius + res_radius:
 
-                # The food
-                R_val = R_Vals[j]
+                #state = ADList[i]
+                #if state == 'd':
+                #    ADList[i] == 'a'
+
                 R_type = R_Types[j]
 
                 rtype = list(R_type)
@@ -419,7 +415,7 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_
                 QP = Q[1]
                 QC = Q[2]
 
-                # the species
+                # The species
                 sp = Sp_IDs[i]
                 mu = GD[sp]
 
@@ -440,8 +436,10 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_
 
                 mu = mu * efficiency
 
-                if R_val > (mu * Q): # Increase cell quota
-                    R_val = R_val - (mu * Q)
+                # Increase cell quota & decrease resource particle size
+
+                if R_val > (mu * Q):
+                    R_val = R_val - (mu * Q)*10
                     Q += (mu * Q)
 
                 else:
@@ -449,10 +447,9 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_
                     R_val = 0.0
 
                 if Q > 1.0:
-                    R_val = Q - 1.0
+                    R_val = R_val + (Q - 1.0)
                     Q = 1.0
                     R_Vals[j] = R_val
-
 
                 if R_val <= 0.0:
                     R_Vals.pop(j)
@@ -476,147 +473,6 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_
         IYs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
 
 
-
-
-
-
-def consume_boxes(field, R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
-        Qs, I_IDs, I_ID, I_Xs, I_Ys, w, h, GD, N_RD, P_RD, C_RD, DispD,
-        GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList, enz_action = True):
-
-    if not len(R_Types) or not len(Sp_IDs):
-        List = [R_Types, R_Vals, R_IDs, R_ID, R_Xs]
-        List += [R_Ys, Sp_IDs, Qs, I_IDs, I_ID]
-        List += [I_Xs, I_Ys, GrowthList, MaintList, N_RList,
-                P_RList, C_RList, DispList, ADList]
-        return List
-
-    I_Boxes = [list([]) for _ in xrange(w*h)]
-    R_Boxes = [list([]) for _ in xrange(w*h)]
-
-    index = 0
-    for i, val in enumerate(I_IDs):
-        rX = int(round(I_Xs[i]))
-        rY = int(round(I_Ys[i]))
-
-        index = int(round(rX + (rY * w)))
-
-        if index > len(I_Boxes) - 1:
-            index = len(I_Boxes) - 1
-        elif index < 0:
-            index = 0
-
-        I_Boxes[index].append(val)
-
-    index = 0
-    for i, val in enumerate(R_IDs):
-
-        rX = int(round(R_Xs[i]))
-        rY = int(round(R_Ys[i]))
-        index = int(round(rX + (rY * w)))
-
-        if index > len(R_Boxes) - 1:
-            index = len(R_Boxes) - 1
-        elif index < 0:
-            index = 0
-
-        R_Boxes[index].append(val)
-
-
-    for i, box in enumerate(I_Boxes):
-        if not len(box): continue
-
-        R_Box = R_Boxes[i]
-        EnzVal = field[i] # enzymatic value
-
-        for ind in box: # The individuals
-            if not len(R_Box): break
-
-            R_ID = choice(R_Box)
-            boxI_ex = R_Box.index(R_ID)
-
-            # The food
-            j = R_IDs.index(R_ID)
-            R_val = R_Vals[j]
-            R_type = R_Types[j]
-
-            rtype = list(R_type)
-            R = rtype.pop(0)
-            rnum = int(''.join(rtype))
-
-            # The Individual
-            ID = I_IDs.index(ind)
-
-            state = ADList[ID]
-            if state == 'd':
-                ADList[ID] == 'a'
-
-            # The individual's cell quota
-
-            Q = Qs[ID]
-            QN = Q[0]
-            QP = Q[1]
-            QC = Q[2]
-
-            # the species
-            sp = Sp_IDs[ID]
-            mu = GD[sp]
-
-            Q = 0.0
-            efficiency = 0.0
-
-            if R == 'N':
-                efficiency = N_RList[ID][rnum]
-                Q = QN
-
-            if R == 'P':
-                efficiency = P_RList[ID][rnum]
-                Q = QP
-
-            if R == 'C':
-                efficiency = C_RList[ID][rnum]
-                Q = QC
-
-            mu = mu * efficiency
-
-            if R_val > (mu * Q): # Increase cell quota
-                R_val = R_val - (mu * Q)
-                Q += (mu * Q)
-
-            else:
-                Q += R_val
-                R_val = 0.0
-
-            if Q > 1.0:
-                R_val = Q - 1.0
-                Q = 1.0
-                R_Vals[j] = R_val
-
-
-            if R_val <= 0.0:
-                R_Box.pop(boxI_ex)
-                R_Vals.pop(j)
-                R_Types.pop(j)
-                R_IDs.pop(j)
-                R_Xs.pop(j)
-                R_Ys.pop(j)
-
-
-            if Q < 0.0:
-                print Q, QN, QP, QC
-                sys.exit()
-
-            if R == 'N':
-                Qs[ID] = [Q, QP, QC]
-            if R == 'P':
-                Qs[ID] = [QN, Q, QC]
-            if R == 'C':
-                Qs[ID] = [QN, QP, Q]
-
-
-    return [R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
-            Qs, I_IDs, I_ID, I_Xs, I_Ys, GrowthList, MaintList, N_RList,
-            P_RList, C_RList, DispList, ADList]
 
 
 
@@ -770,12 +626,12 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
 
                     ADList.append('a')
 
-                    newX = float(np.random.uniform(X-0.1, X, 1))
+                    newX = float(np.random.uniform(X-0.5, X+0.5, 1))
                     if limit > newX: newX = 0
                     if newX > w - limit: newX = w - limit
                     Xs.append(newX)
 
-                    newY = float(np.random.uniform(Y-0.1, Y+0.1, 1))
+                    newY = float(np.random.uniform(Y-0.5, Y+0.5, 1))
                     if limit > newY: newY = 0
                     elif newY > h: newY = h - limit
                     Ys.append(newY)
@@ -794,7 +650,7 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
 
 
 
-def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD,
+def chemotaxis(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD,
         N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 

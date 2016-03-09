@@ -54,7 +54,7 @@ def nextFrame(arg):
     global C_RList, DispList, envgrads, MainFactorDict, RPFDict, enzyme_field, u0
 
     ct += 1
-    plot_system = 'no'
+    plot_system = 'yes'
 
     # Inflow of resources
     RTypes, RVals, RX, RY,  RIDs, RID = bide.ResIn(RTypes, RVals, RX, RY,  RID, RIDs, r, rmax, nNi, nP, nC, width, height, u0)
@@ -77,16 +77,16 @@ def nextFrame(arg):
 
 
     # Chemotaxis
-    #SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, \
-    #MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.chemotaxis(reproduction, \
-    #speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
-    #DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, \
-    #nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, \
+    MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.chemotaxis(\
+    speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
+    DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, \
+    nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
 
 
     # Forage
     #SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList,\
-    #N_RList, P_RList, C_RList, DispList, ADList = bide.density_forage(RVals, RX, RY, reproduction,\
+    #N_RList, P_RList, C_RList, DispList, ADList = bide.density_forage(RVals, RX, RY,\
     #speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict,\
     #DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi,\
     #nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
@@ -136,18 +136,25 @@ def nextFrame(arg):
         resource_scatImage.remove()
         Ind_scatImage.remove()
         colorlist = []
-        sizelist = []
+
+        ind_sizelist = []
+        res_sizelist = []
+
+        for val in RVals:
+            res_sizelist.append(val*10)
+
         for i, val in enumerate(SpeciesIDs):
             if ADList[i] == 'a':
                 colorlist.append('red')
             elif ADList[i] == 'd':
                 colorlist.append('0.3')
 
-            sizelist.append(min(Qs[i]) * 1000)
+            ind_sizelist.append(min(Qs[i]) * 1000)
 
-        resource_scatImage = ax.scatter(RX, RY, s = RVals*100, c = 'w', edgecolor = 'SpringGreen', lw = 0.6, alpha=0.3)
 
-        Ind_scatImage = ax.scatter(IndX, IndY, s = sizelist, c = colorlist, edgecolor = '0.2', lw = 0.2, alpha=0.9)
+        resource_scatImage = ax.scatter(RX, RY, s = res_sizelist, c = 'w', edgecolor = 'SpringGreen', lw = 0.6, alpha=0.8)
+
+        Ind_scatImage = ax.scatter(IndX, IndY, s = ind_sizelist, c = colorlist, edgecolor = '0.2', lw = 0.2, alpha=0.8)
 
     Ns.append(N)
 
@@ -155,7 +162,7 @@ def nextFrame(arg):
         Ns = [Ns[-1]] # only keep the most recent N value
         BurnIn = 'done'
 
-    if len(Ns) >= 100:
+    if len(Ns) >= 300:
 
         if BurnIn == 'not done':
             AugmentedDickeyFuller = sta.adfuller(Ns)
