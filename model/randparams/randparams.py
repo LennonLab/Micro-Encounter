@@ -50,10 +50,10 @@ def get_rand_params(fixed):
         barriers = 0
 
         #r = choice([1, 10, 100]) # max resource particles flowing in per time step
-        r = 100
+        r = 1
 
         gmax = 0.9 # max specific growth rate
-        rmax = 1000 # max resource particle size
+        rmax = 100 # max resource particle size
         dmax = 0.1 # max dispersal probability
         pmax = 0.001 # max probability of going active
         mmax = 0.001 # max maintenance factor
@@ -79,10 +79,10 @@ def get_rand_params(fixed):
 
 
         #width = randint(6, 10)
-        width = 20
+        width = 40
 
         #height = randint(10, 100)
-        height = 20
+        height = 40
 
         #barriers = randint(0, 2)
         barriers = 0
@@ -101,10 +101,12 @@ def get_rand_params(fixed):
         reproduction = choice(['fission'])
 
         speciation = np.random.uniform(0.01, 0.1)
-        m = np.random.uniform(0.01, 0.1) # m = probability of immigration
+        m = np.random.uniform(0.0001, 0.001) # m = probability of immigration
+        m = 0.0
 
-        r = randint(10, 100) #resource particles flowing in per time step
-        rmax = randint(100, 1000) # maximum resource particle size
+        r = randint(1, 10) #resource particles flowing in per time step
+        r = 1
+        rmax = randint(10, 100) # maximum resource particle size
 
         nNi = randint(1, 10) # max number of Nitrogen types
         nP = randint(1, 10) # max number of Phosphorus types
@@ -120,9 +122,9 @@ def get_rand_params(fixed):
 
         gmax = np.random.uniform(0.05, 0.5)
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
-        maintmax = np.random.uniform(0.0001*gmax, 0.001*gmax) # maximum metabolic maintanence cost
-        pmax = np.random.uniform(0.0001, 0.01) # max probability of going active
-        mmax = np.random.uniform(10, 100) # max maintenance 'factor'
+        maintmax = np.random.uniform(0.01*gmax, 0.1*gmax) # maximum metabolic maintanence cost
+        pmax = np.random.uniform(0.5, 0.9) # max probability of going active
+        mmax = np.random.uniform(1, 2) # max maintenance 'factor'
 
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS

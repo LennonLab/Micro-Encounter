@@ -45,44 +45,11 @@ def GetRAD(vector):
     return RAD, unique # the rad and the specieslist
 
 
-def get_color(ID, colorD): # FUNCTION TO ASSIGN COLORS TO Sp_
-
-    r1 = lambda: randint(0,255)
-    r2 = lambda: randint(0,255)
-    r3 = lambda: randint(0,255)
-
-    color = '#%02X%02X%02X' % (r1(),r2(),r3())
-    colorD[ID] = color
-
-    return colorD
-
-
-
-def NewTracers(motion, IDs, Xs, Ys, t_In, w, h, u0, ct):
-
-    if ct == 1:
-        for i in range(200):
-            IDs.append(0)
-            t_In.append(0)
-            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-            Xs.append(float(np.random.uniform(0.1*w, 0.101*w)))
-    else:
-        x = np.random.binomial(1, u0)
-        if x == 1:
-            IDs.append(0)
-            t_In.append(0)
-            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-            Xs.append(float(np.random.uniform(0.1*w, 0.101*w)))
-
-    return [IDs, t_In, Xs, Ys]
-
-
-
-def ResIn(motion, Type, Vals, Xs, Ys, ID, IDs, t_In, numr, rmax, nN, nP, nC, w, h, u0):
+def ResIn(Type, Vals, Xs, Ys, ID, IDs, numr, rmax, nN, nP, nC, w, h, u0):
 
 
     for r in range(numr):
-        x = np.random.binomial(1, u0/2)
+        x = np.random.binomial(1, u0)
 
         if x == 1:
             rval = int(np.random.random_integers(1, rmax, 1))
@@ -103,31 +70,21 @@ def ResIn(motion, Type, Vals, Xs, Ys, ID, IDs, t_In, numr, rmax, nN, nP, nC, w, 
             Vals.append(rval)
             IDs.append(ID)
             Type.append(rtype)
-            t_In.append(0)
             ID += 1
 
+            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+            Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
 
-            if motion == 'white_noise' or motion == 'brown_noise':
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
-
-
-            else:
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.15*w)))
-
-
-    return [Type, Vals, Xs, Ys, IDs, ID, t_In]
+    return [Type, Vals, Xs, Ys, IDs, ID]
 
 
 
-def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys, w, h, MD, MFD, RPD,
-        EnvD, envGs, GD, DispD, colorD, IDs, ID, t_In, Qs, N_RD, P_RD, C_RD,
-        nN, nP, nC, u0, alpha, GList, MList, NList, PList, CList, DList, ADList):
+def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, MD, MFD, RPD,
+        EnvD, envGs, GD, DispD, IDs, ID, Qs, N_RD, P_RD, C_RD, nN, nP, nC, u0, alpha, GList,
+        MList, NList, PList, CList, DList, ADList, ct):
 
     if u0 > 1.0:
         u0 = 1.0
-
 
     for m in range(seed):
         x = 0
@@ -139,34 +96,22 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys,
             x = np.random.binomial(1, u0*ip)
 
         if x == 1:
-
             prop = str(float(np.random.logseries(alpha, 1)))
 
             Sp.append(prop)
 
-            if motion == 'white_noise' or motion == 'brown_noise':
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
-
-
-            else:
-                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-                Xs.append(float(np.random.uniform(0.1*w, 0.15*w)))
-
+            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+            Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
 
             IDs.append(ID)
-            t_In.append(0)
             ID += 1
-            Qn = float(np.random.uniform(0.01, 0.5))
-            Qp = float(np.random.uniform(0.01, 0.5))
-            Qc = float(np.random.uniform(0.01, 0.5))
 
+            Qn = float(np.random.uniform(0.01, 0.1))
+            Qp = float(np.random.uniform(0.01, 0.1))
+            Qc = float(np.random.uniform(0.01, 0.1))
             Qs.append([Qn, Qp, Qc])
 
-            if prop not in colorD:
-                # speciescolor
-                colorD = get_color(prop, colorD)
-
+            if prop not in GD:
                 # species growth rate
                 GD[prop] = np.random.uniform(g_max/10, g_max)
 
@@ -212,8 +157,6 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys,
 
             means = MD[prop]
             i = GetIndParam(means)
-            j = GetIndParam(means)
-            k = GetIndParam(means)
 
             if state == 'a':
                 MList.append(i)
@@ -237,112 +180,13 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, motion, seed, ip, Sp, Xs, Ys,
             DList.append(i)
 
 
-    return [Sp, Xs, Ys, MD, MFD, RPD, EnvD, GD, DispD, colorD, IDs, ID, t_In, Qs, N_RD,
+    return [Sp, Xs, Ys, MD, MFD, RPD, EnvD, GD, DispD, IDs, ID, Qs, N_RD,
             P_RD, C_RD, GList, MList, NList, PList, CList, DList, ADList]
 
 
 
-def fluid_movement(TypeOf, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
 
-    Type, IDs, ID, Vals = [], [], int(), []
-
-    if TypeOf == 'resource':
-        Type, IDs, ID, Vals = List
-    elif TypeOf == 'individual':
-        Type, IDs, ID, Vals, DispD, GrowthList, MList, N_RList, P_RList, C_RList, DispList, ADList = List
-    else:
-        IDs = List
-
-    if Xs == []:
-        if TypeOf == 'tracer':
-            return [IDs, Xs, Ys, xAge, t_In]
-        elif TypeOf == 'individual':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList,
-                    MList, N_RList, P_RList, C_RList, DispList, ADList]
-        elif TypeOf == 'resource':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
-
-    ux = np.reshape(ux, (w*h)) # ux is the macroscopic x velocity
-    uy = np.reshape(uy, (w*h)) # uy is the macroscopic y velocity
-
-    # dispersal inside the system
-
-    n = len(Xs)
-    for j in range(n):
-
-        i = randint(0, len(Xs)-1)
-        X = int(round(Xs[i]))
-        Y = int(round(Ys[i]))
-
-        index =  int(round(X + Y * w))
-
-        if index > len(ux) - 1:
-            index = len(ux) - 1
-        if index > len(uy) - 1:
-            index = len(uy) - 1
-
-        k = 0
-        if TypeOf == 'individual':
-            # A cost for active dispersal
-            r1,r2,r3 = Vals[i]
-            r1 -= MList[i]*DispD[Type[i]]*r1
-            r2 -= MList[i]*DispD[Type[i]]*r2
-            r3 -= MList[i]*DispD[Type[i]]*r3
-            Vals[i] = [r1, r2, r3]
-
-            k = np.random.binomial(1, DispD[Type[i]])
-
-        if k == 0:
-            Xs[i] += ux[index]
-            Ys[i] += uy[index]
-
-        y = Ys[i]
-
-        if 0.0 > y:
-            Ys[i] = 0.0
-        elif y >= h:
-            Ys[i] = h - 0.0
-
-        t_In[i] += 1
-        if Xs[i] <= 0:
-            Xs[i] = 0.0
-
-        if Xs[i] >= w - limit:
-
-            xAge.append(t_In[i])
-            Xs.pop(i)
-            Ys.pop(i)
-            t_In.pop(i)
-            IDs.pop(i)
-
-            if TypeOf == 'resource' or TypeOf == 'individual':
-                Type.pop(i)
-                Vals.pop(i)
-
-            if TypeOf == 'individual':
-                GrowthList.pop(i)
-                MList.pop(i)
-                N_RList.pop(i)
-                P_RList.pop(i)
-                C_RList.pop(i)
-                DispList.pop(i)
-                ADList.pop(i)
-
-    ux = np.reshape(ux, (h, w))
-    uy = np.reshape(uy, (h, w))
-
-    if TypeOf == 'tracer':
-        return [IDs, Xs, Ys, xAge, t_In]
-    elif TypeOf == 'individual':
-        return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MList,
-            N_RList, P_RList, C_RList, DispList, ADList]
-    elif TypeOf == 'resource':
-        return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
-
-
-
-
-def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0):
+def movement(TypeOf, motion, List, Xs, Ys, w, h, u0):
 
     Type, IDs, ID, Vals = [], [], int(), []
 
@@ -356,11 +200,11 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
 
     if Xs == []:
         if TypeOf == 'tracer':
-            return [IDs, Xs, Ys, xAge, t_In]
+            return [IDs, Xs, Ys]
         elif TypeOf == 'individual':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
+            return [Type, Xs, Ys, IDs, ID, Vals, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
         elif TypeOf == 'resource':
-            return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
+            return [Type, Xs, Ys, IDs, ID, Vals]
 
 
     limit, distance, direction, pop = 0.1, 0, 0, 'no'
@@ -418,13 +262,10 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
 
         if pop == 'no':
             Xs[i], Ys[i] = x, y
-            t_In[i] = t_In[i]+1
 
         elif pop == 'yes':
-            xAge.append(t_In[i])
             Xs.pop(i)
             Ys.pop(i)
-            t_In.pop(i)
             IDs.pop(i)
 
             if TypeOf == 'resource' or TypeOf == 'individual':
@@ -441,25 +282,21 @@ def nonfluid_movement(TypeOf, motion, List, t_In, xAge, Xs, Ys, ux, uy, w, h, u0
                 ADList.pop(i)
 
     if TypeOf == 'tracer':
-        return [IDs, Xs, Ys, xAge, t_In]
+        return [IDs, Xs, Ys]
     elif TypeOf == 'individual':
-        return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals, GrowthList, MaintList,
+        return [Type, Xs, Ys, IDs, ID, Vals, GrowthList, MaintList,
                 N_RList, P_RList, C_RList, DispList, ADList]
     elif TypeOf == 'resource':
-        return [Type, Xs, Ys, xAge, IDs, ID, t_In, Vals]
+        return [Type, Xs, Ys, IDs, ID, Vals]
 
 
 
 
-
-
-
-
-def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs, GrowthList,
+def maintenance(Sp_IDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GrowthList,
         MaintList, N_RList, P_RList, C_RList, DispList, ADList):
 
     if Sp_IDs == []:
-        return [Sp_IDs, Xs, Ys, xAge, IDs, t_In, Qs, GrowthList, MaintList, N_RList,
+        return [Sp_IDs, Xs, Ys, IDs, Qs, GrowthList, MaintList, N_RList,
                 P_RList, C_RList, DispList, ADList]
 
     n = len(IDs)
@@ -475,8 +312,6 @@ def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs,
         if min(val) <= MaintList[i]*0.00001:   # starved
 
             Qs.pop(i)
-            xAge.append(t_In[i])
-            t_In.pop(i)
             Sp_IDs.pop(i)
             IDs.pop(i)
             Xs.pop(i)
@@ -491,7 +326,7 @@ def maintenance(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs,
 
         else: Qs[i] = val
 
-    return [Sp_IDs, Xs, Ys, xAge, IDs, t_In, Qs, GrowthList, MaintList, N_RList,
+    return [Sp_IDs, Xs, Ys, IDs, Qs, GrowthList, MaintList, N_RList,
             P_RList, C_RList, DispList, ADList]
 
 
@@ -533,50 +368,14 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
 
 
 
-def decimate(Sp_IDs, Xs, Ys, xAge, colorD, MD, MFD, RPD, EnvD, IDs, t_In, Qs, GrowthList,
-            MaintList, N_RList, P_RList, C_RList, DispList, ADList):
 
-    if Sp_IDs == []:
-        return [Sp_IDs, Xs, Ys, xAge, IDs, t_In, Qs, GrowthList, MaintList,
-        N_RList, P_RList, C_RList, DispList, ADList]
-
-    n = len(IDs)
-    for j in range(n):
-
-        i = randint(0, len(IDs)-1)
-
-        d = np.random.binomial(1, 0.1)
-
-        if d == 1:   # remvoe
-
-            Qs.pop(i)
-            xAge.append(t_In[i])
-            t_In.pop(i)
-            Sp_IDs.pop(i)
-            IDs.pop(i)
-            Xs.pop(i)
-            Ys.pop(i)
-            GrowthList.pop(i)
-            MaintList.pop(i)
-            N_RList.pop(i)
-            P_RList.pop(i)
-            C_RList.pop(i)
-            DispList.pop(i)
-            ADList.pop(i)
-
-    return [Sp_IDs, Xs, Ys, xAge, IDs, t_In, Qs, GrowthList, MaintList, N_RList,
-            P_RList, C_RList, DispList, ADList]
-
-
-
-
-def consume(R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, R_t_In, R_xAge, Sp_IDs,
-        Qs, I_IDs, I_ID, I_t_In, I_Xs, I_Ys, w, h, GD, N_RD, P_RD, C_RD, DispD,
-        GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList):
+def consume(field, R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
+        Qs, I_IDs, I_ID, I_Xs, I_Ys, w, h, GD, N_RD, P_RD, C_RD, DispD,
+        GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList, enz_action = True):
 
     if not len(R_Types) or not len(Sp_IDs):
-        List = [R_Types, R_Vals, R_IDs, R_ID, R_t_In, R_xAge, R_Xs]
-        List += [R_Ys, Sp_IDs, Qs, I_IDs, I_ID, I_t_In]
+        List = [R_Types, R_Vals, R_IDs, R_ID, R_Xs]
+        List += [R_Ys, Sp_IDs, Qs, I_IDs, I_ID]
         List += [I_Xs, I_Ys, GrowthList, MaintList, N_RList,
                 P_RList, C_RList, DispList, ADList]
         return List
@@ -617,6 +416,7 @@ def consume(R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, R_t_In, R_xAge, Sp_IDs,
         if not len(box): continue
 
         R_Box = R_Boxes[i]
+        EnzVal = field[i] # enzymatic value
 
         for ind in box: # The individuals
             if not len(R_Box): break
@@ -685,8 +485,6 @@ def consume(R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, R_t_In, R_xAge, Sp_IDs,
             if R_val <= 0.0:
                 R_Box.pop(boxI_ex)
                 R_Vals.pop(j)
-                R_xAge.append(R_t_In[j])
-                R_t_In.pop(j)
                 R_Types.pop(j)
                 R_IDs.pop(j)
                 R_Xs.pop(j)
@@ -705,18 +503,18 @@ def consume(R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, R_t_In, R_xAge, Sp_IDs,
                 Qs[ID] = [QN, QP, Q]
 
 
-    return [R_Types, R_Vals, R_IDs, R_ID, R_t_In, R_xAge, R_Xs, R_Ys, Sp_IDs,
-            Qs, I_IDs, I_ID, I_t_In, I_Xs, I_Ys, GrowthList, MaintList, N_RList,
+    return [R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
+            Qs, I_IDs, I_ID, I_Xs, I_Ys, GrowthList, MaintList, N_RList,
             P_RList, C_RList, DispList, ADList]
 
 
 
-def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
+def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
+        N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
 
     if repro == 'fission':
@@ -774,7 +572,6 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
 
                     ID += 1
                     IDs.append(ID)
-                    t_In.append(t_In[i])
 
                     p = np.random.binomial(1, spec)
                     p = 0
@@ -783,9 +580,6 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                         # speciate
                         #t = time.clock()
                         spID_new = str(spID)# +' '+ str(t)
-
-                        # new species color
-                        colorD = get_color(spID_new, colorD)
 
                         # new species growth rate
                         p = np.random.binomial(1, 0.25)
@@ -875,25 +669,25 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, w, h, GD, DispD,
                     Ys.append(newY)
 
 
-    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(t_In), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
     if min(listlen) != max(listlen):
         print 'In reproduce'
         print 'min(listlen) != max(listlen)'
         print listlen
         sys.exit()
 
-    return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
 
 
 
 
-def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
+def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD,
+        N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList,
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList,
                     MList, NList, PList, CList, DList, ADList]
 
     n = len(IDs)
@@ -945,17 +739,17 @@ def chemotaxis(repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
             Ys[i] = Y
 
 
-    return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
 
 
 
-def density_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
+def density_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD,
+        N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList,
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList,
                     MList, NList, PList, CList, DList, ADList]
 
     # Locate resource density
@@ -1006,16 +800,16 @@ def density_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys
         Xs[i] = X
         Ys[i] = Y
 
-    return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
 
 
-def nearest_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys,  w, h, GD, DispD,
-        colorD, N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
+def nearest_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD,
+        N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
     if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList,
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList,
                     MList, NList, PList, CList, DList, ADList]
 
     n = len(IDs)
@@ -1079,5 +873,5 @@ def nearest_forage(RVals, RX, RY, repro, spec, Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys
         Xs[i] = x1
         Ys[i] = y1
 
-    return [Sp_IDs, Qs, IDs, ID, t_In, Xs, Ys, GD, DispD, GList, MList,
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
