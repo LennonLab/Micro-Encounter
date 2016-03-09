@@ -15,14 +15,11 @@ def get_rand_params(fixed):
 
         rates = np.array([1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001])
 
-        #motion = 'white_noise'
-        motion = 'brown_noise'
-        #motion = 'fluid'
+        motion = 'white_noise'
+        #motion = 'brown_noise'
 
-        #width = choice([5, 20, 5, 20])
-        width = 10
-        #height = int(width)
-        height = choice([5])
+        width  = 40
+        height = 40
 
         num_envgrads = 2
         for i in range(num_envgrads):
@@ -30,33 +27,21 @@ def get_rand_params(fixed):
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
 
-        nNi = 3 # max number of Nitrogen types
-        nP = 3 # max number of Phosphorus types
-        nC = 3 # max number of Carbon types
+        nNi = 1 # max number of Nitrogen types
+        nP = 1 # max number of Phosphorus types
+        nC = 1 # max number of Carbon types
 
-        amp = 0.001
-        freq = 0.001
-        phase = 0.0
-        pulse = 0.001
-        flux = 'yes'
-
-        disturb = 0.00001
-        m = 0.01
+        m = 0.0
         speciation = 0.01
-        maintmax = 0.001
-
-        reproduction = 'fission'
-        alpha = 0.99
-        barriers = 0
-
-        #r = choice([1, 10, 100]) # max resource particles flowing in per time step
+        maintmax = 0.01
+        alpha = 0.98
         r = 1
 
-        gmax = 0.9 # max specific growth rate
+        gmax = 0.5 # max specific growth rate
         rmax = 100 # max resource particle size
         dmax = 0.1 # max dispersal probability
-        pmax = 0.001 # max probability of going active
-        mmax = 0.001 # max maintenance factor
+        pmax = 0.1 # max probability of going active
+        mmax = 0.01 # max maintenance factor
 
 
     elif fixed is False:
@@ -79,34 +64,22 @@ def get_rand_params(fixed):
 
 
         #width = randint(6, 10)
-        width = 40
+        width = 100
 
         #height = randint(10, 100)
-        height = 40
+        height = 100
 
         #barriers = randint(0, 2)
         barriers = 0
 
-        pulse = np.random.uniform(0.01, 1.0)
-        flux = choice(['yes'])
-
-        # Sine wave: y(t) = amplitude * sin(2 * pi * frequency * t + phase)
-        # if phi = 0, then there will be 0 amplitude at time 0
-        amp = np.random.uniform(0.05, 0.5) # A
-        freq = np.random.uniform(0.01, 0.1) # f
-        phase = randint(0, 16) # 0 = in phase; 16 = entirely out of phase
-
-        disturb = np.random.uniform(0.001, 0.1)
         alpha = np.random.uniform(0.95, 0.99)
-        reproduction = choice(['fission'])
-
         speciation = np.random.uniform(0.01, 0.1)
         m = np.random.uniform(0.0001, 0.001) # m = probability of immigration
         m = 0.0
 
         r = randint(1, 10) #resource particles flowing in per time step
-        r = 1
         rmax = randint(10, 100) # maximum resource particle size
+        rmax = 100
 
         nNi = randint(1, 10) # max number of Nitrogen types
         nP = randint(1, 10) # max number of Phosphorus types
@@ -129,6 +102,6 @@ def get_rand_params(fixed):
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
-    return [width, height, alpha, motion, reproduction, speciation, \
-            seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, \
-            flux, pulse, phase, disturb, envgrads, barriers, rates, pmax, mmax]
+    return [width, height, alpha, motion, speciation, \
+            seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, \
+            envgrads, rates, pmax, mmax]

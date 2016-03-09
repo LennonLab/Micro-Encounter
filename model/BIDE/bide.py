@@ -8,6 +8,10 @@ import math
 #import decimal
 import time
 
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/spatial")
+import spatial
+
+
 limit = 0.1
 
 def coord(d):
@@ -369,7 +373,114 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
 
 
 
-def consume(field, R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
+def consume(field, R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID,
+    IXs, IYs, w, h, GD, N_RD, P_RD, C_RD, DispD, GrowthList, MaintList, N_RList,
+    P_RList, C_RList, DispList, ADList, enz_action = True):
+
+
+    if Sp_IDs == []:
+        return [Sp_IDs, I_IDs, Qs, GrowthList, MaintList, ADList]
+
+    n = len(I_IDs)
+    for i in range(n):
+
+        x1 = IXs[i]
+        y1 = IYs[i]
+
+        r = len(R_IDs)
+        Try = r
+        ct = 0
+
+        while ct < Try:
+            ct += 1
+
+            j = randint(0, r-1)
+            x2 = RXs[j]
+            y2 = RYs[j]
+
+            dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+            if dist <= min(Qs[i]) * 1000:
+                state = ADList[i]
+                if state == 'd':
+                    ADList[i] == 'a'
+
+                # The food
+                R_val = R_Vals[j]
+                R_type = R_Types[j]
+
+                rtype = list(R_type)
+                R = rtype.pop(0)
+                rnum = int(''.join(rtype))
+
+                # The individual's cell quota
+                Q = Qs[i]
+                QN = Q[0]
+                QP = Q[1]
+                QC = Q[2]
+
+                # the species
+                sp = Sp_IDs[i]
+                mu = GD[sp]
+
+                Q = 0.0
+                efficiency = 0.0
+
+                if R == 'N':
+                    efficiency = N_RList[i][rnum]
+                    Q = QN
+
+                if R == 'P':
+                    efficiency = P_RList[i][rnum]
+            	    Q = QP
+
+                if R == 'C':
+                    efficiency = C_RList[i][rnum]
+                    Q = QC
+
+                mu = mu * efficiency
+
+                if R_val > (mu * Q): # Increase cell quota
+                    R_val = R_val - (mu * Q)
+                    Q += (mu * Q)
+
+                else:
+                    Q += R_val
+                    R_val = 0.0
+
+                if Q > 1.0:
+                    R_val = Q - 1.0
+                    Q = 1.0
+                    R_Vals[j] = R_val
+
+
+                if R_val <= 0.0:
+                    R_Vals.pop(j)
+                    R_Types.pop(j)
+                    R_IDs.pop(j)
+                    RXs.pop(j)
+                    RYs.pop(j)
+
+                if Q < 0.0:
+                    print Q, QN, QP, QC
+                    sys.exit()
+
+                if R == 'N':
+                    Qs[i] = [Q, QP, QC]
+                if R == 'P':
+                    Qs[i] = [QN, Q, QC]
+                if R == 'C':
+                    Qs[i] = [QN, QP, Q]
+
+    return [R_Types, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID, IXs,
+        IYs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList]
+
+
+
+
+
+
+def consume_boxes(field, R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
         Qs, I_IDs, I_ID, I_Xs, I_Ys, w, h, GD, N_RD, P_RD, C_RD, DispD,
         GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList, enz_action = True):
 
@@ -509,7 +620,7 @@ def consume(field, R_Types, R_Vals, R_IDs, R_ID, R_Xs, R_Ys, Sp_IDs,
 
 
 
-def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
+def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
         N_RD, P_RD, C_RD, MD, MFD, RPD, EnvD, envGs, nN, nP, nC, GList, MList,
         NList, PList, CList, DList, ADList):
 
@@ -517,6 +628,7 @@ def reproduce(repro, spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD,
         return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList,
                 NList, PList, CList, DList, ADList]
 
+    repro = 'fission'
     if repro == 'fission':
 
         n = len(IDs)

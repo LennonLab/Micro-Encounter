@@ -47,7 +47,7 @@ def nextFrame(arg):
     global P_RD, C_RD, DispDict, MaintDict, gmax, dmax, maintmax, IndIDs, Qs
     global IndID, IndX, IndY, Ind_scatImage, SpeciesIDs
     global RTypes, RX, RY, RID, RIDs, RVals, EnvD, resource_scatImage, ct1, Mu, Maint
-    global motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, sim
+    global motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, sim
     global N, ct, RDens, RDiv, RRich, T, R, LowerLimit, prod_i, prod_q, alpha
     global Ts, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, GrowthList, MaintList, N_RList, P_RList
     global MUs, MAINTs, PRODNs, PRODPs, PRODCs, Gs, Ms, NRs, PRs, CRs, Ds
@@ -101,7 +101,7 @@ def nextFrame(arg):
     RTypes, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.consume(enzyme_field, RTypes, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, N_RD, P_RD, C_RD, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
 
     # Reproduction
-    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.reproduce(reproduction, speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
 
     # maintenance
     SpeciesIDs, X, Y, IndIDs, Qs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
@@ -248,7 +248,7 @@ def nextFrame(arg):
             if u0 == max(Rates):
                 sim += 1
 
-                width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates, pmax, mmax = rp.get_rand_params(fixed)
+                width, height, alpha, motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
                 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, N_RD, P_RD, C_RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
                 enzyme_field = [0]*(width*height)
 
@@ -257,8 +257,8 @@ def nextFrame(arg):
 
 
 ################ Randomly chosen variables ##################################
-fixed = False
-width, height, alpha, motion, reproduction, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, flux, pulse, phase, disturb, envgrads, barriers, Rates, pmax, mmax = rp.get_rand_params(fixed)
+fixed = True
+width, height, alpha, motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
 u0 = Rates[0]
 
 #######################  Lists & Dictionaries  #########################
