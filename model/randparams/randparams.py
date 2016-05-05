@@ -27,16 +27,12 @@ def get_rand_params(fixed):
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
 
-        nNi = 1 # max number of Nitrogen types
-        nP = 1 # max number of Phosphorus types
-        nC = 1 # max number of Carbon types
-
         m = 0.0
         speciation = 0.01
         alpha = 0.98
-        r = 10
+        r = 1
 
-        gmax = 0.1 # max specific growth rate
+        gmax = 0.5 # max specific growth rate
         maintmax = 0.1*gmax
 
         rmax = 100 # max resource particle size
@@ -71,17 +67,11 @@ def get_rand_params(fixed):
         rmax = randint(10, 100) # maximum resource particle size
         rmax = 100
 
-        nNi = randint(1, 10) # max number of Nitrogen types
-        nP = randint(1, 10) # max number of Phosphorus types
-        nC = randint(1, 10) # max number of Carbon types
-
         num_envgrads = randint(1, 10)
         for i in range(num_envgrads):
             x = np.random.uniform(0, width)
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
-
-        #tp_max = np.random.uniform(0.001, 0.1) # maximum probability of transitioning at random from dormant to active (i.e., Scout hypothesis)
 
         gmax = np.random.uniform(0.05, 0.5)
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
@@ -93,5 +83,5 @@ def get_rand_params(fixed):
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
     return [width, height, alpha, motion, speciation, \
-            seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, \
+            seedCom, m, r, rmax, gmax, maintmax, dmax, \
             envgrads, rates, pmax, mmax]

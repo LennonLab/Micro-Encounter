@@ -43,29 +43,29 @@ def nextFrame(arg):
     """ Function called for each successive animation frame; arg is the frame number """
 
     global mmax, pmax, ADs, ADList, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth
-    global fixed, p, BurnIn, t, num_sims, width, height, Rates, GrowthDict, N_RD
-    global P_RD, C_RD, DispDict, MaintDict, gmax, dmax, maintmax, IndIDs, Qs
-    global IndID, IndX, IndY, Ind_scatImage, SpeciesIDs
-    global RTypes, RX, RY, RID, RIDs, RVals, EnvD, resource_scatImage, ct1, Mu, Maint
-    global motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, sim
-    global N, ct, RDens, RDiv, RRich, T, R, LowerLimit, prod_i, prod_q, alpha
-    global Ts, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, GrowthList, MaintList, N_RList, P_RList
-    global MUs, MAINTs, PRODNs, PRODPs, PRODCs, Gs, Ms, NRs, PRs, CRs, Ds
-    global C_RList, DispList, envgrads, MainFactorDict, RPFDict, enzyme_field, u0
+    global fixed, p, BurnIn, t, num_sims, width, height, Rates, GrowthDict, RD
+    global DispDict, MaintDict, gmax, dmax, maintmax, IndIDs, Qs, EVList
+    global IndID, IndX, IndY, Ind_scatImage, SpeciesIDs, TLList
+    global RX, RY, RID, RIDs, RVals, EnvD, resource_scatImage, Mu, Maint
+    global motion, speciation, seedCom, m, r, rmax, sim
+    global N, ct, ct1, RDens, RDiv, RRich, T, R, LowerLimit, prod_i, prod_q, alpha
+    global Ts, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, GrowthList, MaintList, RList
+    global MUs, MAINTs, PRODNs, PRODPs, PRODCs, Gs, Ms, Ds
+    global DispList, envgrads, MainFactorDict, RPFDict, enzyme_field, u0
 
     ct += 1
     plot_system = 'yes'
 
     # Inflow of resources
-    RTypes, RVals, RX, RY,  RIDs, RID = bide.ResIn(RTypes, RVals, RX, RY,  RID, RIDs, r, rmax, nNi, nP, nC, width, height, u0)
+    RList, RVals, RX, RY,  RIDs, RID = bide.ResIn(RList, RVals, RX, RY,  RID, RIDs, r,  rmax, width, height, u0)
 
     # Immigration
     SpeciesIDs, IndX, IndY,  MaintDict, MainFactorDict, RPFDict, EnvD, GrowthDict,\
-    DispDict, IndIDs, IndID, Qs, N_RD, P_RD, C_RD, GrowthList, MaintList, N_RList, P_RList,\
-    C_RList, DispList, ADList = bide.immigration(mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
+    DispDict, IndIDs, IndID, Qs, RD, GrowthList, MaintList, DispList, ADList, EVList,\
+    TLList = bide.immigration(mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
     SpeciesIDs, IndX, IndY, width, height, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads,\
-    GrowthDict, DispDict, IndIDs, IndID, Qs, N_RD, P_RD, C_RD, nNi, nP, nC, u0,\
-    alpha, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList, ct)
+    GrowthDict, DispDict, IndIDs, IndID, Qs, RD, u0, alpha, GrowthList, MaintList, \
+    DispList, ADList, EVList, TLList, ct)
 
     # dispersal
     #Lists = [SpeciesIDs, IndIDs, IndID, Qs, DispDict, GrowthList, MaintList, \
@@ -75,41 +75,33 @@ def nextFrame(arg):
     #MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.movement('individual',\
     #motion, Lists, IndX, IndY, width, height, u0)
 
-
     # Chemotaxis
     SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, \
-    MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.chemotaxis(\
-    speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
-    DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, \
-    nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    MaintList, RList, DispList, ADList = bide.chemotaxis(speciation, SpeciesIDs,\
+    Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
+    DispDict, RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, \
+    GrowthList, MaintList, TLList, DispList, ADList)
 
-
-    # Forage
-    #SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList,\
-    #N_RList, P_RList, C_RList, DispList, ADList = bide.density_forage(RVals, RX, RY,\
-    #speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict,\
-    #DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi,\
-    #nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
 
     PRODI = 0
-    p1, TNQ1, TPQ1, TCQ1 = metrics.getprod(Qs)
+    p1 = len(Qs)
 
     # Modify enzyme field
-    enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
+    #enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
 
     # Consume
-    RTypes, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.consume(enzyme_field, RTypes, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, N_RD, P_RD, C_RD, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs = bide.consume(enzyme_field, RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, TLList, EVList)
 
     # Reproduction
-    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, DispDict, N_RD, P_RD, C_RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, nNi, nP, nC, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    #SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList, TLList, DispList, ADList = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY,  width, height, GrowthDict, DispDict, RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, GrowthList, MaintList, TLList, DispList, ADList)
 
     # maintenance
-    SpeciesIDs, X, Y, IndIDs, Qs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, N_RList, P_RList, C_RList, DispList, ADList)
+    SpeciesIDs, X, Y, IndIDs, Qs, GrowthList, MaintList, TLList, DispList, ADList = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, RList, DispList, ADList)
 
     # transition to or from dormancy
     Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList = bide.transition(SpeciesIDs, IndIDs, Qs, GrowthList, MaintList, MainFactorDict, RPFDict,  ADList)
 
-    p2, TNQ2, TPQ2, TCQ2 = metrics.getprod(Qs)
+    p2 = len(Qs)
     PRODI = p2 - p1
 
     ax = fig.add_subplot(111)
@@ -149,7 +141,7 @@ def nextFrame(arg):
             elif ADList[i] == 'd':
                 colorlist.append('0.3')
 
-            ind_sizelist.append(min(Qs[i]) * 1000)
+            ind_sizelist.append(Qs[i] * 1000)
 
 
         resource_scatImage = ax.scatter(RX, RY, s = res_sizelist, c = 'w', edgecolor = 'SpringGreen', lw = 0.6, alpha=0.8)
@@ -181,15 +173,14 @@ def nextFrame(arg):
         PRODIs.append(PRODI)
 
         # Examining the resource RAD
-        if len(RTypes) > 0:
-            RRAD, Rlist = bide.GetRAD(RTypes)
-            RDens = len(RTypes)/(height*width)
-            RDiv = float(metrics.Shannons_H(RRAD))
-            RRich = len(Rlist)
+        if len(RList) > 0:
+            RDens = len(RList)/(height*width)
+            #RDiv = float(metrics.Shannons_H(RRAD))
+            #RRich = len(Rlist)
 
         RDENs.append(RDens)
-        RDIVs.append(RDiv)
-        RRICHs.append(RRich)
+        #RDIVs.append(RDiv)
+        #RRICHs.append(RRich)
 
         R = len(RX)
         Rs.append(R)
@@ -225,10 +216,10 @@ def nextFrame(arg):
             print sim, ' N:', int(round(mean(Ns))), 'dormant:', round(mean(ADs),3), 'distance:', round(mean(AVG_DIST))
             OUT1 = open(GenPath + '/SimData.csv','a')
 
-            outlist = [sim, motion, mean(PRODIs), r, nNi, nP, nC, rmax, gmax, maintmax, dmax,\
-            alpha, seedCom, u0, width-0.2, height, N, m, mean(RDENs), mean(RDIVs), mean(RRICHs),\
-            T, R, speciation, mean(Gs), mean(Ms), mean(NRs), mean(PRs), mean(CRs), mean(Ds),\
-            mean(SpecGrowth), mean(SpecDisp), mean(SpecMaint), mean(AVG_DIST), mean(ADs)]
+            outlist = [sim, motion, mean(PRODIs), r, rmax, gmax, maintmax, dmax, alpha, \
+            seedCom, u0, width-0.2, height, N, m, mean(RDENs), mean(RDIVs), mean(RRICHs),\
+            T, R, speciation, mean(Gs), mean(Ms), mean(Rs), mean(Ds), mean(SpecGrowth), \
+            mean(SpecDisp), mean(SpecMaint), mean(AVG_DIST), mean(ADs)]
 
             outlist = str(outlist).strip('[]')
 
@@ -243,11 +234,11 @@ def nextFrame(arg):
 
             RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, ct1, T, R, PRODI, PRODQ = [0]*14
 
-            ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, N_RList, \
-            P_RList, C_RList, DispList = [list([]) for _ in xrange(12)]
+            ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RList, \
+            DispList, EVList, TLList = [list([]) for _ in xrange(12)]
 
-            SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RTypes, RVals, Gs, Ms, NRs, PRs, CRs,\
-            Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(24)]
+            SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, Gs, Ms,\
+            Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(21)]
 
             p = 0
             BurnIn = 'not done'
@@ -255,8 +246,8 @@ def nextFrame(arg):
             if u0 == max(Rates):
                 sim += 1
 
-                width, height, alpha, motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
-                GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, N_RD, P_RD, C_RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+                width, height, alpha, motion, speciation, seedCom, m, r, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
+                GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}
                 enzyme_field = [0]*(width*height)
 
             ####################### REPLACE ENVIRONMENT ########################
@@ -265,19 +256,19 @@ def nextFrame(arg):
 
 ################ Randomly chosen variables ##################################
 fixed = True
-width, height, alpha, motion, speciation, seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
+width, height, alpha, motion, speciation, seedCom, m, r, rmax, gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
 u0 = Rates[0]
 
 #######################  Lists & Dictionaries  #########################
 RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, ct1, T, R, PRODI, PRODQ = [0]*14
 
-ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, N_RList, \
-P_RList, C_RList, DispList = [list([]) for _ in xrange(12)]
+ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RList, \
+DispList, EVList, TLList = [list([]) for _ in xrange(12)]
 
-SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RTypes, RVals, Gs, Ms, NRs, PRs, CRs,\
-Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(24)]
+SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
+Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(21)]
 
-GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, N_RD, P_RD, C_RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}
 enzyme_field = [0]*(width*height)
 
 num_sims, LowerLimit, sim, p = 10000, 30, 1, 0.0

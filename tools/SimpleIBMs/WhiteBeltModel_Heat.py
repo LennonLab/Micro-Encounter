@@ -7,8 +7,8 @@ from scipy import stats
 
 
 ######################### COMMUNITY SIMULATION FUNCTION ########################
-def simCOM(gens, dorm, disp, env, lgp = 0.92):
-    COM = list(np.random.logseries(lgp, 2000)) # populate the community
+def simCOM(gens, dorm, disp, env, lgp = 0.99):
+    COM = list(np.random.logseries(lgp, 1000)) # populate the community
 
     for i, microbe in enumerate(COM):
         x, y = np.random.uniform(0, 1, 2)
@@ -64,7 +64,7 @@ def getVals(Zvals, Yints, COM):
 ####################  GENERATE DATA FOR FIGURES  ###############################
 inds, num = [ [0, 0, 1, 1, 2, 2],  10]
 DormVals, DispVals, EnvVals = [ np.array(range(1, num+1)) * 0.1 ] * 3
-Zvals, Yints, gens = [ [],  [],  20000]
+Zvals, Yints, gens = [ [],  [],  1000]
 
 for i in DormVals: # rows starting from bottom
     for j in DispVals: # columns starting from left
