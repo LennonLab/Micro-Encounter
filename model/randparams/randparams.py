@@ -15,14 +15,11 @@ def get_rand_params(fixed):
 
         rates = np.array([1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001])
 
-        #motion = 'white_noise'
-        motion = 'brown_noise'
-        #motion = 'fluid'
+        motion = 'white_noise'
+        #motion = 'brown_noise'
 
-        #width = choice([5, 20, 5, 20])
-        width = 10
-        #height = int(width)
-        height = choice([5])
+        width  = 20
+        height = 20
 
         num_envgrads = 2
         for i in range(num_envgrads):
@@ -30,33 +27,18 @@ def get_rand_params(fixed):
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
 
-        nNi = 3 # max number of Nitrogen types
-        nP = 3 # max number of Phosphorus types
-        nC = 3 # max number of Carbon types
-
-        amp = 0.001
-        freq = 0.001
-        phase = 0.0
-        pulse = 0.001
-        flux = 'yes'
-
-        disturb = 0.00001
-        m = 0.01
+        m = 0.0
         speciation = 0.01
-        maintmax = 0.001
+        alpha = 0.98
+        r = 1
 
-        reproduction = 'fission'
-        alpha = 0.99
-        barriers = 0
+        gmax = 0.5 # max specific growth rate
+        maintmax = 0.1*gmax
 
-        #r = choice([1, 10, 100]) # max resource particles flowing in per time step
-        r = 100
-
-        gmax = 0.9 # max specific growth rate
-        rmax = 1000 # max resource particle size
-        dmax = 0.1 # max dispersal probability
-        pmax = 0.001 # max probability of going active
-        mmax = 0.001 # max maintenance factor
+        rmax = 100 # max resource particle size
+        dmax = 0.01 # max dispersal probability
+        pmax = 0.01 # max probability of going active
+        mmax = 100 # max maintenance factor
 
 
     elif fixed is False:
@@ -68,47 +50,22 @@ def get_rand_params(fixed):
         if motion == 'white_noise':
             rates = np.array([0.00001])
         else:
-            #rates = [choice([1.0, 0.8, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])]
-
-            #rates = np.array([1.0, 0.9, 0.8, 0.7, 0.6, 0.4, 0.2, 0.08, 0.06, 0.04, 0.02, 0.008, 0.006, 0.002])
             rates = np.array([1.0, 0.7, 0.4, 0.1, 0.07, 0.04, 0.01, 0.007])
-            #rates = np.array([1.0, 0.1])
-
-            #rate = 1.001
-            #rates = np.array([rate])
-
 
         #width = randint(6, 10)
-        width = 20
+        width = 100
 
         #height = randint(10, 100)
-        height = 20
+        height = 100
 
-        #barriers = randint(0, 2)
-        barriers = 0
-
-        pulse = np.random.uniform(0.01, 1.0)
-        flux = choice(['yes'])
-
-        # Sine wave: y(t) = amplitude * sin(2 * pi * frequency * t + phase)
-        # if phi = 0, then there will be 0 amplitude at time 0
-        amp = np.random.uniform(0.05, 0.5) # A
-        freq = np.random.uniform(0.01, 0.1) # f
-        phase = randint(0, 16) # 0 = in phase; 16 = entirely out of phase
-
-        disturb = np.random.uniform(0.001, 0.1)
         alpha = np.random.uniform(0.95, 0.99)
-        reproduction = choice(['fission'])
-
         speciation = np.random.uniform(0.01, 0.1)
-        m = np.random.uniform(0.01, 0.1) # m = probability of immigration
+        m = np.random.uniform(0.0001, 0.001) # m = probability of immigration
+        m = 0.0
 
-        r = randint(10, 100) #resource particles flowing in per time step
-        rmax = randint(100, 1000) # maximum resource particle size
-
-        nNi = randint(1, 10) # max number of Nitrogen types
-        nP = randint(1, 10) # max number of Phosphorus types
-        nC = randint(1, 10) # max number of Carbon types
+        r = randint(1, 10) #resource particles flowing in per time step
+        rmax = randint(10, 100) # maximum resource particle size
+        rmax = 100
 
         num_envgrads = randint(1, 10)
         for i in range(num_envgrads):
@@ -116,17 +73,15 @@ def get_rand_params(fixed):
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
 
-        #tp_max = np.random.uniform(0.001, 0.1) # maximum probability of transitioning at random from dormant to active (i.e., Scout hypothesis)
-
         gmax = np.random.uniform(0.05, 0.5)
         dmax = np.random.uniform(0.01, 0.1) # probability of dispersing in a given time step
-        maintmax = np.random.uniform(0.0001*gmax, 0.001*gmax) # maximum metabolic maintanence cost
-        pmax = np.random.uniform(0.0001, 0.01) # max probability of going active
-        mmax = np.random.uniform(10, 100) # max maintenance 'factor'
+        maintmax = np.random.uniform(0.001*gmax, 0.01*gmax) # maximum metabolic maintanence cost
+        pmax = np.random.uniform(0.5, 0.9) # max probability of going active
+        mmax = np.random.uniform(1, 2) # max maintenance 'factor'
 
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
-    return [width, height, alpha, motion, reproduction, speciation, \
-            seedCom, m, r, nNi, nP, nC, rmax, gmax, maintmax, dmax, amp, freq, \
-            flux, pulse, phase, disturb, envgrads, barriers, rates, pmax, mmax]
+    return [width, height, alpha, motion, speciation, \
+            seedCom, m, r, rmax, gmax, maintmax, dmax, \
+            envgrads, rates, pmax, mmax]
