@@ -13,10 +13,9 @@ def get_rand_params(fixed):
 
     if fixed is True:
 
-        rates = np.array([1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001])
-
-        motion = 'white_noise'
-        #motion = 'brown_noise'
+        #rates = np.array([1.0, 0.5, 0.1, 0.05, 0.01, 0.005, 0.001])
+        #rates = [round(10**np.random.uniform(-2, 0.0), 4)]
+        rates = np.array([0.1])
 
         width  = 20
         height = 20
@@ -27,30 +26,23 @@ def get_rand_params(fixed):
             y = np.random.uniform(0, height)
             envgrads.append([x, y])
 
-        m = 0.0
+        m = 0.5
         speciation = 0.01
-        alpha = 0.98
-        r = 1
+        alpha = 0.99
+        r = 10
 
-        gmax = 0.5 # max specific growth rate
-        maintmax = 0.1*gmax
+        gmax = 0.2 # max specific growth rate
+        maintmax = 0.01
 
-        rmax = 100 # max resource particle size
+        rmax = 200 # max resource particle size
         dmax = 0.01 # max dispersal probability
         pmax = 0.01 # max probability of going active
-        mmax = 100 # max maintenance factor
+        mmax = 10 # max maintenance factor
 
 
     elif fixed is False:
 
-        #motion = choice(['fluid', 'white_noise']) # 'fluid', 'unidirectional'
-        motion = 'fluid'
-        #motion = 'brown_noise'
-
-        if motion == 'white_noise':
-            rates = np.array([0.00001])
-        else:
-            rates = np.array([1.0, 0.7, 0.4, 0.1, 0.07, 0.04, 0.01, 0.007])
+        rates = np.array([1.0, 0.7, 0.4, 0.1, 0.07, 0.04, 0.01, 0.007])
 
         #width = randint(6, 10)
         width = 100
@@ -67,7 +59,7 @@ def get_rand_params(fixed):
         rmax = randint(10, 100) # maximum resource particle size
         rmax = 100
 
-        num_envgrads = randint(1, 10)
+        num_envgrads = randint(1, 2)
         for i in range(num_envgrads):
             x = np.random.uniform(0, width)
             y = np.random.uniform(0, height)
@@ -82,6 +74,6 @@ def get_rand_params(fixed):
 
         # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
-    return [width, height, alpha, motion, speciation, \
+    return [width, height, alpha, speciation, \
             seedCom, m, r, rmax, gmax, maintmax, dmax, \
             envgrads, rates, pmax, mmax]

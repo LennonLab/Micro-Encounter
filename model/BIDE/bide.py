@@ -4,12 +4,23 @@ from random import randint, choice
 import numpy as np
 import sys
 import math
-#from math import modf
-#import decimal
-import time
+import os
+
+mydir = os.path.expanduser("~/")
+sys.path.append(mydir + "GitHub/Micro-Encounter/model/EnzymeField")
+import EnzymeField as field
 
 
 limit = 0.1
+
+
+def randSplit(word, splits):
+    for splitLen in splits:
+        if splitLen > len(word):
+            break
+        yield word[:splitLen]
+        word = word[splitLen::]
+
 
 def coord(d):
     return float(np.random.uniform(0.1*d, 0.9*d))
@@ -46,7 +57,18 @@ def GetRAD(vector):
     return RAD, unique # the rad and the specieslist
 
 
-def ResIn(RList, Vals, Xs, Ys, ID, IDs, numr, rmax, w, h, u0):
+def ResIn(ct, RList, Vals, Xs, Ys, ID, IDs, numr, rmax, w, h, u0, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+
+    Ymean = float(np.random.uniform(0.1*h, 0.9*h))
+    Xmean = float(np.random.uniform(0.1*w, 0.9*w))
+
+    listlen = [len(RList), len(Vals), len(Xs), len(Ys), len(IDs)]
+    if min(listlen) != max(listlen):
+        print ct, 'In ResIn (top)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
+
 
     for r in range(numr):
         x = np.random.binomial(1, u0)
@@ -58,22 +80,66 @@ def ResIn(RList, Vals, Xs, Ys, ID, IDs, numr, rmax, w, h, u0):
             IDs.append(ID)
             ID += 1
 
-            r = choice(['A', 'B', 'C'])
+            if ResourceComplexityLevel == 1:
+                r = 'a'
+
+            elif ResourceComplexityLevel == 2:
+                r = choice(['a', 'b', 'c'])
+
+            elif ResourceComplexityLevel == 3:
+
+                a = ['a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a-a']
+                b = ['bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb-bbb']
+                c = ['cccccc-cccccc-cccccc-cccccc-cccccc-cccccc-cccccc-cccccc-cccccc']
+                r = choice([a, b, c])
+
             RList.append(r)
 
-            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-            Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
+            if SpatialComplexityLevel < 3:
+
+                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+                Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
+
+            elif SpatialComplexityLevel == 3:
+
+                std = 0.01
+                vals = np.random.normal([Ymean, Xmean], std)
+
+                if vals[0] < 0.1*h:
+                    vals[0] = 0.1*h
+                elif vals[0] > 0.9*h:
+                    vals[0] = 0.9*h
+
+                if vals[1] < 0.1*w:
+                    vals[1] = 0.1*w
+                elif vals[1] > 0.9*w:
+                    vals[1] = 0.9*w
+
+                Ys.append(vals[0])
+                Xs.append(vals[1])
+
+    listlen = [len(RList), len(Vals), len(Xs), len(Ys), len(IDs)]
+    if min(listlen) != max(listlen):
+        print 'In ResIn (bottom)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
     return [RList, Vals, Xs, Ys, IDs, ID]
 
 
 
-def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, MD, MFD, RPD,
-        EnvD, envGs, GD, DispD, IDs, ID, Qs, RD, u0, alpha, GList, MList, DList, ADList, EVList, TLList, ct):
+def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, MD,
+    MFD, RPD, EnvD, envGs, GD, DispD, IDs, ID, Qs, RD, u0, alpha, GList, MList,
+    DList, ADList, EVList, TLList, ct, TrophicComplexityLevel, SpatialComplexityLevel,
+    ResourceComplexityLevel, BiologicalComplexityLevel):
 
-    listlen = [len(Sp), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
+    Ymean = float(np.random.uniform(0.1*h, 0.9*h))
+    Xmean = float(np.random.uniform(0.1*w, 0.9*w))
+
+    listlen = [len(Sp), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
-        print 'In immigration (top)'
+        print ct, 'In immigration (top)'
         print 'min(listlen) != max(listlen)'
         print listlen
         sys.exit()
@@ -93,13 +159,32 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
 
             Sp.append(prop)
 
-            Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
-            Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
+            if SpatialComplexityLevel < 3:
+                Ys.append(float(np.random.uniform(0.1*h, 0.9*h)))
+                Xs.append(float(np.random.uniform(0.1*w, 0.9*w)))
+
+            elif SpatialComplexityLevel == 3:
+
+                std = 0.01
+                vals = np.random.normal([Ymean, Xmean], std)
+
+                if vals[0] < 0.1*h:
+                    vals[0] = 0.1*h
+                elif vals[0] > 0.9*h:
+                    vals[0] = 0.9*h
+
+                if vals[1] < 0.1*w:
+                    vals[1] = 0.1*w
+                elif vals[1] > 0.9*w:
+                    vals[1] = 0.9*w
+
+                Ys.append(vals[0])
+                Xs.append(vals[1])
 
             IDs.append(ID)
             ID += 1
 
-            tl = choice(['A', 'B', 'C'])
+            tl = choice(['a', 'b', 'c'])
             TLList.append(tl)
 
             Q = float(np.random.uniform(0.05, 0.5))
@@ -108,7 +193,8 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
             if prop not in GD:
 
                 # species growth rate
-                GD[prop] = np.random.uniform(g_max/10, g_max)
+                g = np.random.uniform(g_max/10, g_max)
+                GD[prop] = g
 
                 # species maintenance
                 MD[prop] = np.random.uniform(m_max/10, m_max)
@@ -124,14 +210,14 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
 
                 # species environmental gradient optima
                 glist = []
-                for g in envGs:
+                for e in envGs:
                     x = np.random.uniform(0.0, w)
                     y = np.random.uniform(0.0, h)
                     glist.append([x,y])
                 EnvD[prop] = glist
 
                 # Resource use efficiency
-                RD[prop] = np.random.uniform(0.1, 1.0, 1)
+                RD[prop] = [1-g]
 
             ADList.append('a')
 
@@ -152,12 +238,12 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
             DList.append(i)
 
 
-            listlen = [len(Sp), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
-            if min(listlen) != max(listlen):
-                print 'In immigration'
-                print 'min(listlen) != max(listlen)'
-                print listlen
-                sys.exit()
+    listlen = [len(Sp), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In immigration (bottom)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
 
     return [Sp, Xs, Ys, MD, MFD, RPD, EnvD, GD, DispD, IDs, ID, Qs,
@@ -167,11 +253,20 @@ def immigration(mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, M
 
 
 
-def maintenance(Sp_IDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GrowthList,
-        MaintList, TLList, DList, ADList):
+
+def maintenance(Sp_IDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintList,
+    DList, ADList, EVList, TLList, TrophicComplexityLevel, SpatialComplexityLevel,
+    ResourceComplexityLevel, BiologicalComplexityLevel):
+
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MaintList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In maintenance (top)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
     if Sp_IDs == []:
-        return [Sp_IDs, Xs, Ys, IDs, Qs, GrowthList, MaintList, TLList, DList, ADList]
+        return [Sp_IDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList]
 
     n = len(IDs)
     for j in range(n):
@@ -181,28 +276,36 @@ def maintenance(Sp_IDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GrowthList,
         val = Qs[i]
         val -= MaintList[i] # maintanence influenced by species id
 
-        if val <= MaintList[i]*0.00001:   # starved
+        if val <= MaintList[i]*0.001:   # starved
 
             Qs.pop(i)
             Sp_IDs.pop(i)
             IDs.pop(i)
             Xs.pop(i)
             Ys.pop(i)
-            GrowthList.pop(i)
+            GList.pop(i)
             MaintList.pop(i)
             TLList.pop(i)
             DList.pop(i)
             ADList.pop(i)
+            EVList.pop(i)
 
         else: Qs[i] = val
 
-    return [Sp_IDs, Xs, Ys, IDs, Qs, GrowthList, MaintList, TLList, DList, ADList]
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MaintList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In maintenance (bottom)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
+
+    return [Sp_IDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList]
 
 
 
 
 
-def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
+def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
 
     if Sp_IDs == []:
         return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
@@ -230,6 +333,11 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
                 MaintList[i] = MaintList[i]/mfd # metabolic maintenance decreases
                 ADList[i] = 'd'
 
+            if Q < 0.0:
+                print 'line 321: Q:', Q
+                sys.exit()
+
+
     return [Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList]
 
 
@@ -237,7 +345,15 @@ def transition(Sp_IDs, IDs, Qs, GrowthList, MaintList, MFD, RPD, ADList):
 
 
 def consume(field, RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID,
-    IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList, enz_action = True):
+    IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, enz_action = True):
+
+
+    listlen = [len(Sp_IDs), len(Qs), len(I_IDs), len(IXs), len(IYs), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In consume (top)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
     if Sp_IDs == [] or R_IDs == []:
         return [RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs]
@@ -267,19 +383,13 @@ def consume(field, RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID
             j = randint(0, r-1)
 
             # The food
-            R = RList[j]
+            R = RList[j][0]
+            Rtype = R[0]
 
-            #print tl, R
+            if ResourceComplexityLevel == 1:
+                tl = str(Rtype)
 
-            if tl == R:
-                r = str()
-
-                if R == 'A':
-                    R = 'B'
-                    r = 'B'
-                elif R == 'B':
-                    R = 'C'
-                    r = 'C'
+            if tl == Rtype: # individual is capable of consuming the resource type
 
                 x2 = RXs[j]
                 y2 = RYs[j]
@@ -290,38 +400,96 @@ def consume(field, RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID
                 res_radius = R_val
 
                 if dist <= ind_radius + res_radius:
+                    ct = Try
 
-                    # The individual's cell quota
-                    Q = Qs[i]
+                    if '-' in R:
+                        # useful stackoverflow answers:
+                        # http://stackoverflow.com/questions/32212998/split-string-by-n-when-n-is-random
+                        # http://stackoverflow.com/questions/19954593/python-checking-a-strings-first-and-last-character
+                        # http://stackoverflow.com/questions/5188792/how-to-check-a-string-for-specific-characters
 
-                    # The species
-                    sp = Sp_IDs[i]
-                    mu = GD[sp]
-                    efficiency = EVList[i][0]
-                    mu = mu * efficiency
+                        pos = randint(0, len(R))
+                        eat = 'no'
 
-                    # Increase cell quota & decrease resource particle size
-                    if R_val > (mu * Q):
-                        R_val = R_val - (mu * Q)*10
-                        Q += (mu * Q)
+                        if R[pos] == '-':
+                            pieces = randSplit(R, randint(0,len(R)))
 
-                    else:
-                        Q += R_val
-                        R_val = 0.0
+                            for index, piece in enumerate(pieces):
+                                if piece.startswith('-'):
+                                    piece = piece[1:]
 
-                    if Q > 1.0:
-                        R_val = R_val + (Q - 1.0)
-                        Q = 1.0
-                        R_Vals[j] = R_val
+                                if piece.endswith('-'):
+                                    piece = piece[:-1]
 
-                    if R_val <= 0.0:
-                        R_Vals.pop(j)
-                        RList.pop(j)
-                        R_IDs.pop(j)
-                        RXs.pop(j)
-                        RYs.pop(j)
+                            if '-' in piece[0] and '-' in piece[1]:
+                                RList[j] = pieces[0]
+                                R_Vals[j] = pieces[0].count(Rtype)
 
-                    Qs[i] = Q
+                                RList.append(pieces[1])
+                                R_Vals[j] = pieces[1].count(Rtype)
+                                R_IDs.append(R_ID)
+                                R_ID += 1
+                                RXs.append(x2)
+                                RYs.append(y2)
+
+
+                            elif '-' not in piece[0]:
+                                eat = 'yes'
+                                RList[j] = pieces[1]
+                                R_Vals[j] = pieces[1].count(Rtype)
+
+                                R = piece[0]
+                                R_val = pieces[0].count(Rtype)
+
+                            elif '-' not in piece[1]:
+                                eat = 'yes'
+                                RList[j] = pieces[0]
+                                R_Vals[j] = pieces[0].count(Rtype)
+
+                                R = piece[1]
+                                R_val = pieces[1].count(Rtype)
+
+                            if eat == 'yes':
+
+                                # The individual's cell quota
+                                Q = Qs[i]
+
+                                # The species
+                                sp = Sp_IDs[i]
+                                mu = GD[sp]
+                                efficiency = EVList[i][0]
+                                mu = mu * efficiency
+
+                                # Increase cell quota & decrease resource particle size
+                                if R_val > (mu * Q):
+                                    R_val = R_val - (mu * Q)*10
+                                    Q += (mu * Q)
+
+                                else:
+                                    Q += R_val
+                                    R_val = 0.0
+
+                                if Q > 1.0:
+                                    R_val = R_val + (Q - 1.0)
+                                    Q = 1.0
+                                    R_Vals[j] = R_val
+
+                                if R_val <= 0.0:
+                                    R_Vals.pop(j)
+                                    RList.pop(j)
+                                    R_IDs.pop(j)
+                                    RXs.pop(j)
+                                    RYs.pop(j)
+
+                                Qs[i] = Q
+
+
+    listlen = [len(Sp_IDs), len(Qs), len(I_IDs), len(IXs), len(IYs), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In consume (bottom)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
     return [RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs]
 
@@ -330,21 +498,27 @@ def consume(field, RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs, I_IDs, I_ID
 
 
 def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
-    RPD, EnvD, envGs, GList, MList, RList, DList, ADList):
+    RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
 
-    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList)]
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
-        print 'In reproduce'
+        print 'In reproduce (top)'
         print 'min(listlen) != max(listlen)'
         print listlen
         sys.exit()
 
 
     if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, RList, DList, ADList]
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList]
+
 
     n = len(IDs)
     for j in range(n):
+
+        if len(TLList) != len(EVList):
+            print j, n, "len(TLList) != len(EVList) 2"
+            print len(TLList), len(EVList)
+            sys.exit()
 
         i = randint(0, len(IDs)-1)
 
@@ -354,18 +528,19 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
 
         Q = Qs[i]
         pq = float(np.mean(Q))
+
+        if Q < 0.0:
+            print 'line 456: Q:', Q
+            sys.exit()
+
         p = np.random.binomial(1, pq)
 
+        p = 1
         if p == 1: # individual is large enough to reproduce
 
             spID = Sp_IDs[i]
             X = Xs[i]
             Y = Ys[i]
-
-            # A cost for reproducing
-            r = Qs[i]
-            r -= MList[i]*r
-            Qs[i] = r
 
             pg = []
             sp_opts = EnvD[spID]
@@ -378,15 +553,20 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
 
 
             if np.mean(pg) > 1 or np.mean(pg) < 0:
-                print pg
+                print 'pg:', pg
                 sys.exit()
 
             p = np.mean(pg)
             p = np.random.binomial(1, p)
+
+            p = 1
             if p == 1: # the environment is suitable for reproduction
 
                 Qs[i] = Q/2
                 Qs.append(Q/2)
+
+                tll = TLList[i]
+                TLList.append(tll)
 
                 ID += 1
                 IDs.append(ID)
@@ -396,7 +576,7 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
                 if p == 1:
 
                     # speciate
-                    spID_new = spID**3
+                    spID_new = float(spID)**3
 
                     # new species growth rate
                     p = np.random.binomial(1, 0.25)
@@ -414,14 +594,14 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
 
                     # species environmental gradient optima
                     glist = []
-                    for j, g in enumerate(envGs):
+                    for jj, g in enumerate(envGs):
                         p = np.random.binomial(1, 0.25)
                         if p == 1:
                             x = np.random.uniform(0.0, w)
                             y = np.random.uniform(0.0, h)
                         else:
-                            x = EnvD[spID][j][0]
-                            y = EnvD[spID][j][1]
+                            x = EnvD[spID][jj][0]
+                            y = EnvD[spID][jj][1]
 
                         glist.append([x, y])
                         EnvD[spID_new] = glist
@@ -439,20 +619,20 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
                     spID = spID_new
 
                 means = GD[spID]
-                i = GetIndParam(means)
-                GList.append(i)
+                ii = GetIndParam(means)
+                GList.append(ii)
 
                 means = MD[spID]
-                i = GetIndParam(means)
-                MList.append(i)
+                ii = GetIndParam(means)
+                MList.append(ii)
 
                 means = RD[spID]
-                i = GetIndParam(means)
-                RList.append(i)
+                ii = GetIndParam(means)
+                EVList.append(ii)
 
                 means = DispD[spID]
-                i = GetIndParam(means)
-                DList.append(i)
+                ii = GetIndParam(means)
+                DList.append(ii)
 
                 Sp_IDs.append(spID)
                 ADList.append('a')
@@ -467,62 +647,148 @@ def reproduce(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
                 elif newY > h: newY = h - limit
                 Ys.append(newY)
 
-    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, RList, DList, ADList]
+
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In reproduce (bottom)'
+        print 'min(listlen) != max(listlen)'
+        sys.exit()
+
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList]
 
 
 
 
-def chemotaxis(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, MFD,
-        RPD, EnvD, envGs, GList, MList, RList, DList, ADList):
 
-    if Sp_IDs == []:
-        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, RList, DList, ADList]
+
+def res_dispersal(ct, RList, Vals, Xs, Ys, ID, IDs, numr, rmax, w, h, u0, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+
+    if IDs == []:
+        return [RList, Vals, Xs, Ys, ID, IDs]
 
     n = len(IDs)
     for j in range(n):
 
         i = randint(0, len(IDs)-1)
 
-        state = ADList[i]
-        if state == 'd':
-            continue
+        Ys[i] = float(np.random.uniform(0.1*h, 0.9*h))
+        Xs[i] = float(np.random.uniform(0.1*w, 0.9*w))
+
+    return [RList, Vals, Xs, Ys, ID, IDs]
+
+
+
+
+
+def dispersal(spec, Sp_IDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, MFD,
+        RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In dispersal (top)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
+
+    if Sp_IDs == []:
+        return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList]
+
+    n = len(IDs)
+    for j in range(n):
+
+        i = randint(0, len(IDs)-1)
 
         spID = Sp_IDs[i]
         X = Xs[i]
         Y = Ys[i]
 
-        sp_opts = EnvD[spID]
 
-        for g, opt in enumerate(sp_opts):
-            x, y = opt
-            dist = DispD[spID]
+        if SpatialComplexityLevel == 1:
+            Ys[i] = float(np.random.uniform(0.1*h, 0.9*h))
+            Xs[i] = float(np.random.uniform(0.1*w, 0.9*w))
 
-            if g == 0:
+        state = ADList[i]
+        if state == 'd':
+            continue
+
+        if SpatialComplexityLevel == 2:
+            dist = DispD[spID]*10
+
+            r = Qs[i]
+
+            if r < 0.0:
+                print 'line 653: Q:', r
+                sys.exit()
+
+            if Qs[i] >= MList[i]*dist:
+
                 # A cost for active dispersal
-
-                r = Qs[i]
-                r -= MList[i]*dist*r
+                r -= MList[i]*dist
                 Qs[i] = r
 
-            if x > X:
-                X += dist
+                vd = choice([-1, 1])
+                hd = choice([-1, 1])
 
-            elif x < X:
-                X -= dist
+                X += hd*dist
+                Y += vd*dist
 
-            if y > Y:
-                Y += dist
+                if X > w: X = w
+                elif X < 0: X = 0
+                if Y > h: Y = h
+                elif Y < 0: Y = 0
 
-            elif y < Y:
-                Y -= dist
+                Xs[i] = X
+                Ys[i] = Y
 
-            if X > w: X = w
-            elif X < 0: X = 0
-            if Y > h: Y = h
-            elif Y < 0: Y = 0
+        elif SpatialComplexityLevel == 3:
+            sp_opts = EnvD[spID]
 
-            Xs[i] = X
-            Ys[i] = Y
+            move = 'n'
+            for g, opt in enumerate(sp_opts):
+                x, y = opt
+                dist = DispD[spID]
+
+                if g == 0:
+
+                    # A cost for active dispersal
+                    if Qs[i] >= MList[i]*dist:
+
+                        r = Qs[i]
+                        r -= MList[i]*dist
+                        if r < 0.0:
+                            print 'line 689: Q:', r
+                            sys.exit()
+
+                        Qs[i] = r
+                        move = 'y'
+
+                if move == 'y':
+                    if x > X:
+                        X += dist
+
+                    elif x < X:
+                        X -= dist
+
+                    if y > Y:
+                        Y += dist
+
+                    elif y < Y:
+                        Y -= dist
+
+                    if X > w: X = w
+                    elif X < 0: X = 0
+                    if Y > h: Y = h
+                    elif Y < 0: Y = 0
+
+                Xs[i] = X
+                Ys[i] = Y
+
+    listlen = [len(Sp_IDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
+    if min(listlen) != max(listlen):
+        print 'In dispersal (bottom)'
+        print 'min(listlen) != max(listlen)'
+        print listlen
+        sys.exit()
 
 
-    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, RList, DList, ADList]
+    return [Sp_IDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList]
