@@ -5,159 +5,146 @@ import numpy as np
 import os
 import sys
 
-#import statsmodels.stats.api as sms
-#import statsmodels.api as sm
-import statsmodels.formula.api as smf
-#from statsmodels.sandbox.regression.predstd import wls_prediction_std
-from statsmodels.stats.outliers_influence import summary_table
-
-
-mydir = os.path.expanduser('~/Desktop/MicroEncounter')
+mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
+dat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
+dat = dat.convert_objects(convert_numeric=True).dropna()
 
-#dat = pd.read_csv(mydir + '/results/simulated_data/examples/2015_01_19/SimData.csv')
-dat = pd.read_csv(mydir + '/SimData/SimData.csv')
+#-------------------------DATA FILTERS------------------------------------------
 
-#print 'here'
-#sys.exit()
+#dat = dat[dat['SpatialComplexityLevel'] == 3]
+#dat = dat[dat['ResourceComplexityLevel'] == 1]
+dat = dat[dat['TrophicComplexityLevel'] != 2]
+#dat = dat[dat['IncomingResAgg'] < 0.2]
+#dat = dat[dat['MaxMetMaint'] < 0.005]
+#dat = dat[dat['ResInflow'] < 18]
 
-dat = dat[np.isfinite(dat['resource.concentration'])]
-dat = dat[np.isfinite(dat['resource.particles'])]
-dat = dat[np.isfinite(dat['dorm.freq'])]
-dat = dat[np.isfinite(dat['avg.dist'])]
+#-------------------------------------------------------------------------------
 
-dat = dat[dat['avg.dist'] > 0]
-#dat = dat[dat['resource.concentration'] > 0]
-#dat = dat[dat['resource.particles'] > 0]
-#dat = dat[dat['barriers'] == 0]
+ComplexityLevels = ['res', 'troph', 'spatial']
 
-dat['dorm'] = dat['dorm.freq']
-dat['res_conc'] = np.log10(dat['resource.concentration'])
-dat['res_N'] = np.log10(dat['resource.particles'])
-dat['avg_dist'] = dat['avg.dist']
-
-Dorm = dat['dorm'].tolist()
-ResConc = dat['res_conc'].tolist()
-NRes = dat['res_N'].tolist()
-AvgDist = dat['avg_dist'].tolist()
-
-#### plot figure ###############################################################
-fs = 8 # fontsize
-fig = plt.figure()
-
-#### Itau vs. Tau #################################################################
-fig.add_subplot(2, 2, 1)
-
-xlab = 'Percent Dormant'
-#f2 = smf.ols('res_conc ~ dorm + I(dorm ** 2.0)', dat).fit()
-f2 = smf.ols('res_conc ~ dorm', dat).fit()
-#print f2.summary(),'\n\n'
-#f2 = smf.ols('Itau ~ tau', d).fit()
-
-a, b  =  f2.params
-p1, p2 = f2.pvalues
-#a, b, c =  f2.params
-#p1, p2, p3 = f2.pvalues
-r2 = round(f2.rsquared, 2)
-
-st, data, ss2 = summary_table(f2, alpha=0.05)
-fitted = data[:,2]
-pred_mean_se = data[:,3]
-pred_mean_ci_low, pred_mean_ci_upp = data[:,4:6].T
-pred_ci_low, pred_ci_upp = data[:,6:8].T
-
-dorm2, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp = zip(*sorted(zip(Dorm, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp)))
-plt.scatter(dorm2, ResConc, color = 'b', alpha = 0.4 , s = 5, linewidths = 0.0, edgecolor = 'k')
-plt.fill_between(dorm2, pred_ci_low, pred_ci_upp, color='r', lw=0.0, alpha=0.1)
-plt.fill_between(dorm2, pred_mean_ci_low, pred_mean_ci_upp, color='r', lw=0.0, alpha=0.3)
-plt.plot(dorm2, fitted, color = 'r', ls='--', lw=0.5, alpha=0.9)
-
-ylab = 'Resource\nconcentration'
-plt.ylabel(ylab, fontsize=fs+5)
-plt.xlim(0, 1)
-#plt.ylim(0, 7)
-plt.xlabel(xlab, fontsize=fs+5)
-plt.tick_params(axis='both', which='major', labelsize=fs)
-
-#plt.text(4, 0.5,  r'$r^2$' + '=' +str(r2)+', '+r'$p$' + '=' +str(round(p2, 3)), fontsize=fs+1, color='k')
+for level in ComplexityLevels:
 
 
-
-#### Number of resource particles vs. % Dormant ################################
-
-fig.add_subplot(2, 2, 2)
-#f2 = smf.ols('res_N ~ dorm + I(dorm ** 2.0)', dat).fit()
-f2 = smf.ols('res_N ~ dorm', dat).fit()
-#print f2.summary(),'\n\n'
-#f2 = smf.ols('Ptau ~ tau', d).fit()
-#print f2.summary()
-
-a, b  =  f2.params
-p1, p2 = f2.pvalues
-#a, b, c =  f2.params
-#p1, p2, p3 = f2.pvalues
-r2 = round(f2.rsquared, 2)
-
-st, data, ss2 = summary_table(f2, alpha=0.05)
-fitted = data[:,2]
-pred_mean_se = data[:,3]
-pred_mean_ci_low, pred_mean_ci_upp = data[:,4:6].T
-pred_ci_low, pred_ci_upp = data[:,6:8].T
-
-dorm2, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp = zip(*sorted(zip(Dorm, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp)))
-plt.scatter(dorm2, NRes, color = 'b', alpha = 0.4 , s = 5, linewidths = 0.0, edgecolor = 'k')
-plt.fill_between(dorm2, pred_ci_low, pred_ci_upp, color='r', lw=0.0, alpha=0.1)
-plt.fill_between(dorm2, pred_mean_ci_low, pred_mean_ci_upp, color='r', lw=0.0, alpha=0.3)
-plt.plot(dorm2, fitted, color = 'r', ls='--', lw=0.5, alpha=0.9)
+    #### plot figure ###############################################################
+    fs = 8 # fontsize
+    fig = plt.figure()
 
 
-plt.ylabel('Resource\nparticles', fontsize=fs+5)
-plt.xlim(0, 1)
-#plt.ylim(0, 3)
-plt.xlabel(xlab, fontsize=fs+5)
-plt.tick_params(axis='both', which='major', labelsize=fs)
+    if level == 'res':
 
-#plt.text(3.5, 0.5,  r'$r^2$' + '=' +str(r2)+', '+r'$p$' + '=' +str(round(p2, 3)), fontsize=fs+1, color='k')
+        dat1 = dat[dat['ResourceComplexityLevel'] == 1]
+        dat2 = dat[dat['ResourceComplexityLevel'] == 2]
+        dat3 = dat[dat['ResourceComplexityLevel'] == 3]
 
-####  AvgDist vs. % Dormant #################################################################
-fig.add_subplot(2, 2, 3)
+        label1 = 'No diversity, No complexity'
+        label2 = 'No complexity'
+        label3 = 'Diversity + Complexity'
 
-#f2 = smf.ols('avg_dist ~ dorm + I(dorm ** 2.0)', dat).fit()
-f2 = smf.ols('avg_dist ~ dorm', dat).fit()
-print f2.summary(),'\n'
-#sys.exit()
+    if level == 'troph':
 
-a, b  =  f2.params
-p1, p2 = f2.pvalues
-#a, b, c =  f2.params
-#p1, p2, p3 = f2.pvalues
-r2 = round(f2.rsquared, 2)
+        dat1 = dat[dat['TrophicComplexityLevel'] == 1]
+        dat2 = dat[dat['TrophicComplexityLevel'] == 2]
+        dat3 = dat[dat['TrophicComplexityLevel'] == 3]
 
+        label1 = 'No trophic complexity'
+        label2 = 'Trophic complexity'
+        label3 = 'Recycling'
 
-st, data, ss2 = summary_table(f2, alpha=0.05)
-fitted = data[:,2]
-pred_mean_se = data[:,3]
-pred_mean_ci_low, pred_mean_ci_upp = data[:,4:6].T
-pred_ci_low, pred_ci_upp = data[:,6:8].T
+    if level == 'spatial':
 
-dorm2, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp = zip(*sorted(zip(Dorm, fitted, pred_ci_low, pred_ci_upp, pred_mean_ci_low, pred_mean_ci_upp)))
-plt.scatter(dorm2, AvgDist, color = 'b', alpha = 0.4 , s = 5, linewidths = 0.0, edgecolor = 'k')
-plt.fill_between(dorm2, pred_ci_low, pred_ci_upp, color='r', lw=0.0, alpha=0.1)
-plt.fill_between(dorm2, pred_mean_ci_low, pred_mean_ci_upp, color='r', lw=0.0, alpha=0.3)
-plt.plot(dorm2, fitted, color = 'r', ls='--', lw=0.5, alpha=0.9)
+        dat1 = dat[dat['SpatialComplexityLevel'] == 1]
+        dat2 = dat[dat['SpatialComplexityLevel'] == 2]
+        dat3 = dat[dat['SpatialComplexityLevel'] == 3]
 
-ylab = 'Mean distance'
-plt.ylabel(ylab, fontsize=fs+5)
-plt.xlim(0, 1)
-plt.ylim(0, 10)
-plt.xlabel(xlab, fontsize=fs+3)
-plt.tick_params(axis='both', which='major', labelsize=fs)
-
-#plt.text(0.1, 2.2,  r'$r^2$' + '=' +str(r2)+', '+r'$p$' + '=' +str(round(p2,3)), fontsize=fs+1, color='k')
+        label1 = 'White noise'
+        label2 = 'Aggregated w/ Random walks'
+        label3 = 'Aggregated w/ chemotaxis'
 
 
-#### Final Format and Save #####################################################
-plt.subplots_adjust(wspace=0.4, hspace=0.4)
-plt.savefig(mydir2 + 'Desktop/MicroEncounter/Figures/Fig1.png', dpi=600, bbox_inches = "tight")
-#plt.show()
+    #### PLOT 1 #################################################################
+    fig.add_subplot(2, 2, 1)
+
+    ylab = 'Dormant fraction'
+    xlab = 'Resource supply'
+
+    plt.scatter(dat1['MeanIndAgg'], dat1['MeanDormFreq'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label1)
+    plt.scatter(dat2['MeanIndAgg'], dat2['MeanDormFreq'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label2)
+    plt.scatter(dat3['MeanIndAgg'], dat3['MeanDormFreq'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label3)
+
+    plt.ylabel(ylab, fontsize=fs+5)
+    plt.xlabel(xlab, fontsize=fs+5)
+    plt.xscale('log')
+    plt.xlim(0.1, 300)
+    plt.tick_params(axis='both', which='major', labelsize=fs)
+    plt.legend(bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=3, mode="expand",prop={'size':fs})
+
+
+    #### PLOT 2 ################################
+    fig.add_subplot(2, 2, 2)
+
+    ylab = 'Avg Encounters'
+    xlab = 'Resource supply'
+
+    plt.scatter(dat1['ResInflow'], dat1['MeanEncounter'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat2['ResInflow'], dat2['MeanEncounter'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat3['ResInflow'], dat3['MeanEncounter'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+
+    plt.ylabel(ylab, fontsize=fs+5)
+    plt.xlabel(xlab, fontsize=fs+5)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.ylim(0.008, 2000)
+    plt.xlim(0.1, 300)
+    plt.tick_params(axis='both', which='major', labelsize=fs)
+
+    #### PLOT 3 #################################################################
+    fig.add_subplot(2, 2, 3)
+
+    ylab = 'Avg Encounters'
+    xlab = 'Resource aggregation'
+
+    plt.scatter(dat1['MeanResAgg'], dat1['MeanEncounter'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat2['MeanResAgg'], dat2['MeanEncounter'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat3['MeanResAgg'], dat3['MeanEncounter'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+
+    plt.ylabel(ylab, fontsize=fs+5)
+    plt.xlabel(xlab, fontsize=fs+5)
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlim(0.15, 1000)
+    plt.ylim(0.01, 3000)
+    plt.tick_params(axis='both', which='major', labelsize=fs)
+
+
+    #### PLOT 4 #################################################################
+    fig.add_subplot(2, 2, 4)
+
+    ylab = 'Avg Encounters'
+    xlab = 'Individual aggregation'
+
+    plt.scatter(dat1['MeanIndAgg'], dat1['MeanEncounter'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat2['MeanIndAgg'], dat2['MeanEncounter'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+    plt.scatter(dat3['MeanIndAgg'], dat3['MeanEncounter'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+
+    plt.ylabel(ylab, fontsize=fs+5)
+    plt.xlabel(xlab, fontsize=fs+5)
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlim(0.15, 1000)
+    plt.ylim(0.9, 100)
+    plt.tick_params(axis='both', which='major', labelsize=fs)
+
+    #### Final Format and Save #####################################################
+    plt.subplots_adjust(wspace=0.4, hspace=0.4)
+
+    if level == 'spatial':
+        plt.savefig(mydir + '/results/figures/Encounters-SpatialComplexity-NoTrophicLevel2.png', dpi=600, bbox_inches = "tight")
+    elif level == 'res':
+        plt.savefig(mydir + '/results/figures/Encounters-ResourceComplexity-NoTrophicLevel2.png', dpi=600, bbox_inches = "tight")
+    elif level == 'troph':
+        plt.savefig(mydir + '/results/figures/Encounters-TrophicComplexity-NoTrophicLevel2.png', dpi=600, bbox_inches = "tight")
+
+    #plt.show()
+    plt.close()
