@@ -49,6 +49,52 @@ def nearest_neighbor(xlist1, xlist2, ylist1, ylist2, q=1):
 
 
 
+def morisitas(Xs, Ys, w, h):
+
+    '''
+    From http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/dispindmorisita.html
+
+    The Morisita index of dispersion is defined as (Morisita 1959, 1962):
+
+    Imor = n * (sum(xi^2) - sum(xi)) / (sum(xi)^2 - sum(xi))
+
+    where xi is the count of individuals in sample i, and n is the number of samples (i = 1, 2, ..., n).
+    Imor has values from 0 to n. In uniform (hyperdispersed) patterns its value falls between 0 and 1, in clumped patterns it falls between 1 and n.
+    For increasing sample sizes (i.e. joining neighbouring quadrats), Imor goes to n as the quadrat size approaches clump size.
+    For random patterns, Imor = 1 and counts in the samples follow Poisson frequency distribution.
+    '''
+
+    Imor = float()
+
+    Boxes = [list([]) for _ in xrange(w*h)]
+
+    index = 0
+    for i, val in enumerate(Xs):
+        X = int(round(Xs[i]))
+        Y = int(round(Ys[i]))
+
+        index = int(round(X + (Y * w)))
+
+        if index > len(Boxes) - 1:
+            index = len(Boxes) - 1
+        elif index < 0:
+            index = 0
+
+        Boxes[index].append(val)
+
+    a = 0
+    b = 0
+
+    for i, box in enumerate(Boxes):
+        a += len(box)**2
+        b += len(box)
+
+    Imor = len(Boxes) * (a - b)/(b**2 - b)
+
+    return Imor
+
+
+
 
 
 def avg_dist(xlist1, xlist2, ylist1, ylist2, q=1):

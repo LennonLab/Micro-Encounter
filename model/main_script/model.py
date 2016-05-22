@@ -3,40 +3,35 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
 import statsmodels.tsa.stattools as sta
+from random import choice, randint
 from math import isnan
 
 import numpy as np
-from numpy import mean
+from numpy import mean, var
 import sys
 import os
 
 mydir = os.path.expanduser("~/")
-sys.path.append(mydir + "GitHub/Micro-Encounter/model/metrics")
-import metrics
 sys.path.append(mydir + "GitHub/Micro-Encounter/model/bide")
 import bide
 sys.path.append(mydir + "GitHub/Micro-Encounter/model/randparams")
 import randparams as rp
 sys.path.append(mydir + "GitHub/Micro-Encounter/model/spatial")
 import spatial
-sys.path.append(mydir + "GitHub/Micro-Encounter/model/EnzymeField")
-import EnzymeField as field
-
 
 GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
+
+'''
 OUT1 = open(GenPath + 'SimData.csv','w')
-
-print>>OUT1, 'RowID, ind.production, res.inflow, N.types, P.types, C.types, max.res.val, \
-              max.growth.rate, max.met.maint, max.active.dispersal, logseries.a, \
-              starting.seed, width, height, viscosity, total.abundance, immigration.rate, \
-              resource.concentration, \
-              resource.particles, speciation, avg.per.capita.growth, avg.per.capita.maint, \
-              avg.per.capita.N.efficiency, avg.per.capita.P.efficiency, \
-              avg.per.capita.C.efficiency, avg.per.capita.active.dispersal, \
-              amplitude, flux, frequency, phase, disturbance, spec.growth, \
-              spec.disp, spec.maint, avg.dist, dorm.freq'
+print>>OUT1,'RowID,MeanIndProduction,VarIndProduction,ResInflow,MaxGrowthRate,MaxMetMaint,MaxActiveDispersal,LogseriesA,StartingSeed,\
+width,height,MeanTotalAbundance,VarTotalAbundance,ImmigrationRate,MeanResourceConcentration,VarResourceConcentration,\
+MeanResourceParticles,VarResourceParticles,Speciation,MeanPerCapitaGrowth,VarPerCapitaGrowth,MeanPerCapitaMaint,\
+VarPerCapitaMaint,MeanPerCapitaActiveDispersal,VarPerCapitaActiveDispersal,MeanSpecGrowth,VarSpecGrowth,\
+MeanSpecDisp,VarSpecDisp,MeanSpecMaint,VarSpecMaint,MeanAvgDist,VarAvgDist,MeanDormFreq,VarDormFreq,\
+TrophicComplexityLevel,ResourceComplexityLevel,SpatialComplexityLevel,MeanEncounter,VarEncounter,\
+IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,RunTime'
 OUT1.close()
-
+'''
 
 def nextFrame(arg):
 
@@ -47,86 +42,94 @@ def nextFrame(arg):
     global DispDict, MaintDict, gmax, dmax, maintmax, IndIDs, Qs, EVList
     global IndID, IndX, IndY, Ind_scatImage, SpeciesIDs, TLList
     global RX, RY, RID, RIDs, RVals, EnvD, resource_scatImage, Mu, Maint
-    global speciation, seedCom, m, r, rmax, sim
-    global N, ct, ct1, RDens, RDiv, RRich, T, R, LowerLimit, prod_i, prod_q, alpha
+    global speciation, seedCom, m, r, sim
+    global N, ct, RDens, RDiv, RRich, T, R, LowerLimit, prod_i, prod_q, alpha
     global Ts, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, GrowthList, MaintList, RList
     global MUs, MAINTs, PRODNs, PRODPs, PRODCs, Gs, Ms, Ds
     global DispList, envgrads, MainFactorDict, RPFDict, enzyme_field, u0
 
-    global TrophicComplexityLevel, SpatialComplexityLevel
+    global TrophicComplexityLevel, SpatialComplexityLevel, encList, std
     global ResourceComplexityLevel, BiologicalComplexityLevel
+    global Ragg, Iagg, static
 
     ct += 1
-    plot_system = 'yes'
+    plot_system = 'no'
 
     listlen = [len(SpeciesIDs), len(Qs), len(IndIDs), len(IndX), len(IndY), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
         print ct, 'In model.py'
         print 'min(listlen) != max(listlen)'
         print listlen
-
         sys.exit()
 
+    encounters = 0
 
     # Inflow of resources
-    RList, RVals, RX, RY,  RIDs, RID = bide.ResIn(ct, RList, RVals, RX, RY,  RID,\
-    RIDs, r,  rmax, width, height, u0, TrophicComplexityLevel, \
-    SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
+    RList, RVals, RX, RY,  RIDs, RID = bide.ResIn(std, ct, RList, RVals, RX, RY,  RID,\
+    RIDs, r, width, height, u0, TrophicComplexityLevel, SpatialComplexityLevel, \
+    ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Immigration
     SpeciesIDs, IndX, IndY,  MaintDict, MainFactorDict, RPFDict, EnvD, GrowthDict,\
     DispDict, IndIDs, IndID, Qs, RD, GrowthList, MaintList, DispList, ADList, EVList,\
-    TLList = bide.immigration(mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
+    TLList = bide.immigration(std, mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
     SpeciesIDs, IndX, IndY, width, height, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads,\
     GrowthDict, DispDict, IndIDs, IndID, Qs, RD, u0, alpha, GrowthList, MaintList, \
     DispList, ADList, EVList, TLList, ct, TrophicComplexityLevel, \
     SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Dispersal
-    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, \
-    MaintList, DispList, ADList, EVList, TLList = bide.dispersal(speciation, SpeciesIDs,\
-    Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
-    DispDict, RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, \
-    GrowthList, MaintList, DispList, ADList, EVList, TLList, TrophicComplexityLevel, \
-    SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
+    if SpatialComplexityLevel < 3:
+        SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, \
+        MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.dispersal(speciation, SpeciesIDs,\
+	Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
+        DispDict, RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, \
+        GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID, TrophicComplexityLevel, \
+        SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
+
+    elif SpatialComplexityLevel == 3:
+        RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList = bide.chemotaxis(RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID,
+        IndX, IndY, width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, TLList, EVList,
+        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Resource Dispersal
     if SpatialComplexityLevel == 1:
         RList, RVals, RX, RY, RID, RIDs = bide.res_dispersal(ct, RList, RVals, RX, RY, RID, RIDs, r,\
-        rmax, width, height, u0, TrophicComplexityLevel, SpatialComplexityLevel, \
+        width, height, u0, TrophicComplexityLevel, SpatialComplexityLevel, \
         ResourceComplexityLevel, BiologicalComplexityLevel)
 
     PRODI = 0
     p1 = len(Qs)
 
     # Modify enzyme field
-    enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
+    #enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
 
     # Consume
-    RList, R_Vals, R_IDs, R_ID, RXs, RYs, Sp_IDs, Qs = bide.consume(enzyme_field, \
+    RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, encounters = bide.consume(enzyme_field, \
     RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, \
     width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, \
     TLList, EVList, TrophicComplexityLevel, SpatialComplexityLevel, \
     ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Reproduction
-    SpeciesIDs, Qs, IndIDs, ID, X, Y, GrowthDict, DispDict, GrowthList, MaintList, \
-    DispList, ADList, EVList, TLList = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, \
+    SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, MaintList, \
+    DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, \
     IndX, IndY,  width, height, GrowthDict, DispDict, RD, MaintDict, MainFactorDict, \
-    RPFDict, EnvD, envgrads, GrowthList, MaintList, DispList, ADList, EVList, TLList, \
+    RPFDict, EnvD, envgrads, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, \
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
     BiologicalComplexityLevel)
 
     # maintenance
-    SpeciesIDs, X, Y, IndIDs, Qs, GrowthList, MaintList, DispList, ADList,\
-    EVList, TLList = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
-    RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, DispList, ADList, EVList, TLList,\
+    SpeciesIDs, IndX, IndY, IndIDs, Qs, GrowthList, MaintList, DispList, ADList,\
+    EVList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
+    RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID,\
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
     BiologicalComplexityLevel)
 
     # transition to or from dormancy
-    Sp_IDs, IDs, Qs, GrowthList, MaintList, ADList = bide.transition(SpeciesIDs, \
-    IndIDs, Qs, GrowthList, MaintList, MainFactorDict, RPFDict,  ADList, \
+    SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList, IndIDs, Qs, GrowthList, \
+    MaintList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.transition(SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList,\
+    IndIDs, Qs, MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, MainFactorDict, RPFDict, \
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
     BiologicalComplexityLevel)
 
@@ -135,19 +138,39 @@ def nextFrame(arg):
 
     ax = fig.add_subplot(111)
     plt.tick_params(axis='both', which='both', bottom='off', top='off', \
-    left='off', right='off', labelbottom='off', labelleft='off')
+        left='off', right='off', labelbottom='off', labelleft='off')
 
     N = len(IndIDs)
+
+    if N == 0 or N >= 1000:
+
+        TrophicComplexityLevel = choice([1,2,3]) #
+        SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+        ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
+        BiologicalComplexityLevel = 2
+
+        RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
+        ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RVals, \
+        DispList, EVList, TLList = [list([]) for _ in xrange(12)]
+
+        SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
+        Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
+
+        p = 0
+        BurnIn = 'not done'
+
+    Ns.append(N)
     rr = len(RIDs)
     numD = ADList.count('d')
 
+    pD = 0.0
     if N > 0:
-        Title = ['Individuals consume resources, grow, reproduce, and die in complex resource-limited environment.\n \
-        N: '+str(N)+', Resources: '+str(rr)+', ct: '+str(ct)+', %dormant: '+str(round((numD/N)*100, 2))]
-    else:
-        Title = ['Individuals consume resources, grow, reproduce, and die in complex resource-limited environment.\n \
-        N: '+str(N)+', Resources: '+str(rr)+', ct: '+str(ct)+', %dormant: '+str(0.0)]
+        pD = round((numD/N*100), 2)
 
+    Title = ['Active individuals (red) consume resources, grow, reproduce, go dormant (gray) and die in complex resource-limited environment.\n \
+Resource complexity: ' + str(ResourceComplexityLevel) + ',  Trophic complexity: ' + str(TrophicComplexityLevel) + ',  \
+Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Resources: '+str(rr)+',  ct: '+str(ct)+ ', \
+%Dormant: '+str(pD) + '\n# of inflowing resources: ' + str(r) + ', Aggregation: ' + str(round(std,2))]
 
     txt.set_text(' '.join(Title))
     ax.set_ylim(0, height)
@@ -164,7 +187,7 @@ def nextFrame(arg):
         res_sizelist = []
 
         for val in RVals:
-            res_sizelist.append(val*10)
+            res_sizelist.append(val*200)
 
         for i, val in enumerate(SpeciesIDs):
             if ADList[i] == 'a':
@@ -176,18 +199,17 @@ def nextFrame(arg):
 
 
         resource_scatImage = ax.scatter(RX, RY, s = res_sizelist, c = 'w',
-                    edgecolor = 'SpringGreen', lw = 0.9, alpha=0.8)
+                    edgecolor = 'SpringGreen', lw = 2.0, alpha=0.7)
 
         Ind_scatImage = ax.scatter(IndX, IndY, s = ind_sizelist, c = colorlist,
                     edgecolor = '0.2', lw = 0.2, alpha=0.8)
 
-    Ns.append(N)
+    if len(Ns) >= 100:
+        BurnIn = 'done'
+        Ns = []
 
-    #if N == 0 and BurnIn == 'not done':
-    #    Ns = [Ns[-1]] # only keep the most recent N value
-    #    BurnIn = 'done'
-
-    if len(Ns) >= 100 and ct > 200:
+    '''
+    if len(Ns) >= 50:
 
         if BurnIn == 'not done':
             AugmentedDickeyFuller = sta.adfuller(Ns)
@@ -199,33 +221,40 @@ def nextFrame(arg):
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
+    '''
 
 
     if BurnIn == 'done':
 
         PRODIs.append(PRODI)
 
-        # Examining the resource RAD
         if len(RList) > 0:
             RDens = len(RList)/(height*width)
 
         RDENs.append(RDens)
         R = len(RX)
         Rs.append(R)
+        encList.append(encounters)
 
         if N >= 1:
 
-            if R >= 1:
-                q = min([10, R])
-                avg_dist = spatial.avg_dist(IndX, RX, IndY, RY, q)
-                avg_dist = spatial.nearest_neighbor(IndX, RX, IndY, RY, q)
+            if N >= 2:
+                Imor = spatial.morisitas(IndX, IndY, width, height)
+                Iagg.append(Imor)
 
-                AVG_DIST.append(avg_dist)
+            if R >= 1:
+                q = min([20, R])
+
+                #avg_dist1 = spatial.avg_dist(IndX, RX, IndY, RY, q)
+                avg_dist2 = spatial.nearest_neighbor(IndX, RX, IndY, RY, q)
+                AVG_DIST.append(avg_dist2)
+
+                if R >= 2:
+                    Rmor = spatial.morisitas(RX, RY, width, height)
+                    Ragg.append(Rmor)
 
             spD = DispDict.values()
             spM = MaintDict.values()
-            #spMF = MainFactorDict.values()
-            #spRPF = RPFDict.values()
             spG = GrowthDict.values()
 
             SpecDisp.append(mean(spD))
@@ -240,37 +269,46 @@ def nextFrame(arg):
             ADs.append(numD/len(ADList))
 
 
-        if len(Ns) > 100:
+        if len(Ns) >= 20:
 
-            print sim, ' N:', int(round(mean(Ns))), 'dormant:', round(mean(ADs),3), 'distance:', round(mean(AVG_DIST))
+            print sim, 'r:', r, 'R:', int(round(mean(Rs))), 'N:', int(round(mean(Ns))), \
+            '%Dormant:', round(mean(ADs),3), 'Encounters:', round(mean(encList),2), 'Spatial:', SpatialComplexityLevel, \
+            'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel, \
+            'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
 
             OUT1 = open(GenPath + '/SimData.csv','a')
 
-            lengths = [len(PRODIs), len(RDENs), len(Gs), len(Ms), len(Rs), len(Ds), len(SpecGrowth), len(SpecDisp), len(SpecMaint), len(AVG_DIST), len(ADs)]
-            print 'min(lengths):', min(lengths)
-            print lengths
-
-            outlist = [sim, mean(PRODIs), r, rmax, gmax, maintmax, dmax, alpha, \
-            seedCom, u0, width-0.2, height, N, m, mean(RDENs),\
-            T, R, speciation, mean(Gs), mean(Ms), mean(Rs), mean(Ds), mean(SpecGrowth), \
-            mean(SpecDisp), mean(SpecMaint), mean(AVG_DIST), mean(ADs)]
+            outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, alpha, seedCom, \
+            width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
+            speciation, mean(Gs), var(Gs), mean(Ms), var(Ms), mean(Ds), var(Ds), \
+            mean(SpecGrowth), var(SpecGrowth), mean(SpecDisp), var(SpecDisp), \
+            mean(SpecMaint),  var(SpecMaint), mean(AVG_DIST), var(AVG_DIST), \
+            mean(ADs), var(ADs), TrophicComplexityLevel, ResourceComplexityLevel, \
+            SpatialComplexityLevel, mean(encList), var(encList), std, mean(Iagg), \
+            var(Iagg), mean(Ragg), var(Ragg),ct]
 
             outlist = str(outlist).strip('[]')
+            outlist = str(outlist).strip('')
 
             print>>OUT1, outlist
             OUT1.close()
 
-            ct1 += 1
             Rates = np.roll(Rates, -1, axis=0)
             u0 = Rates[0]
 
-            RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, ct1, T, R, PRODI, PRODQ = [0]*14
+            if static == 'no':
+                TrophicComplexityLevel = choice([1,2,3]) #
+                SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+                ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
+                BiologicalComplexityLevel = 2
+
+            RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
 
             ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RVals, \
             DispList, EVList, TLList = [list([]) for _ in xrange(12)]
 
-            SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, Gs, Ms, Ds, Rs,\
-            PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(20)]
+            SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
+            Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
 
             p = 0
             BurnIn = 'not done'
@@ -278,8 +316,8 @@ def nextFrame(arg):
             if u0 == max(Rates):
                 sim += 1
 
-                width, height, alpha, speciation, seedCom, m, r, rmax, \
-                gmax, maintmax, dmax, envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
+                width, height, alpha, speciation, seedCom, m, r, \
+                gmax, maintmax, dmax, envgrads, Rates, pmax, mmax, std = rp.get_rand_params(fixed)
 
                 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict,\
                 EnvD = {}, {}, {}, {}, {}, {}, {}, {}
@@ -295,34 +333,32 @@ def nextFrame(arg):
 
 fixed = True
 
-TrophicComplexityLevel = 1 #
-
-SpatialComplexityLevel = 2 # goes up to 3
-
-ResourceComplexityLevel = 2 # goes up to 3 but needs enzyme breakdown
-
-BiologicalComplexityLevel = 1
+TrophicComplexityLevel = 1 #choice([1,2,3]) #
+SpatialComplexityLevel = 1 #choice([1,2,3]) # goes up to 3
+ResourceComplexityLevel = 1 #choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
+BiologicalComplexityLevel = 2
 
 ################ Randomly chosen variables ##################################
 
-width, height, alpha, speciation, seedCom, m, r, rmax, gmax, maintmax, dmax,\
-envgrads, Rates, pmax, mmax = rp.get_rand_params(fixed)
+width, height, alpha, speciation, seedCom, m, r, gmax, maintmax, dmax,\
+envgrads, Rates, pmax, mmax, std = rp.get_rand_params(fixed)
 
 u0 = Rates[0]
 
 #######################  Lists & Dictionaries  #########################
-RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, ct1, T, R, PRODI, PRODQ = [0]*14
+RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
 
 ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RList, \
 DispList, EVList, TLList = [list([]) for _ in xrange(12)]
 
 SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
-Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs = [list([]) for _ in xrange(21)]
+Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
 
 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}
 enzyme_field = [0]*(width*height)
 
-num_sims, LowerLimit, sim, p = 10000, 30, 1, 0.0
+num_sims, LowerLimit, sim, p = 100, 30, 9045, 0.0
+static = 'no'
 BurnIn = 'not done'
 
 ############### INITIALIZE GRAPHICS ############################################
@@ -334,6 +370,6 @@ resource_scatImage = ax.scatter([0],[0], alpha=0)
 Title = ['','']
 txt = fig.suptitle(' '.join(Title), fontsize = 12)
 
-ani = animation.FuncAnimation(fig, nextFrame, frames=110, interval=40, blit=False) # 20000 frames is a long movie
+ani = animation.FuncAnimation(fig, nextFrame, frames=2000, interval=40, blit=False) # 20000 frames is a long movie
 plt.show()
-#ani.save(mydir+'/GitHub/Micro-Encounter/results/movies/examples/2015_10_05_1751_hydrobide.avi', bitrate=5000)
+#ani.save(mydir+'/GitHub/Micro-Encounter/results/movies/Micro-Encounter.avi', bitrate=2000)
