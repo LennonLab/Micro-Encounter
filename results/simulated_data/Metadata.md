@@ -52,8 +52,8 @@ A file to provide information on simulation data in any of the *SimData.csv file
 **ResourceComplexityLevel:**
 
 **SpatialComplexityLevel:** 
-1. White noise, a.k.a, uncorrelated movement. The x-y coordinates of all particles change in a uniform random way. This effectively removes spatial structure from the model, making it analogous to a thoroughly mixed chemostat or batch reactor.
-2. Aggregated resources and random walking individuals. Resources enter in clumps, which vary in size according to the standard deviation of a 2-D Gaussian distribution (see IncomingResAgg below). Individuals undergo correlated random walks, where the positions at subsequent time steps are influenced by the position at the previous time step.
+1. White noise, a.k.a, uncorrelated movement. The x-y coordinates of all particles change in a uniform random way. This effectively removes spatial structure from the model, making it analogous to a thoroughly mixed chemostat or batch reactor.  
+2. Aggregated resources and random walking individuals. Resources enter in clumps, which vary in size according to the standard deviation of a 2-D Gaussian distribution (see IncomingResAgg below). Individuals undergo correlated random walks, where the positions at subsequent time steps are influenced by the position at the previous time step.  
 3. Aggregated resources and individuals that que in on resource particles (chemotaxis of sorts). Individuals sense which consumable particles are nearest and move towards them.
 
 
