@@ -7,7 +7,7 @@ A file to provide information on simulation data in any of the *SimData.csv file
 
 **MeanIndProduction and VarIndProduction:** Time-averaged mean number of individuals produced per time step. If this number is negative, it reflects a net loss.
 
-**ResInflow:** Average number of resource particles entering the system per time step. A resource particle is a string of 1 to 100 a's, b's, or c's that is potentially separated by a hyphen.
+**ResInflow:** Maximum number of resource particles entering the system per time step. A resource particle is a string of 1 to 100 a's, b's, or c's that is potentially separated by a hyphen. The average number entering per time step is ResInflow*0.1.
 
 **MaxGrowthRate:** Maximum per capita growth rate for any species. This is the highest proportional increase in cell quota that can any individual can attain before maintenance costs are subtracted. A species specific parameter.
 
