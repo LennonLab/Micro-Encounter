@@ -25,42 +25,47 @@ A file to provide information on simulation data in any of the *SimData.csv file
 
 **Immigration rate:** Number of individuals entering the system from outside, per time step.
 
-**MeanResourceConcentration and VarResourceConcentration:** Time-averaged mean and variance for the ratio of the number of resource particles to the area of the environment.
+**MeanResourceConcentration and VarResourceConcentration:** Mean and variance in a time-series of values for the ratio of the number of resource particles to the area of the environment.
 
-**MeanResourceParticles and VarResourceParticles:** Time-averaged mean and variance for the number of resource particles in the system.
+**MeanResourceParticles and VarResourceParticles:** Mean and variance in a time-series of values quantifying the number of resource particles in the system.
 
 **Speciation:** Per capita probability of a point speciation event, the same as modeled in Hubbell's neutral theory.
 
-**MeanPerCapitaGrowth and VarPerCapitaGrowth:** Time-averaged mean values among individuals.
+**MeanPerCapitaGrowth and VarPerCapitaGrowth:** Mean and variance in a time-series of values quantifying per capita growth rates.
 
-**MeanPerCapitaMaint and VarPerCapitaMaint:** Time-averaged mean values among individuals.
+**MeanPerCapitaMaint and VarPerCapitaMaint:** Mean and variance in a time-series of per capita metabolic maintenance values.
 
-**MeanPerCapitaActiveDispersal and VarPerCapitaActiveDisperal:** Time-averaged mean values among individuals.
+**MeanPerCapitaActiveDispersal and VarPerCapitaActiveDisperal:** Mean and variance in a time-series of per capita active dispersal rates.
 
-**MeanSpecGrowth and VarSpecGrowth:** Time-averaged mean values among species.
+**MeanSpecGrowth and VarSpecGrowth:** Mean and variance in a time-series of specific growth rates.
 
-**MeanSpecDisp and VarSpecDisp:** Time-averaged mean values among species.
+**MeanSpecDisp and VarSpecDisp:** Mean and variance in a time-series of dispersal rate values.
 
-**MeanSpecMaint and VarSpecMaint:** Time-averaged mean values among species.
+**MeanSpecMaint and VarSpecMaint:** Mean and variance in a time-series of species specific metabolic maintenance values.
 
-**MeanSpecDist and VarSpecDist:** Time-averaged mean values among species.
+**MeanSpecDist and VarSpecDist:** Mean and variance in a time-series of values quantifying the species specific average distance to resource particles.
 
-**MeanDormFreq and VarDormFreq:** Time-averaged mean values among species.
+**MeanDormFreq and VarDormFreq:** Mean and variance in a time-series of values quantifying the fraction of total abundance that is dormant.
 
-**TrophicComplexityLevel:**
+**TrophicComplexityLevel:** One of three levels of trophic complexity.  
+1. A single trophic level. Species do not produce resource for other species. There is no scavenging or recycling of dead biomass.  
+2. Three trophic levels. Resource B is produced as a by-product of metabolizing resource A. Resource C, in turn, is produced as a by-product of metabolizing resource B.  
+3. Recycling of dead individuals. This level only differs from level #1 in the recycling. Dead individuals become available to all species as resource "D".
 
-**ResourceComplexityLevel:**
+**ResourceComplexityLevel:** One of three levels of resource complexity.  
+1. All resource particles are a's.  
+2. Resource particles are a's, b's, or c's.  
+3. Resource particles are a's, b's, or c's, and all particles have a structure complexity.
 
-**SpatialComplexityLevel:** 
+**SpatialComplexityLevel:** One of three levels of spatial complexity.  
 1. White noise, a.k.a, uncorrelated movement. The x-y coordinates of all particles change in a uniform random way. This effectively removes spatial structure from the model, making it analogous to a thoroughly mixed chemostat or batch reactor.  
 2. Aggregated resources and random walking individuals. Resources enter in clumps, which vary in size according to the standard deviation of a 2-D Gaussian distribution (see IncomingResAgg below). Individuals undergo correlated random walks, where the positions at subsequent time steps are influenced by the position at the previous time step.  
 3. Aggregated resources and individuals that que in on resource particles (chemotaxis of sorts). Individuals sense which consumable particles are nearest and move towards them.
-
 
 **MeanEncounter and VarEncounter:** Mean and variance in a time-series of encounter values. Here, an encounter is any event where an individual touches a consumable resource particle.
 
 **IncomingResAgg:** The standard deviation used to parameterize a 2-dimensional Gaussian distribution that determines the size of clumps that resource particles enter as.
 
-**MeanIndAgg and VarIndAgg, MeanResAgg and VarResAgg:** Time-averaged mean and variance for aggregation of individual organisms and resource particle. Quantified using Morisita's index of dispersion. A random distribution produces values close to 1. A uniform distribution produces values of 0 or less. Aggregated values produce values between 1 and the number of quadrats/windows/sections/etc.
+**MeanIndAgg and VarIndAgg, MeanResAgg and VarResAgg:** Mean and variance in a time-series of aggregation values pertaining to individual organisms and resource particles. Quantified using Morisita's index of dispersion. A random distribution produces values close to 1. A uniform distribution produces values of 0 or less. Aggregated values produce values between 1 and the number of quadrats/windows/sections/etc.
 
 **RunTime:** Number of generations a model ran. In starting with a small seed (n = 10), models hit mean reversion very quickly.
