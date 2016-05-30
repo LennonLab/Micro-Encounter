@@ -291,7 +291,7 @@ def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintLis
 
         if val <= MaintList[i]*0.001:   # starved
 
-            if TrophicComplexityLevel == 3:
+            if TrophicComplexityLevel >= 3:
                 RList.append('d')
                 RVals.append(1)
                 RXs.append(Xs[i])
@@ -530,7 +530,8 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
                         Q += (mu * Q)
                         if Q > 1.0: Q = 1.0
 
-                        if TrophicComplexityLevel == 2 and Rtype != 'c':
+                        levels = [2,4]
+                        if TrophicComplexityLevel in levels and Rtype != 'c':
                             # b's are by-products of consuming a's
                             # c's are by-products of consuming b's
 
@@ -605,7 +606,7 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
 
         if Q < 0.0:
 
-            if TrophicComplexityLevel == 3:
+            if TrophicComplexityLevel >= 3:
                 RList.append('d')
                 RVals.append(1)
                 RX.append(Xs[i])
@@ -822,7 +823,7 @@ def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, M
 
                     if r < 0.0:
 
-                        if TrophicComplexityLevel == 3:
+                        if TrophicComplexityLevel >= 3:
                             RList.append('d')
                             RVals.append(1)
                             RXs.append(Xs[i])
@@ -949,7 +950,7 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
 
             if r < 0.0:
 
-                if TrophicComplexityLevel == 3:
+                if TrophicComplexityLevel >= 3:
                     RList.append('d')
                     RVals.append(1)
                     RXs.append(IXs[i])
