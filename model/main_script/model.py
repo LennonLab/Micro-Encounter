@@ -297,7 +297,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             u0 = Rates[0]
 
             if static == 'no':
-                TrophicComplexityLevel = choice([1,2,3]) #
+                TrophicComplexityLevel = 4 #choice([1,2,3]) #
                 SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
                 ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
                 BiologicalComplexityLevel = 2
@@ -333,9 +333,9 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
 
 fixed = True
 
-TrophicComplexityLevel = 1 #choice([1,2,3]) #
-SpatialComplexityLevel = 1 #choice([1,2,3]) # goes up to 3
-ResourceComplexityLevel = 1 #choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
+TrophicComplexityLevel = 4 #choice([1,2,3]) #
+SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
 BiologicalComplexityLevel = 2
 
 ################ Randomly chosen variables ##################################
@@ -357,7 +357,7 @@ Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [li
 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}
 enzyme_field = [0]*(width*height)
 
-num_sims, LowerLimit, sim, p = 100, 30, 9045, 0.0
+num_sims, LowerLimit, sim, p = 100, 30, 1, 0.0
 static = 'no'
 BurnIn = 'not done'
 
