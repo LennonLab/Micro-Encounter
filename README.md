@@ -8,7 +8,7 @@ Exploring interactions between microbial activity, encounter dynamics, and dimen
 This repository contains preliminary open-source code, simulated data, figures, movies, & text files 
 
 ## Contributors
-[Dr. Ken (awesome) Locey](http://kenlocey.weecology.org/): Postdoctoral Fellow in the Lennon Lab, Indiana University, Bloomington.
+[Dr. Ken Locey](http://kenlocey.weecology.org/): Postdoctoral Fellow in the Lennon Lab, Indiana University, Bloomington.
 
 [Dr. Melany Fisk](http://www.units.miamioh.edu/melanyfisklab/): Professor, Department of Biology, Miami University, Oxford, Ohio.
 
