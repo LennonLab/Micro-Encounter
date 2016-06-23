@@ -21,8 +21,7 @@ import spatial
 
 GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
 
-'''
-OUT1 = open(GenPath + 'SimData.csv','w')
+OUT1 = open(GenPath + 'SimData-LowChemComplexity.csv','w')
 print>>OUT1,'RowID,MeanIndProduction,VarIndProduction,ResInflow,MaxGrowthRate,MaxMetMaint,MaxActiveDispersal,LogseriesA,StartingSeed,\
 width,height,MeanTotalAbundance,VarTotalAbundance,ImmigrationRate,MeanResourceConcentration,VarResourceConcentration,\
 MeanResourceParticles,VarResourceParticles,Speciation,MeanPerCapitaGrowth,VarPerCapitaGrowth,MeanPerCapitaMaint,\
@@ -31,7 +30,6 @@ MeanSpecDisp,VarSpecDisp,MeanSpecMaint,VarSpecMaint,MeanAvgDist,VarAvgDist,MeanD
 TrophicComplexityLevel,ResourceComplexityLevel,SpatialComplexityLevel,MeanEncounter,VarEncounter,\
 IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,RunTime'
 OUT1.close()
-'''
 
 def nextFrame(arg):
 
@@ -53,6 +51,7 @@ def nextFrame(arg):
     global Ragg, Iagg, static
 
     ct += 1
+    #print ct
     plot_system = 'no'
 
     listlen = [len(SpeciesIDs), len(Qs), len(IndIDs), len(IndX), len(IndY), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
@@ -204,11 +203,10 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
         Ind_scatImage = ax.scatter(IndX, IndY, s = ind_sizelist, c = colorlist,
                     edgecolor = '0.2', lw = 0.2, alpha=0.8)
 
-    if len(Ns) >= 100:
-        BurnIn = 'done'
-        Ns = []
+    #if len(Ns) >= 100:
+        #BurnIn = 'done'
+    #    Ns = []
 
-    '''
     if len(Ns) >= 50:
 
         if BurnIn == 'not done':
@@ -221,7 +219,6 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
-    '''
 
 
     if BurnIn == 'done':
@@ -276,7 +273,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel, \
             'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
 
-            OUT1 = open(GenPath + '/SimData.csv','a')
+            OUT1 = open(GenPath + '/SimData-LowChemComplexity.csv','a')
 
             outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, alpha, seedCom, \
             width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
@@ -297,7 +294,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             u0 = Rates[0]
 
             if static == 'no':
-                TrophicComplexityLevel = 4 #choice([1,2,3]) #
+                TrophicComplexityLevel = choice([1,2,3,4]) #
                 SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
                 ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
                 BiologicalComplexityLevel = 2
@@ -333,7 +330,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
 
 fixed = True
 
-TrophicComplexityLevel = 4 #choice([1,2,3]) #
+TrophicComplexityLevel = choice([1,2,3,4]) #
 SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
 ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
 BiologicalComplexityLevel = 2
@@ -370,6 +367,6 @@ resource_scatImage = ax.scatter([0],[0], alpha=0)
 Title = ['','']
 txt = fig.suptitle(' '.join(Title), fontsize = 12)
 
-ani = animation.FuncAnimation(fig, nextFrame, frames=2000, interval=40, blit=False) # 20000 frames is a long movie
+ani = animation.FuncAnimation(fig, nextFrame, frames=400, interval=100, blit=False) # 20000 frames is a long movie
 plt.show()
 #ani.save(mydir+'/GitHub/Micro-Encounter/results/movies/Micro-Encounter.avi', bitrate=2000)
