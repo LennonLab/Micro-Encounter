@@ -25,15 +25,15 @@ def get_rand_params(fixed):
     m = 0.0
     speciation = 0.0
     alpha = 0.99
-    r = choice([1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64]) # resource particles flowing in per time step
+    r = 6 #choice([1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64]) # resource particles flowing in per time step
 
-    gmax = np.random.uniform(0.01, 0.1) # max specific growth rate
-    maintmax = np.random.uniform(0.001, 0.005)
+    gmax = 0.2 #np.random.uniform(0.01, 0.1) # max specific growth rate
+    maintmax = 0.001 #np.random.uniform(0.001, 0.005)
 
-    dmax = np.random.uniform(0.001, 0.01)  # max dispersal probability
-    pmax = np.random.uniform(0.01, 0.1)  # max probability of going active
-    mmax = randint(20, 40)  # max maintenance factor
-    std = np.random.uniform(0.01, 0.4)
+    dmax = 0.03 #np.random.uniform(0.001, 0.01)  # max dispersal probability
+    pmax = 0.2 #np.random.uniform(0.01, 0.1)  # max probability of going active
+    mmax = 20 #randint(20, 40)  # max maintenance factor
+    std = 0.4 #np.random.uniform(0.01, 0.4)
 
     # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 

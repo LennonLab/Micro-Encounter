@@ -11,6 +11,9 @@ mydir2 = os.path.expanduser("~/")
 dat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
 dat = dat.convert_objects(convert_numeric=True).dropna()
 
+print dat.shape
+sys.exit()
+
 #-------------------------DATA FILTERS------------------------------------------
 
 #dat = dat[dat['SpatialComplexityLevel'] == 3]
@@ -21,6 +24,7 @@ dat = dat[dat['TrophicComplexityLevel'] != 2]
 #dat = dat[dat['ResInflow'] < 18]
 
 #-------------------------------------------------------------------------------
+
 
 ComplexityLevels = ['res', 'troph', 'spatial']
 

@@ -93,12 +93,12 @@ def ResIn(std, ct, RList, Vals, Xs, Ys, ID, IDs, numr, w, h, u0, TrophicComplexi
 
             elif ResourceComplexityLevel == 3:
                 # Three types of resource particles that vary in the effort/energy needed to break them down
-                r = choice(['a-', 'bb-', 'cccc-'])
+                r = choice(['a-', 'b-b-', 'c-c-c-c-'])
                 if r == 'a-':
                     n = randint(1, 40)
-                elif r == 'bb-':
+                elif r == 'b-b-':
                     n = randint(1, 20)
-                elif r == 'cccc-':
+                elif r == 'c-c-c-c-':
                     n = randint(1, 10)
 
                 r = ''.join(r for _ in xrange(n))
@@ -400,6 +400,7 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
 
         # Trophic level
         tl = TLList[i]
+        Q = Qs[i]
 
         x1 = IXs[i]
         y1 = IYs[i]
@@ -412,8 +413,8 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
 
             r = len(RIDs)
             Try = min([50, r])
-            j = randint(0, r-1)
 
+            j = randint(0, r-1)
             # The food
             R = RList[j]
 
@@ -428,7 +429,7 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
                 print 'Rtype is a hyphen'
                 sys.exit()
 
-            if ResourceComplexityLevel == 1 or ResourceComplexityLevel == 'd':
+            if ResourceComplexityLevel == 1 or Rtype == 'd':
                 tl = str(Rtype)
 
             if tl == Rtype: # individual is capable of consuming the resource type
