@@ -140,7 +140,7 @@ def ResIn(std, ct, RList, Vals, Xs, Ys, ID, IDs, numr, w, h, u0, TrophicComplexi
 
 
 
-def immigration(std, mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, MD,
+def immigration(maxgen, std, mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w, h, MD,
     MFD, RPD, EnvD, envGs, GD, DispD, IDs, ID, Qs, RD, u0, alpha, GList, MList,
     DList, ADList, EVList, TLList, ct, TrophicComplexityLevel, SpatialComplexityLevel,
     ResourceComplexityLevel, BiologicalComplexityLevel):
@@ -269,7 +269,8 @@ def immigration(std, mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs, Ys, w,
 
 def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintList,
     DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID,
-    TrophicComplexityLevel, SpatialComplexityLevel,ResourceComplexityLevel, BiologicalComplexityLevel):
+    TrophicComplexityLevel, SpatialComplexityLevel,ResourceComplexityLevel,
+    BiologicalComplexityLevel,numD):
 
     listlen = [len(SpeciesIDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MaintList), len(DList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
@@ -279,7 +280,7 @@ def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintLis
         sys.exit()
 
     if SpeciesIDs == []:
-        return [SpeciesIDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
+        return [SpeciesIDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
 
     n = len(IDs)
     for j in range(n):
@@ -311,6 +312,8 @@ def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintLis
             ADList.pop(i)
             EVList.pop(i)
 
+            numD += 1
+
         else: Qs[i] = val
 
     listlen = [len(SpeciesIDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MaintList), len(DList), len(ADList), len(EVList), len(TLList)]
@@ -320,16 +323,16 @@ def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintLis
         print listlen
         sys.exit()
 
-    return [SpeciesIDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
+    return [SpeciesIDs, Xs, Ys, IDs, Qs, GList, MaintList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
 
 
 
 
 
-def transition(SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID, MFD, RPD, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+def transition(SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID, MFD, RPD, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numD):
 
     if SpeciesIDs == []:
-        return [SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, GList, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
+        return [SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, GList, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
 
     n = len(IDs)
     for j in range(n):
@@ -367,10 +370,12 @@ def transition(SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, MaintL
                 DList.pop(i)
             	ADList.pop(i)
                 EVList.pop(i)
+
+                numD += 1
                 continue
 
 
-    return [SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, GList, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
+    return [SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, GList, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
 
 
 
@@ -429,7 +434,7 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
                 print 'Rtype is a hyphen'
                 sys.exit()
 
-            if ResourceComplexityLevel == 1 or Rtype == 'd':
+            if Rtype == 'd':
                 tl = str(Rtype)
 
             if tl == Rtype: # individual is capable of consuming the resource type
@@ -574,7 +579,8 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
 
 
 def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MFD,
-    RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+    RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs,
+    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numD):
 
     listlen = [len(SpeciesIDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
@@ -585,7 +591,7 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
 
 
     if SpeciesIDs == []:
-        return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs]
+        return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numD]
 
 
     n = len(IDs)
@@ -626,6 +632,9 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
             DList.pop(i)
             ADList.pop(i)
             EVList.pop(i)
+
+            numD += 1
+
             continue
 
         p = np.random.binomial(1, pq)
@@ -750,7 +759,7 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
         print 'min(listlen) != max(listlen)'
         sys.exit()
 
-    return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs]
+    return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numD]
 
 
 
@@ -777,7 +786,8 @@ def res_dispersal(ct, RList, Vals, Xs, Ys, ID, IDs, numr, w, h, u0, TrophicCompl
 
 
 def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, MFD,
-        RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel):
+        RPD, EnvD, envGs, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RXs,
+        RYs, RIDs, RID, TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numD):
 
     listlen = [len(SpeciesIDs), len(Qs), len(IDs), len(Xs), len(Ys), len(GList), len(MList), len(DList), len(ADList), len(EVList), len(TLList)]
     if min(listlen) != max(listlen):
@@ -843,6 +853,8 @@ def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, M
                         DList.pop(i)
                         ADList.pop(i)
                         EVList.pop(i)
+
+                        numD += 1
                         continue
 
                     Qs[i] = r
@@ -869,12 +881,14 @@ def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, M
         sys.exit()
 
 
-    return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
+    return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
+
 
 
 def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
     IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList,
-    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, enz_action = False):
+    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel,
+    numD, enz_action = False):
 
     listlen = [len(SpeciesIDs), len(Qs), len(IndIDs), len(IXs), len(IYs), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
 
@@ -885,7 +899,7 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
         sys.exit()
 
     if SpeciesIDs == [] or RIDs == []:
-        return [RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID, IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList]
+        return [RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID, IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList, numD]
 
     n = len(IndIDs)
 
@@ -970,6 +984,9 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
                 DispList.pop(i)
                 ADList.pop(i)
                 EVList.pop(i)
+
+                numD += 1
+
                 continue
 
             Qs[i] = r
@@ -1002,4 +1019,4 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
         print listlen
         sys.exit()
 
-    return [RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID, IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList]
+    return [RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID, IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList, numD]
