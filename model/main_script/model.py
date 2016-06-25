@@ -21,14 +21,14 @@ import spatial
 
 GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
 
-OUT1 = open(GenPath + 'SimData-LowChemComplexity.csv','w')
+OUT1 = open(GenPath + 'SimData.csv','w')
 print>>OUT1,'RowID,MeanIndProduction,VarIndProduction,ResInflow,MaxGrowthRate,MaxMetMaint,MaxActiveDispersal,LogseriesA,StartingSeed,\
 width,height,MeanTotalAbundance,VarTotalAbundance,ImmigrationRate,MeanResourceConcentration,VarResourceConcentration,\
 MeanResourceParticles,VarResourceParticles,Speciation,MeanPerCapitaGrowth,VarPerCapitaGrowth,MeanPerCapitaMaint,\
 VarPerCapitaMaint,MeanPerCapitaActiveDispersal,VarPerCapitaActiveDispersal,MeanSpecGrowth,VarSpecGrowth,\
 MeanSpecDisp,VarSpecDisp,MeanSpecMaint,VarSpecMaint,MeanAvgDist,VarAvgDist,MeanDormFreq,VarDormFreq,\
 TrophicComplexityLevel,ResourceComplexityLevel,SpatialComplexityLevel,MeanEncounter,VarEncounter,\
-IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,RunTime'
+IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,MeanDeaths,VarDeaths,RunTime'
 OUT1.close()
 
 def nextFrame(arg):
@@ -48,8 +48,9 @@ def nextFrame(arg):
 
     global TrophicComplexityLevel, SpatialComplexityLevel, encList, std
     global ResourceComplexityLevel, BiologicalComplexityLevel
-    global Ragg, Iagg, static
+    global Ragg, Iagg, static, maxgen, Deadlist
 
+    numDead = 0
     ct += 1
     #print ct
     plot_system = 'no'
@@ -71,7 +72,7 @@ def nextFrame(arg):
     # Immigration
     SpeciesIDs, IndX, IndY,  MaintDict, MainFactorDict, RPFDict, EnvD, GrowthDict,\
     DispDict, IndIDs, IndID, Qs, RD, GrowthList, MaintList, DispList, ADList, EVList,\
-    TLList = bide.immigration(std, mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
+    TLList = bide.immigration(maxgen, std, mmax, pmax, dmax, gmax, maintmax, seedCom, m, \
     SpeciesIDs, IndX, IndY, width, height, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads,\
     GrowthDict, DispDict, IndIDs, IndID, Qs, RD, u0, alpha, GrowthList, MaintList, \
     DispList, ADList, EVList, TLList, ct, TrophicComplexityLevel, \
@@ -80,16 +81,17 @@ def nextFrame(arg):
     # Dispersal
     if SpatialComplexityLevel < 3:
         SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, \
-        MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.dispersal(speciation, SpeciesIDs,\
+        MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.dispersal(speciation, SpeciesIDs,\
 	Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
         DispDict, RD, MaintDict, MainFactorDict, RPFDict, EnvD, envgrads, \
         GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID, TrophicComplexityLevel, \
-        SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
+        SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numDead)
 
     elif SpatialComplexityLevel == 3:
-        RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList = bide.chemotaxis(RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID,
-        IndX, IndY, width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, TLList, EVList,
-        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
+        RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GD, RD, DispD, GrowthList,\
+        MaintList, DispList, ADList, TLList, EVList, numDead = bide.chemotaxis(RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID,\
+        IndX, IndY, width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, TLList, EVList,\
+        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numDead)
 
     # Resource Dispersal
     if SpatialComplexityLevel == 1:
@@ -101,7 +103,7 @@ def nextFrame(arg):
     p1 = len(Qs)
 
     # Modify enzyme field
-    #enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
+    # enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
 
     # Consume
     RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, encounters = bide.consume(enzyme_field, \
@@ -112,25 +114,25 @@ def nextFrame(arg):
 
     # Reproduction
     SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, MaintList, \
-    DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, \
+    DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numDead = bide.reproduce(speciation, SpeciesIDs, Qs, IndIDs, IndID, \
     IndX, IndY,  width, height, GrowthDict, DispDict, RD, MaintDict, MainFactorDict, \
     RPFDict, EnvD, envgrads, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, \
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-    BiologicalComplexityLevel)
+    BiologicalComplexityLevel, numDead)
 
     # maintenance
     SpeciesIDs, IndX, IndY, IndIDs, Qs, GrowthList, MaintList, DispList, ADList,\
-    EVList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
+    EVList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
     RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID,\
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-    BiologicalComplexityLevel)
+    BiologicalComplexityLevel, numDead)
 
     # transition to or from dormancy
     SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList, IndIDs, Qs, GrowthList, \
-    MaintList, TLList, RList, RVals, RX, RY, RIDs, RID = bide.transition(SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList,\
+    MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.transition(SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList,\
     IndIDs, Qs, MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, MainFactorDict, RPFDict, \
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-    BiologicalComplexityLevel)
+    BiologicalComplexityLevel, numDead)
 
     p2 = len(Qs)
     PRODI = p2 - p1
@@ -264,7 +266,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
 
             numD = ADList.count('d')
             ADs.append(numD/len(ADList))
-
+            Deadlist.append(numDead)
 
         if len(Ns) >= 20:
 
@@ -273,7 +275,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel, \
             'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
 
-            OUT1 = open(GenPath + '/SimData-LowChemComplexity.csv','a')
+            OUT1 = open(GenPath + '/SimData.csv','a')
 
             outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, alpha, seedCom, \
             width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
@@ -282,7 +284,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             mean(SpecMaint),  var(SpecMaint), mean(AVG_DIST), var(AVG_DIST), \
             mean(ADs), var(ADs), TrophicComplexityLevel, ResourceComplexityLevel, \
             SpatialComplexityLevel, mean(encList), var(encList), std, mean(Iagg), \
-            var(Iagg), mean(Ragg), var(Ragg),ct]
+            var(Iagg), mean(Ragg), var(Ragg), mean(Deadlist), var(Deadlist), ct]
 
             outlist = str(outlist).strip('[]')
             outlist = str(outlist).strip('')
@@ -299,10 +301,10 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
                 ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
                 BiologicalComplexityLevel = 2
 
-            RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
+            RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
 
             ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RVals, \
-            DispList, EVList, TLList = [list([]) for _ in xrange(12)]
+            DispList, EVList, TLList, Deadlist = [list([]) for _ in xrange(13)]
 
             SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
             Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
@@ -314,7 +316,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
                 sim += 1
 
                 width, height, alpha, speciation, seedCom, m, r, \
-                gmax, maintmax, dmax, envgrads, Rates, pmax, mmax, std = rp.get_rand_params(fixed)
+                gmax, maintmax, dmax, envgrads, Rates, pmax, mmax, std, maxgen = rp.get_rand_params(fixed)
 
                 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict,\
                 EnvD = {}, {}, {}, {}, {}, {}, {}, {}
@@ -338,15 +340,15 @@ BiologicalComplexityLevel = 2
 ################ Randomly chosen variables ##################################
 
 width, height, alpha, speciation, seedCom, m, r, gmax, maintmax, dmax,\
-envgrads, Rates, pmax, mmax, std = rp.get_rand_params(fixed)
+envgrads, Rates, pmax, mmax, std, maxgen = rp.get_rand_params(fixed)
 
 u0 = Rates[0]
 
 #######################  Lists & Dictionaries  #########################
-RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
+RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
 
 ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, GrowthList, MaintList, RList, \
-DispList, EVList, TLList = [list([]) for _ in xrange(12)]
+DispList, EVList, TLList, Deadlist = [list([]) for _ in xrange(13)]
 
 SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
 Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
