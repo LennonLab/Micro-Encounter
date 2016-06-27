@@ -21,6 +21,7 @@ import spatial
 
 GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
 
+'''
 OUT1 = open(GenPath + 'SimData.csv','w')
 print>>OUT1,'RowID,MeanIndProduction,VarIndProduction,ResInflow,MaxGrowthRate,MaxMetMaint,MaxActiveDispersal,LogseriesA,StartingSeed,\
 width,height,MeanTotalAbundance,VarTotalAbundance,ImmigrationRate,MeanResourceConcentration,VarResourceConcentration,\
@@ -30,6 +31,7 @@ MeanSpecDisp,VarSpecDisp,MeanSpecMaint,VarSpecMaint,MeanAvgDist,VarAvgDist,MeanD
 TrophicComplexityLevel,ResourceComplexityLevel,SpatialComplexityLevel,MeanEncounter,VarEncounter,\
 IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,MeanDeaths,VarDeaths,RunTime'
 OUT1.close()
+'''
 
 def nextFrame(arg):
 
