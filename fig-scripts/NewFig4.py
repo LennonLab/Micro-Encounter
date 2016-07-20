@@ -1,9 +1,12 @@
 from __future__ import division
 import  matplotlib.pyplot as plt
 import pandas as pd
-#import numpy as np
+import numpy as np
 import os
 import sys
+
+import statsmodels.formula.api as smf
+from statsmodels.stats.outliers_influence import summary_table
 
 mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
@@ -16,116 +19,243 @@ dat = dat.convert_objects(convert_numeric=True).dropna()
 
 #-------------------------DATA FILTERS------------------------------------------
 
-dat = dat[dat['SpatialComplexityLevel'] == 3]
-dat = dat[dat['ResourceComplexityLevel'] == 3]
-dat = dat[dat['TrophicComplexityLevel'] <= 2]
+dat = dat[dat['SpatialComplexityLevel'] == 1]
+dat = dat[dat['ResourceComplexityLevel'] <= 1]
+#dat = dat[dat['TrophicComplexityLevel'] <= 3]
+
+dat['DormFreq'] = np.log10(dat['MeanDormFreq'])
+dat = dat[np.isfinite(dat['DormFreq'])]
+
+dat['Encounters'] = np.log10(dat['MeanEncounter'])
+dat = dat[np.isfinite(dat['Encounters'])]
+
+dat['Production'] = np.log10(dat['MeanIndProduction'])
+dat = dat[np.isfinite(dat['Production'])]
+
+dat['TotalAbundance'] = np.log10(dat['MeanTotalAbundance'])
+dat = dat[np.isfinite(dat['TotalAbundance'])]
+
+dat['ActiveAbundance'] = np.log10(dat['MeanTotalAbundance'] * (1 - dat['MeanDormFreq']))
+dat = dat[np.isfinite(dat['ActiveAbundance'])]
 
 #-------------------------------------------------------------------------------
 
-#ComplexityLevels = ['res', 'troph', 'spatial']
-ComplexityLevels = ['troph']
+#### plot figure ###############################################################
+fs = 8 # fontsize
+fig = plt.figure()
+dat1 = dat[dat['TrophicComplexityLevel'] == 1]
+dat2 = dat[dat['TrophicComplexityLevel'] == 2]
+dat3 = dat[dat['TrophicComplexityLevel'] == 3]
 
-for level in ComplexityLevels:
+label1 = 'No trophic complexity'
+label2 = 'Crossfeeding'
+label3 = 'Recycling'
 
+#### PLOT 1 #################################################################
+fig.add_subplot(2, 2, 1)
+xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
+ylab = '% Dormancy, '+'$log$'+r'$_{10}$'
+width = 1
 
-    #### plot figure ###############################################################
-    fs = 8 # fontsize
-    fig = plt.figure()
-
-    if level == 'troph':
-
-        dat1 = dat[dat['TrophicComplexityLevel'] == 1]
-        dat2 = dat[dat['TrophicComplexityLevel'] == 2]
-        #dat3 = dat[dat['TrophicComplexityLevel'] == 3]
-
-        label1 = 'No trophic complexity'
-        label2 = 'Crossfeeding'
-        #label3 = 'Recycling'
-
-
-
-    #### PLOT 1 #################################################################
-    fig.add_subplot(2, 2, 1)
-
-    xlab = 'Average encounters'
-    ylab = '% Dormancy'
-
-    plt.scatter(dat1['MeanEncounter'], dat1['MeanDormFreq']*100, color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label1)
-    plt.scatter(dat2['MeanEncounter'], dat2['MeanDormFreq']*100, color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label2)
-    #plt.scatter(dat3['MeanEncounter'], dat3['MeanDormFreq']*100, color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k', label=label3)
-
-    plt.ylabel(ylab, fontsize=fs+5)
-    plt.xlabel(xlab, fontsize=fs+5)
-    plt.xscale('log')
-    plt.xlim(0.1, 300)
-    plt.tick_params(axis='both', which='major', labelsize=fs)
-    plt.legend(bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=2, mode="expand",prop={'size':fs})
+f = smf.ols('DormFreq ~ Encounters', dat1).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat1['Encounters'].tolist()
+y = dat1['DormFreq'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'm', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'm', alpha = 0.9, lw=width, label=label1)
+plt.plot(x, yupp, color = 'm', alpha = 0.9, lw=width)
 
 
-    #### PLOT 2 ################################
-    fig.add_subplot(2, 2, 2)
-
-    xlab = 'Average encounters'
-    ylab = 'Individual production'
-
-    plt.scatter(dat1['MeanEncounter'], dat1['MeanIndProduction'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    plt.scatter(dat2['MeanEncounter'], dat2['MeanIndProduction'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    #plt.scatter(dat3['MeanEncounter'], dat3['MeanIndProduction'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
-
-    plt.ylabel(ylab, fontsize=fs+5)
-    plt.xlabel(xlab, fontsize=fs+5)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.ylim(0.008, 90)
-    plt.xlim(0.1, 300)
-    plt.tick_params(axis='both', which='major', labelsize=fs)
-
-    #### PLOT 3 #################################################################
-    fig.add_subplot(2, 2, 3)
-
-    xlab = 'Average encounters'
-    ylab = 'Resource aggregation'
-
-    plt.scatter(dat1['MeanEncounter'], dat1['MeanTotalAbundance'], color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    plt.scatter(dat2['MeanEncounter'], dat2['MeanTotalAbundance'], color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    #plt.scatter(dat3['MeanEncounter'], dat3['MeanTotalAbundance'], color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
-
-    plt.ylabel(ylab, fontsize=fs+5)
-    plt.xlabel(xlab, fontsize=fs+5)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.xlim(0.15, 300)
-    plt.ylim(1, 3000)
-    plt.tick_params(axis='both', which='major', labelsize=fs)
+f = smf.ols('DormFreq ~ Encounters', dat2).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat2['Encounters'].tolist()
+y = dat2['DormFreq'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'steelblue', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'steelblue', alpha = 0.9, lw=width, label=label2)
+plt.plot(x, yupp, color = 'steelblue', alpha = 0.9, lw=width)
 
 
-    #### PLOT 4 #################################################################
-    fig.add_subplot(2, 2, 4)
+f = smf.ols('DormFreq ~ Encounters', dat3).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat3['Encounters'].tolist()
+y = dat3['DormFreq'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'goldenrod', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'goldenrod', alpha = 0.9, lw=width, label=label3)
+plt.plot(x, yupp, color = 'goldenrod', alpha = 0.9, lw=width)
 
-    xlab = 'Average encounters'
-    ylab = 'Active abundance'
 
-    plt.scatter(dat1['MeanEncounter'], dat1['MeanTotalAbundance'] * (1 - dat1['MeanDormFreq']), color = 'm', alpha = 0.7 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    plt.scatter(dat2['MeanEncounter'], dat2['MeanTotalAbundance'] * (1 - dat2['MeanDormFreq']), color = 'steelblue', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
-    #plt.scatter(dat3['MeanEncounter'], dat3['MeanTotalAbundance'] * (1 - dat3['MeanDormFreq']), color = 'goldenrod', alpha = 0.8 , s = 10, linewidths = 0.0, edgecolor = 'k')
+plt.ylabel(ylab, fontsize=fs+5)
+plt.xlabel(xlab, fontsize=fs+5)
+plt.ylim(-1.0, 0.1)
 
-    plt.ylabel(ylab, fontsize=fs+5)
-    plt.xlabel(xlab, fontsize=fs+5)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.xlim(0.15, 1000)
-    plt.ylim(0.9, 1000)
-    plt.tick_params(axis='both', which='major', labelsize=fs)
+plt.tick_params(axis='both', which='major', labelsize=fs)
+plt.legend(bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=3, mode="expand",prop={'size':fs})
 
-    #### Final Format and Save #####################################################
-    plt.subplots_adjust(wspace=0.4, hspace=0.4)
+#### PLOT 2 ################################
+fig.add_subplot(2, 2, 2)
 
-    if level == 'spatial':
-        plt.savefig(mydir + '/results/figures/Encounters-SpatialComplexity.png', dpi=600, bbox_inches = "tight")
-    elif level == 'res':
-        plt.savefig(mydir + '/results/figures/Encounters-ResourceComplexity.png', dpi=600, bbox_inches = "tight")
-    elif level == 'troph':
-        plt.savefig(mydir + '/results/figures/Encounters-TrophicComplexity-RC3.png', dpi=600, bbox_inches = "tight")
+xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
+ylab = 'Individual production, '+'$log$'+r'$_{10}$'
 
-    #plt.show()
-    plt.close()
+f = smf.ols('Production ~ Encounters', dat1).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat1['Encounters'].tolist()
+y = dat1['Production'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'm', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'm', alpha = 0.9, lw=width, label=label1)
+plt.plot(x, yupp, color = 'm', alpha = 0.9, lw=width)
+
+
+f = smf.ols('Production ~ Encounters', dat2).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat2['Encounters'].tolist()
+y = dat2['Production'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'steelblue', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'steelblue', alpha = 0.9, lw=width, label=label2)
+plt.plot(x, yupp, color = 'steelblue', alpha = 0.9, lw=width)
+
+
+f = smf.ols('Production ~ Encounters', dat3).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat3['Encounters'].tolist()
+y = dat3['Production'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'goldenrod', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'goldenrod', alpha = 0.9, lw=width, label=label3)
+plt.plot(x, yupp, color = 'goldenrod', alpha = 0.9, lw=width)
+
+plt.ylabel(ylab, fontsize=fs+5)
+plt.xlabel(xlab, fontsize=fs+5)
+plt.ylim(-2.0, 2.0)
+#plt.xlim(0.1, 300)
+plt.tick_params(axis='both', which='major', labelsize=fs)
+
+#### PLOT 3 #################################################################
+fig.add_subplot(2, 2, 3)
+
+xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
+ylab = 'Total abundance, '+'$log$'+r'$_{10}$'
+
+f = smf.ols('TotalAbundance ~ Encounters', dat1).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat1['Encounters'].tolist()
+y = dat1['TotalAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'm', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'm', alpha = 0.9, lw=width, label=label1)
+plt.plot(x, yupp, color = 'm', alpha = 0.9, lw=width)
+
+
+f = smf.ols('TotalAbundance ~ Encounters', dat2).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat2['Encounters'].tolist()
+y = dat2['TotalAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'steelblue', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'steelblue', alpha = 0.9, lw=width, label=label2)
+plt.plot(x, yupp, color = 'steelblue', alpha = 0.9, lw=width)
+
+
+f = smf.ols('TotalAbundance ~ Encounters', dat3).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat3['Encounters'].tolist()
+y = dat3['TotalAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'goldenrod', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'goldenrod', alpha = 0.9, lw=width, label=label3)
+plt.plot(x, yupp, color = 'goldenrod', alpha = 0.9, lw=width)
+
+plt.ylabel(ylab, fontsize=fs+5)
+plt.xlabel(xlab, fontsize=fs+5)
+#plt.xlim(0.15, 300)
+plt.ylim(0.5, 3.1)
+plt.tick_params(axis='both', which='major', labelsize=fs)
+
+#### PLOT 4 #################################################################
+fig.add_subplot(2, 2, 4)
+
+xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
+ylab = 'Active abundance, '+'$log$'+r'$_{10}$'
+
+
+f = smf.ols('ActiveAbundance ~ Encounters', dat1).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat1['Encounters'].tolist()
+y = dat1['ActiveAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'm', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'm', alpha = 0.9, lw=width, label=label1)
+plt.plot(x, yupp, color = 'm', alpha = 0.9, lw=width)
+
+
+f = smf.ols('ActiveAbundance ~ Encounters', dat2).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat2['Encounters'].tolist()
+y = dat2['ActiveAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'steelblue', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'steelblue', alpha = 0.9, lw=width, label=label2)
+plt.plot(x, yupp, color = 'steelblue', alpha = 0.9, lw=width)
+
+
+f = smf.ols('ActiveAbundance ~ Encounters', dat3).fit()
+st, data, ss2 = summary_table(f, alpha=0.05)
+mean_ci_low, mean_ci_upp = data[:,4:6].T
+x = dat3['Encounters'].tolist()
+y = dat3['ActiveAbundance'].tolist()
+ylow = mean_ci_low.tolist()
+yupp = mean_ci_upp.tolist()
+x, y, yupp, ylow = zip(*sorted(zip(x, y, yupp, ylow)))
+plt.scatter(x, y, color = 'goldenrod', alpha = 0.3 , s = 5, linewidths = 0.0)
+plt.plot(x, ylow, color = 'goldenrod', alpha = 0.9, lw=width, label=label3)
+plt.plot(x, yupp, color = 'goldenrod', alpha = 0.9, lw=width)
+
+
+plt.ylabel(ylab, fontsize=fs+5)
+plt.xlabel(xlab, fontsize=fs+5)
+#plt.xlim(0.15, 1000)
+plt.ylim(-0.5, 3.1)
+plt.tick_params(axis='both', which='major', labelsize=fs)
+
+
+plt.savefig(mydir + '/results/figures/Fig4-Trophic_TC1&2-RC3-SC1-.png', dpi=600, bbox_inches = "tight")
+#plt.show()
+plt.close()
