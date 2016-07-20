@@ -3,18 +3,14 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-
 from statsmodels.nonparametric.smoothers_lowess import lowess
-
-
 import numpy as np
-
 import pandas as pd
-import os
-import sys
-
 import scipy as sc
 from scipy import stats
+import sys
+import os
+
 
 mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
