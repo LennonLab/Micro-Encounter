@@ -93,12 +93,12 @@ def ResIn(std, ct, RList, Vals, Xs, Ys, ID, IDs, numr, w, h, u0, TrophicComplexi
 
             elif ResourceComplexityLevel == 3:
                 # Three types of resource particles that vary in the effort/energy needed to break them down
-                r = choice(['a-', 'b-b-', 'c-c-c-c-'])
+                r = choice(['a-', 'bb-', 'c-cc-c-'])
                 if r == 'a-':
                     n = randint(1, 40)
-                elif r == 'b-b-':
+                elif r == 'bb-':
                     n = randint(1, 20)
-                elif r == 'c-c-c-c-':
+                elif r == 'c-cc-c-':
                     n = randint(1, 10)
 
                 r = ''.join(r for _ in xrange(n))
@@ -169,7 +169,8 @@ def immigration(maxgen, std, mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs
             x = np.random.binomial(1, ip)
 
         if x == 1:
-            prop = str(float(np.random.logseries(alpha, 1)))
+            #prop = str(float(np.random.logseries(alpha, 1)))
+            prop = np.random.randint(1, 100)
 
             Sp.append(prop)
 
@@ -200,26 +201,26 @@ def immigration(maxgen, std, mfmax, p_max, d_max, g_max, m_max, seed, ip, Sp, Xs
             tl = choice(['a', 'b', 'c'])
             TLList.append(tl)
 
-            Q = float(np.random.uniform(0.01, 0.1))
+            Q = float(np.random.uniform(0.1, 0.1))
             Qs.append(Q)
 
             if prop not in GD:
 
                 # species growth rate
                 #g = np.random.uniform(g_max/1, g_max)
-                GD[prop] = g_max
+                GD[prop] = np.random.uniform(g_max/10, g_max)
 
                 # species maintenance
-                MD[prop] = m_max #np.random.uniform(m_max/1, m_max)
+                MD[prop] = np.random.uniform(m_max/10, m_max)
 
                 # species maintenance reduction factor
-                MFD[prop] = mfmax #np.random.uniform(1, mfmax)
+                MFD[prop] = np.random.uniform(20, mfmax)
 
                 # species resuscitation factor
-                RPD[prop] = p_max #np.random.uniform(0.1, 0.1)
+                RPD[prop] = np.random.uniform(p_max/10, p_max)
 
                 # species active dispersal rate
-                DispD[prop] = d_max #np.random.uniform(d_max/1, d_max)
+                DispD[prop] = np.random.uniform(d_max/10, d_max)
 
                 # species environmental gradient optima
                 glist = []
@@ -293,7 +294,30 @@ def maintenance(SpeciesIDs, Xs, Ys, MD, MFD, RPD, EnvD, IDs, Qs, GList, MaintLis
         if val <= MaintList[i]*0.001:   # starved
 
             if TrophicComplexityLevel >= 3:
-                RList.append('d')
+                r = 'd'
+               
+                if ResourceComplexityLevel == 2:
+                    r = choice(['d', 'dd', 'dddd'])
+                    if r == 'd':
+                        n = randint(1, 4)
+                    elif r == 'dd':
+                        n = randint(1, 2)
+                    elif r == 'dddd':
+                        n = randint(1, 1)
+                    r = ''.join(r for _ in xrange(n))
+                    
+                    
+                if ResourceComplexityLevel == 3:
+                    r = choice(['d-', 'dd-', 'd-dd-d-'])
+                    if r == 'd-':
+                        n = randint(1, 4)
+                    elif r == 'dd-':
+                        n = randint(1, 2)
+                    elif r == 'd-dd-d-':
+                        n = randint(1, 1)
+                    r = ''.join(r for _ in xrange(n))
+                
+                RList.append(r)
                 RVals.append(1)
                 RXs.append(Xs[i])
                 RYs.append(Ys[i])
@@ -335,6 +359,7 @@ def transition(SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, MaintL
         return [SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, GList, MaintList, TLList, RList, RVals, RXs, RYs, RIDs, RID, numD]
 
     n = len(IDs)
+    
     for j in range(n):
 
         i = randint(0, len(IDs)-1)
@@ -382,7 +407,7 @@ def transition(SpeciesIDs, Xs, Ys, GList, DList, ADList, EVList, IDs, Qs, MaintL
 
 
 def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
-    IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList,
+    IXs, IYs, w, h, GD, MFD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList,
     TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, enz_action = True):
 
     encounters = 0
@@ -401,23 +426,27 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
     n = len(IndIDs)
 
     for ii in range(n):
+        
         i = randint(0, n-1)
 
         # Trophic level
         tl = TLList[i]
         Q = Qs[i]
+        
+        spid = SpeciesIDs[i]
+        mfd = MFD[spid]  # multiplicative maintenance factor (is greater than 1)
 
         x1 = IXs[i]
         y1 = IYs[i]
 
-        Try = min([50, len(RIDs)])
+        Try = min([40, len(RIDs)])
         ct = 0
 
         while ct < Try and RIDs != []:
             ct += 1
 
             r = len(RIDs)
-            Try = min([50, r])
+            Try = min([40, r])
 
             j = randint(0, r-1)
             # The food
@@ -442,16 +471,23 @@ def consume(field, RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, In
                 x2 = RXs[j]
                 y2 = RYs[j]
                 dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-
+                
                 ind_radius = np.mean(Qs[i])
                 Rval = RVals[j]
                 res_radius = Rval/20.0
 
+                tl = TLList[i] # need to reset this in case of no match
+                
                 if dist <= ind_radius + res_radius:
-                    ADList[i] = 'a'
+                    
+                    if ADList[i] == 'd':
+                        ADList[i] = 'a'
+                        MaintList[i] = MaintList[i]*mfd # metabolic maintenance increases
 
-                    #encounters += 1
                     eat = 'no'
+                    if Rtype == 'd':
+                        eat = 'yes'
+                        
                     ct = Try
 
                     if '-' in R:
@@ -594,7 +630,9 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
         return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numD]
 
 
+    #n = min([len(IDs), 100])
     n = len(IDs)
+
     for j in range(n):
 
         if len(TLList) != len(EVList):
@@ -614,7 +652,31 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
         if Q < 0.0:
 
             if TrophicComplexityLevel >= 3:
-                RList.append('d')
+                
+                r = 'd'
+                       
+                if ResourceComplexityLevel == 2:
+                    r = choice(['d', 'dd', 'dddd'])
+                    if r == 'd':
+                        n = randint(1, 4)
+                    elif r == 'dd':
+                        n = randint(1, 2)
+                    elif r == 'dddd':
+                        n = randint(1, 1)
+                    r = ''.join(r for _ in xrange(n))
+                    
+                    
+                if ResourceComplexityLevel == 3:
+                    r = choice(['d-', 'dd-', 'd-dd-d-'])
+                    if r == 'd-':
+                        n = randint(1, 4)
+                    elif r == 'dd-':
+                        n = randint(1, 2)
+                    elif r == 'd-dd-d-':
+                        n = randint(1, 1)
+                    r = ''.join(r for _ in xrange(n))
+                
+                RList.append(r)
                 RVals.append(1)
                 RX.append(Xs[i])
                 RY.append(Ys[i])
@@ -677,7 +739,6 @@ def reproduce(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys, w, h, GD, DispD, RD, MD, MF
 
                 p = np.random.binomial(1, spec)
 
-                p = 0
                 if p == 1:
 
                     # speciate
@@ -799,7 +860,9 @@ def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, M
     if SpeciesIDs == []:
         return [SpeciesIDs, Qs, IDs, ID, Xs, Ys, GD, DispD, GList, MList, DList, ADList, EVList, TLList, RList, RVals, RXs, RYs, RIDs, RID]
 
+    #n = min([len(IDs), 100])
     n = len(IDs)
+
     for j in range(n):
 
         i = randint(0, len(IDs)-1)
@@ -835,7 +898,30 @@ def dispersal(spec, SpeciesIDs, Qs, IDs, ID, Xs, Ys,  w, h, GD, DispD, RD, MD, M
                     if r < 0.0:
 
                         if TrophicComplexityLevel >= 3:
-                            RList.append('d')
+                            
+                            r = 'd'
+                            if ResourceComplexityLevel == 2:
+                                r = choice(['d', 'dd', 'dddd'])
+                                if r == 'd':
+                                    n = randint(1, 4)
+                                elif r == 'dd':
+                                    n = randint(1, 2)
+                                elif r == 'dddd':
+                                    n = randint(1, 1)
+                                r = ''.join(r for _ in xrange(n))
+                    
+                    
+                            if ResourceComplexityLevel == 3:
+                                r = choice(['d-', 'dd-', 'd-dd-d-'])
+                                if r == 'd-':
+                                    n = randint(1, 4)
+                                elif r == 'dd-':
+                                    n = randint(1, 2)
+                                elif r == 'd-dd-d-':
+                                    n = randint(1, 1)
+                                r = ''.join(r for _ in xrange(n))
+                            
+                            RList.append(r)
                             RVals.append(1)
                             RXs.append(Xs[i])
                             RYs.append(Ys[i])
@@ -901,6 +987,7 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
     if SpeciesIDs == [] or RIDs == []:
         return [RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID, IXs, IYs, w, h, GD, RD, DispD, GrowthList, MaintList, DispList, ADList, TLList, EVList, numD]
 
+    #n = min([len(IndIDs), 100])
     n = len(IndIDs)
 
     for ii in range(n):
@@ -919,7 +1006,7 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
         x1 = IXs[i]
         y1 = IYs[i]
 
-        Try = min([50, len(RIDs)])
+        Try = min([40, len(RIDs)])
         ct = 0
 
         minDist = 100
@@ -932,16 +1019,14 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
             ct += 1
 
             r = len(RIDs)
-            Try = min([50, r])
+            Try = min([40, r])
             j = randint(0, r-1)
 
             # The food
             R = RList[j]
             Rtype = R[0]
 
-            if ResourceComplexityLevel == 1:
-                tl = str(Rtype)
-
+            
             if tl == Rtype: # individual is capable of consuming the resource type
 
                 x2 = RXs[j]
@@ -966,7 +1051,30 @@ def chemotaxis(RList, RVals, RIDs, RID, RXs, RYs, SpeciesIDs, Qs, IndIDs, IndID,
             if r < 0.0:
 
                 if TrophicComplexityLevel >= 3:
-                    RList.append('d')
+                    
+                    r = 'd'
+                    if ResourceComplexityLevel == 2:
+                        r = choice(['d', 'dd', 'dddd'])
+                        if r == 'd':
+                            n = randint(1, 4)
+                        elif r == 'dd':
+                            n = randint(1, 2)
+                        elif r == 'dddd':
+                            n = randint(1, 1)
+                        r = ''.join(r for _ in xrange(n))
+                        
+                        
+                    if ResourceComplexityLevel == 3:
+                        r = choice(['d-', 'dd-', 'd-dd-d-'])
+                        if r == 'd-':
+                            n = randint(1, 4)
+                        elif r == 'dd-':
+                            n = randint(1, 2)
+                        elif r == 'd-dd-d-':
+                            n = randint(1, 1)
+                        r = ''.join(r for _ in xrange(n))
+                        
+                    RList.append(r)
                     RVals.append(1)
                     RXs.append(IXs[i])
                     RYs.append(IYs[i])

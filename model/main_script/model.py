@@ -33,6 +33,7 @@ IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,MeanDeaths,VarDeaths,Ru
 OUT1.close()
 '''
 
+
 def nextFrame(arg):
 
     """ Function called for each successive animation frame; arg is the frame number """
@@ -110,7 +111,7 @@ def nextFrame(arg):
     # Consume
     RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, encounters = bide.consume(enzyme_field, \
     RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, \
-    width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, \
+    width, height, GrowthDict, MaintDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, \
     TLList, EVList, TrophicComplexityLevel, SpatialComplexityLevel, \
     ResourceComplexityLevel, BiologicalComplexityLevel)
 
@@ -145,7 +146,7 @@ def nextFrame(arg):
 
     N = len(IndIDs)
 
-    if N == 0 or N >= 1000:
+    if N == 0 or N > 20000:
 
         TrophicComplexityLevel = choice([1,2,3]) #
         SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
@@ -158,6 +159,17 @@ def nextFrame(arg):
 
         SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
         Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
+        
+        if u0 == max(Rates):
+            #sim += 1
+
+            width, height, alpha, speciation, seedCom, m, r, \
+            gmax, maintmax, dmax, envgrads, Rates, pmax, mmax, std, maxgen = rp.get_rand_params(fixed)
+
+            GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict,\
+            EnvD = {}, {}, {}, {}, {}, {}, {}, {}
+
+            enzyme_field = [0]*(width*height)
 
         p = 0
         BurnIn = 'not done'
@@ -207,11 +219,9 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
         Ind_scatImage = ax.scatter(IndX, IndY, s = ind_sizelist, c = colorlist,
                     edgecolor = '0.2', lw = 0.2, alpha=0.8)
 
-    #if len(Ns) >= 100:
-        #BurnIn = 'done'
-    #    Ns = []
 
-    if len(Ns) >= 50:
+
+    if len(Ns) >= 100:
 
         if BurnIn == 'not done':
             AugmentedDickeyFuller = sta.adfuller(Ns)
@@ -223,6 +233,10 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
+                
+    if ct == 200:
+        BurnIn = 'done'
+        Ns = [Ns[-1]] # only keep the most recent N value
 
 
     if BurnIn == 'done':
@@ -272,10 +286,10 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
 
         if len(Ns) >= 20:
 
-            print sim, 'r:', r, 'R:', int(round(mean(Rs))), 'N:', int(round(mean(Ns))), \
-            '%Dormant:', round(mean(ADs),3), 'Encounters:', round(mean(encList),2), 'Spatial:', SpatialComplexityLevel, \
-            'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel, \
-            'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
+            print '%4s' % sim, ' r:','%4s' %  r, ' R:','%4s' % int(round(mean(Rs))), ' N:','%5s' % int(round(mean(Ns))), \
+            ' Dormant:', '%5s' % round(mean(ADs),3), ' Encounters:','%5s' % round(mean(encList),2), '   Spatial:', SpatialComplexityLevel, \
+            'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel#, \
+            #'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
 
             OUT1 = open(GenPath + '/SimData.csv','a')
 
@@ -358,7 +372,7 @@ Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [li
 GrowthDict, MaintDict, MainFactorDict, RPFDict, EnvD, RD, DispDict, EnvD = {}, {}, {}, {}, {}, {}, {}, {}
 enzyme_field = [0]*(width*height)
 
-num_sims, LowerLimit, sim, p = 100, 30, 1, 0.0
+num_sims, LowerLimit, sim, p = 100, 30, 2868, 0.0
 static = 'no'
 BurnIn = 'not done'
 

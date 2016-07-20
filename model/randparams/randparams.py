@@ -13,8 +13,8 @@ def get_rand_params(fixed):
 
     rates = np.array([0.1])
 
-    width  = 20
-    height = 20
+    width  = 10 #randint(5, 10)
+    height = 10 #randint(5, 10)
 
     num_envgrads = 1
     for i in range(num_envgrads):
@@ -25,16 +25,15 @@ def get_rand_params(fixed):
     m = 0.0
     speciation = 0.0
     alpha = 0.99
-    r = choice([1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64]) # resource particles flowing in per time step
+    r = choice([1, 2, 3, 4])#, 5, 6, 7, 8, 9, 10])#, 12, 14, 16, 20, 24, 28, 32, 40, 50, 70, 90]) # resource particles flowing in per time step
 
-    gmax = np.random.uniform(0.05, 0.5) # max specific growth rate
-    maintmax = np.random.uniform(0.001, 0.005)
+    gmax = np.random.uniform(0.1, 0.5) # max specific growth rate
+    maintmax = np.random.uniform(0.025, 0.05)
 
-    dmax = np.random.uniform(0.001, 0.01)  # max dispersal probability
-    pmax = np.random.uniform(0.01, 0.1)  # max probability of going active
-    mmax = randint(20, 40)  # max maintenance factor
-    std = np.random.uniform(0.01, 0.4)
-
+    dmax = np.random.uniform(0.01, 0.1)  # max dispersal probability
+    pmax = np.random.uniform(0.001, 0.01)  # max probability of going active
+    mmax = randint(30, 50)  # max maintenance factor
+    std = np.random.uniform(0.1, 0.4)
     maxgen = randint(1, 10)
 
     # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
