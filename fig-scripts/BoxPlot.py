@@ -15,13 +15,20 @@ sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
 mdat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
 mdat = mdat.convert_objects(convert_numeric=True).dropna()
-print mdat.shape
+
+#print mdat.shape
+#sys.exit()
+
 #-------------------------DATA FILTERS------------------------------------------
 
-#mdat = mdat[mdat['ResInflow'] > 20]
+#mdat = mdat[mdat['ResInflow'] < 10]
+#mdat = mdat[mdat['RowID'] > 3000]
 #mdat = mdat[mdat['MaxMetMaint'] < 0.002]
 #mdat = mdat[mdat['IncomingResAgg'] < 0.4]
 #mdat = mdat[mdat['MeanTotalAbundance'] > 200]
+mdat = mdat[mdat['MeanResourceParticles'] < 20]
+
+print mdat.shape
 
 #-------------------------END DATA FILTERS--------------------------------------
 
@@ -35,10 +42,8 @@ fig = plt.figure()
 
 ax = fig.add_subplot(3, 3, 1)
 
-
-
 dat = mdat[mdat['ResourceComplexityLevel'] == 3]
-dat = dat[dat['TrophicComplexityLevel'] >= 3]
+#dat = dat[dat['TrophicComplexityLevel'] >= 3]
 
 dat['Encounter'] = np.log10(dat['MeanEncounter'])
 dat = dat[np.isfinite(dat['Encounter'])]
@@ -61,8 +66,7 @@ ax.get_yaxis().tick_left()
 
 ax = fig.add_subplot(3, 3, 2)
 
-dat = mdat[mdat['SpatialComplexityLevel'] == 3]
-dat = dat[dat['TrophicComplexityLevel'] >= 3]
+dat = mdat[mdat['ResourceComplexityLevel'] <= 3]
 
 dat['Encounter'] = np.log10(dat['MeanEncounter'])
 dat = dat[np.isfinite(dat['Encounter'])]
@@ -85,9 +89,8 @@ ax.get_yaxis().tick_left()
 
 ax = fig.add_subplot(3, 3, 3)
 
-dat = mdat[mdat['SpatialComplexityLevel'] <= 3]
-dat = dat[dat['ResourceComplexityLevel'] <= 2] 
-
+dat = dat[dat['ResourceComplexityLevel'] <= 3]
+print dat.shape
 dat['Encounter'] = np.log10(dat['MeanEncounter'])
 dat = dat[np.isfinite(dat['Encounter'])]
 
@@ -110,6 +113,6 @@ ax.get_yaxis().tick_left()
 
 #### Final Format and Save #####################################################
 plt.subplots_adjust(wspace=0.4, hspace=0.4)
-plt.savefig(mydir + '/results/figures/BoxPlot.png', dpi=600, bbox_inches = "tight")
-#plt.show()
+#plt.savefig(mydir + '/results/figures/BoxPlot.png', dpi=600, bbox_inches = "tight")
+plt.show()
 #plt.close()
