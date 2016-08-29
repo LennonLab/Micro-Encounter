@@ -1,10 +1,9 @@
 ## Model description following the ODD Protocol
-The ODD protocol is standard for describing individual-based models (Grimm et al. 2006). 
-ODD stands for Overview, Design concepts, and Details. Here, I descibe simplex *largely* according to the ODD protocol.
-The ODD protocol for simplex can also be found on the public GitHub repository at https://github.com/LennonLab/simplex
+The ODD protocol is standard for describing individual-based models (IBMs), see Grimm et al. 2006.
+ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
 
 ### Purpose
-The purpose of simplex is to simulate life history of individual organisms, the assembly of ecological communities, and the evolution of traits in spatially explicit environments under stochastic conditions. The proximate goal of simplex is to generate high degrees of variation in the assembly and structure of populations and communities by assembling many different models from random combinations of state-variables and processes. The ultimate goal of simplex is to provide a simulation-based platform for examining conditions under which processes and constraints have a robust influence on eco-evolutionary dynamics and patterns of biodiversity.
+The purpose of our modeling framework is to simulate life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The proximate goal was to generate high degrees of variation in the assembly and structure of populations and communities by assembling many different models from random combinations of state-variables and processes. The ultimate goal was to provide a simulation-based platform for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities.
 
 ### Entities & their state variables
 **Individual organisms**--Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a simplex model chooses an individual from the list of cell quotas (the probability of reproducing is determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
