@@ -4,7 +4,7 @@ The ODD protocol is standard for describing individual-based models (IBMs), see 
 ### Purpose
 Our modeling framework simulates life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The goal is to provide a simulation-based framework for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities. This is done by simulating dimensions of ecological complexity, variation in model parameters and processes, varying physical dynamics, and by allowing realistic life history trade-offs to emerge from random combinations of trait values.
 
-### Entities & their state variables
+### Entities
 **Individual organisms** --- Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a model chooses an individual from the list of cell quotas (the probability of reproducing is partly determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
 
 	Example:
@@ -78,7 +78,7 @@ The following are the types of information stored about each resource (molecule,
 
 **Physcial barriers** --- These objects are simulated as discrete 2D spatial coordinates that cannot be occupied by any individual entities. The number, size, and location of physical barriers are chosen at random at the start of each model.
 
-###System level state variables
+### System level state variables
 Each run of an IBM begins with random choices for the values of:
 
 * width (5 to 20)
@@ -145,12 +145,8 @@ Note that all individuals and/or resources move in decimal units the limit of wh
 
 The core program also decides at random whether fluid dynamics will occur and at what rate of flow.
 
-**Core simulation process** --- The IBM begins to run immediately after assembly. After each iteration of resource inflow where varied number of molecules and particles enter the system, each individual is given the chance to consume, grow, reproduce, starve, die, and to disperse towards resources and environmental optima.
-
-**Duration: A run to mean reversion** --- Once assembled, each IBM simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change. Mean reversion captures whether a system is fluctuating around a mean value. At each time point past 200 generations, the modeling program conducts an Augmented Dickey-Fuller (ADF) test on the previous 100 generations to determine whether a state of mean reversion has been reached. The ADF is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. Once mean reversion is reached (p < 0.05), the model runs for an additional 100 generations. A model is stopped once mean reversion is determined to have occurred. Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
-
-
-**Simulated life history** --- Our IBMs simulate growth, reproduction, and death via weighted random sampling. This simulate the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
+**Core simulation and life history** --- The IBM begins to run immediately after assembly. After each iteration of resource inflow where varied number of molecules and particles enter the system, each individual is given the chance to consume, grow, reproduce, starve, die, and to disperse towards resources and environmental optima.
+Our IBMs simulate these life history processes via random sampling. This simulates the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
 
 *Immigration*
 Individuals enter from any point in the environment. Species identities of inflowing propagules are chosen at random from a uniform distribution. Along with a species ID and species-specific maximum rates of resource uptake, active dispersal, resource efficiencies, cell maintenance, an environmental optima, each propagule is given a unique ID and a starting cell quota that represents the state of internal resources. The cell quota also determines the chance of reproduction. 
@@ -169,6 +165,44 @@ Individuals sampled at random will die if their cell quota is equal to or less t
 
 *Emigration* 
 Emigration can result from fluid flow, from random spatial movement, or from active dispersal. Individuals and resource particles are considered to have left the local environment when they pass beyond the 2-dimensional edges.
+
+**Duration: A run to mean reversion** --- Once assembled, each IBM simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change. Mean reversion captures whether a system is fluctuating around a mean value. At each time point past 200 generations, the modeling program conducts an Augmented Dickey-Fuller (ADF) test on the previous 100 generations to determine whether a state of mean reversion has been reached. The ADF is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. 
+
+Once mean reversion is reached (p < 0.05), the model runs for an additional 100 generations and then stops. The following is then recorded for each model:
+
+* Values of randomly chosen state variables:
+	* length
+	* width
+	* 
+* Mean and variance for:
+	* Total abundance, $N$
+	* Species richness, $S$
+	* Growth rate (per species & per capita) 
+	* Maintenance cost (per species & per capita) 
+	* Resource efficiency (per species & per capita) 
+	* Active dispersal rate (per species & per capita) 
+	* Compositional turnover
+		* Bray-Curtis
+		* Sorensen's
+	* Species turnover
+		* Whittaker's $\beta$ 
+	* Species evenness
+		* Smith and Wilson's evenness, $E_{var}$
+		* Simpson's evenness, $E_{1/D}$ 
+	* Species diversity
+		* Shannon's diversity, $H'$ 
+		* Simpson's diversity, $D_{1/D}$
+	* Dominance
+		* Absolute, $N_{max}$
+		* Relative, $N_{max}/N$
+	* Productivity
+		* In number of individuals
+		* In amount of cell quota
+	* Individual residence time, i.e., amount of time individuals spend in the system
+
+These data are stored in file as csv files and can are directly imported into the Python environment via the scripts provided in the project repository: https://github.com/LennonLab/Micro-Encounter/tree/master/fig-scripts
+
+Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
 
 ### Initialization and input data
 
@@ -236,8 +270,7 @@ Our IBMs operate via random sampling and can vary from being completely neutral 
 
 **Hypotheses** --- We used the inherent ecological complexity of our modeling framework to test for robust ecological relationships related to our primary hypothesis that microscale properties of resource encounter rates have a stronger influence on growth,  abundance, and activity than macroscale properties of resource inflow and concentration.
 
-**Adaptation** --- Individuals can move towards their environmental optima. Populations can become aggregated in areas that provide 
-favorable intersections of species optima. Species canevolve by the action of the environmental filter on subpopulation variation in state variables.
+**Adaptation** --- Individuals can move towards their environmental optima. Populations can become aggregated in areas that provide favorable intersections of species optima. Species canevolve by the action of the environmental filter on subpopulation variation in state variables.
 
 **Objectives** --- Individuals can seek conditions that match them to their environmental optima and can also seek to acquire resources through active searching, i.e., chemotaxis.
 
@@ -252,38 +285,6 @@ favorable intersections of species optima. Species canevolve by the action of th
 **Stochasticity** --- The occurrence of life history processes are conducted via random sampling. In this way, population and community dynamics result, in part, from demographic stochasticity. Likewise, the emergence of suites of life history traits proceeds from initially random combinations of traits.
 
 **Collectives** --- Individuals belong to species. Species belong to communities. Depending on the model, communities belong to trophic levels.
-
-**Observation** --- Many models should be run to examine trends in the variation generated. The following is recorded for each model:
-
-* Values of randomly chosen state variables
-* Mean and variance for:
-	* Total abundance, $N$
-	* Species richness, $S$
-	* Growth rate (per species & per capita) 
-	* Maintenance cost (per species & per capita) 
-	* Resource efficiency (per species & per capita) 
-	* Active dispersal rate (per species & per capita) 
-	* Compositional turnover
-		* Bray-Curtis
-		* Sorensen's
-	* Species turnover
-		* Whittaker's $\beta$ 
-	* Species evenness
-		* Smith and Wilson's evenness, $E_{var}$
-		* Simpson's evenness, $E_{1/D}$ 
-	* Species diversity
-		* Shannon's diversity, $H'$ 
-		* Simpson's diversity, $D_{1/D}$
-	* Dominance
-		* Absolute, $N_{max}$
-		* Relative, $N_{max}/N$
-	* Productivity
-		* In number of individuals
-		* In amount of cell quota
-	* Individual residence time, i.e., amount of time individuals spend in the system
-
-These data are stored in file as csv files and can are directly imported into the Python environment via the scripts provided in the project repository: https://github.com/LennonLab/Micro-Encounter/tree/master/fig-scripts
-
 
 ### Submodels & Equations
 
@@ -314,31 +315,29 @@ Our models do not complete until the time series of total abundance values reach
 
 I ran simplex on a Mid 2010 MacBook Pro (OS X 10.9.5) with a 2.4 GHz Intel Core 2 Duo processor and 4GB of Memory. This system probably represents a below average capacity for modern personal computers, which for this study, was desirable as simplex should be able to be ran on both personal computers and high capacity remote servers. I present results for time to completion and required memory in the Results.
 
-## Animations
-
-Simplex can generate animations of its models and store them in various image file formats. It does this using the matplotlib animation libary. At the moment, choosing whether to animate or not animate a model is done by commenting out lines of code in model.py. However, this feature will be developed more highly for future versions.
 
 #Results
-
 ## Unit tests
+### Accuracy and computation
 
-simplex passed all units tests for 15 diversity indices, ensuring that each index returns either the correct calculated value, or 'NaN' if given any values that cannot be used (e.g., negative numbers, string characters, empty lists).
+**Diversity** --- Our models pass all unit tests for 15 diversity indices, ensuring that each index returns either the correct calculated value, or 'NaN' if given any values that cannot be used (e.g., negative numbers, string characters, empty lists).
 
-## Speed & Memory
+## Efficiency
+### Results from 100 randomly assembled models
 
-**Results from 100 randomly assembled models.** On average, simplex models required 96.60 +- 32.70 seconds to run, had an average total abundance (*N*) of 31,367 +- 879, and required 161 +- 4.3 megabytes of memory. The longest any model took to complete was 49 minutes. This particularly demanding model required 261MB of memory and also had generated the greatest total abundance (*N* = 68,808). The shortest any model took to complete was 5.8 seconds with a total abundance of 0 individuals. The least amount of memory any model required was 90MB. These and other analyses from the 100 randomly assembled models can be run using the SpeedMemory.Rmd file located in the results/TestResults directory.
+**Speed & Memory** --- Analyses from 100 randomly assembled models can be run using the SpeedMemory.Rmd file located in the results/TestResults directory.
+
+*Speed*
+On average, our models require 96.60 +- 32.70 seconds to run, had an average total abundance (*N*) of 31,367 +- 879. The longest any model took to complete was 49 minutes.  The shortest any model took to complete was 5.8 seconds. 
+
+*Memory*
+On average, our models required 161 +- 4.3 megabytes of RAM. The longest running model requried 261MB of RAM and had generated the greatest total abundance (*N* = 68,808). The least amount of memory any model required was 90MB.
 
 ## Products
 ### Output data
-simplex generates six files as its output data. They are: 
 
-*SimData.csv*--Formatted as an R data frame, where each row is a run of a randomly assembled model, and each column holds a piece of data about the system that was modeled (e.g., flow rate, total abundance, species richness, species turnover, rate of disturbance, etc.).  
+**SimData.csv** --- A .csv file where each row is a run of a randomly assembled model and each column holds a piece of data about the system that was modeled (e.g., length, width, mean total abundance, number of incoming resources, etc.).
 
-*IndRTD.csv*, *ResRTD.csv*, *TracerRTD.csv*--Each line of these three files contains the amount of time that each individual, resource particle, or inert tracer spent in the system. Each line represents the same run of a randomly assembled model.
+### Animations
 
-*RADs.csv*--Each line is a run of a randomly assembled model and contains the rank-abundance vector at the point when the model was stopped.
-
-*Species.csv*--Each line is a run of a randomly assembled model and contains a vector of species labels corresponding to RADs.csv.
-
-All output data were correctly formatted and placed within results/simulated_data/examples directory.
-Each of the six output data files was able to be imported into the RStudio environment using the Exploratory.Rmd Rmarkdown file provided in the "GitHub/simplex/results/analyses/Rmd/" path. The user can use the Exploratory.Rmd file to craft a .Rmd file for their own specific analyses.
+**.avi movie files** --- Our modeling platform can generate animations of models and store them in various image file formats. It does this using the matplotlib animation libary. Choosing whether to animate or not animate a model is done by commenting out lines of code in model.py.
