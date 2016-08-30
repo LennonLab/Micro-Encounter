@@ -1,11 +1,11 @@
-## Model description following the ODD Protocol  
+# Model description following the ODD Protocol  
 The ODD protocol is standard for describing individual-based models (IBMs), Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
 
-### Purpose  
+## PURPOSE  
 Our modeling framework simulates life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The goal is to provide a simulation-based framework for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities. This is done by simulating dimensions of ecological complexity, variation in model parameters and processes, varying physical dynamics, and by allowing realistic life history trade-offs to emerge from random combinations of trait values.
 
-### Entities  
-**Individual organisms**  
+## ENTITIES  
+###Individual organisms  
 Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a model chooses an individual from the list of cell quotas (the probability of reproducing is partly determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
 
 	Example:
@@ -37,7 +37,7 @@ These are the lists of attributes for individual organisms:
 * products of individual-level metabolism
 
 
-**Species**  
+###Species  
 Each species is characterized by the individuals that share a common set of traits, such as maximum growth rate and environmental optima. Species information is stored in Python dictionaries. In this way, if simplex requires the species ID of an individual it will access the species ID list where each element corresponds to a specific individual. But, if simplex requires the maximum growth rate for an individual, then it finds the species ID and then uses that to access the Python dictionary for maximum specific growth rates of species.
 
 	Example:
@@ -57,7 +57,7 @@ The following are the types of species-level information that are stored in Pyth
 * environmental optima
 
 
-**Resources**  
+###Resources
 Resources are simulated at two levels (molecules, particles). Resource particles are designated as 'a', 'b', or 'c'. Particles are then joined together to form molecules (e.g., 'aaaa'). Depending on the model, chemical complexity is simulated by introducing bonds (e.g., '-') that must be broken in order to consume resource particles (e.g., 'aa-aa'). The breaking of these bonds is done via random draws of positions along the molecule, where for example an 'aa-aa' is less likely to be split than is an 'a-a-a-a' particle.
 
 Depending on the model, resource molecules can enter the system in clusters. The degree of spatial aggregation of incoming resource molecules is determined by a 2-dimensional Gaussian distribution, where the standard deviation (dispersion) is chosen at random at the start of the model and the mean (x-y position) is chosen at random at each time point.
@@ -79,10 +79,10 @@ The following are the types of information stored about each resource (molecule,
 * size and complexity, e.g., 'a', 'bb', 'cc-cc'
 * 2D spatial location
 
-**Physcial barriers**  
+###Physcial barriers  
 These objects are simulated as discrete 2D spatial coordinates that cannot be occupied by any individual entities. The number, size, and location of physical barriers are chosen at random at the start of each model.
 
-### System level state variables  
+## SYSTEM STATE VARIABLES
 Each run of an IBM begins with random choices for the values of:
 
 * width (5 to 20)
@@ -118,22 +118,22 @@ For example:
     m = choice([0.0, 0.0001, 0.0005, 0.001, 0.005])
     ...	
 
-### Spatial and temporal scales  
+## SPATIAL AND TEMPORAL SCALE  
 The two general aspects of scale are grain (a.k.a. resolution) and extent (e.g. total area).
 
-**Spatial extent**  
+###Spatial extent  
 The environment of the IBMs is two dimensional and can vary along each axis from 5 to 20 discrete units. This makes for a potential total extent of 25 to 10,000 discrete patches, each with a grain of 1 square unit.
 
 Note that all individuals and/or resources move in decimal units the limit of which is determined by Python's decimal precision. This means that individual particles can occupy practically infinite locations within patches and likewise, squeeze through barriers (which only occupy integer x-y coordinates).
 
-**Temporal extent**  
+###Temporal extent  
 Each IBM was run to a state of mean reversion in total abundance, that is, a point where the number of individuals in the system fluctuates around an average value. Greater detail is given under 'Process overview and scheduling'.
 
-**Grain**  
+###Grain  
 Grain is the smallest unit over which change can happen. For example, as per the original ODD documentation: “One time step represents one year and simulations were run for 100 years.”  In our IBMs, one time step represented a single generation.
 
-### Process overview and scheduling  
-**Assembly**  
+## PROCESS OVERVIEW AND SCHEDULING  
+###Assembly  
 The user runs a core program (i.e., model.py) that chooses random values for system-level state variables including:
 
 * Number of incoming resource molecules:
@@ -153,7 +153,7 @@ The user runs a core program (i.e., model.py) that chooses random values for sys
 
 The core program also decides at random whether fluid dynamics will occur and at what rate of flow.
 
-**Core simulation and life history**  
+###Core simulation and life history  
 The IBM begins to run immediately after assembly. After each iteration of resource inflow where varied number of molecules and particles enter the system, each individual is given the chance to consume, grow, reproduce, starve, die, and to disperse towards resources and environmental optima.
 Our IBMs simulate these life history processes via random sampling. This simulates the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
 
@@ -175,7 +175,7 @@ Individuals sampled at random will die if their cell quota is equal to or less t
 *Emigration*   
 Emigration can result from fluid flow, from random spatial movement, or from active dispersal. Individuals and resource particles are considered to have left the local environment when they pass beyond the 2-dimensional edges.
 
-**Duration: A run to mean reversion**  
+###Duration: A run to mean reversion  
 Once assembled, each IBM simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change. Mean reversion captures whether a system is fluctuating around a mean value. At each time point past 200 generations, the modeling program conducts an Augmented Dickey-Fuller (ADF) test on the previous 100 generations to determine whether a state of mean reversion has been reached. The ADF is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. 
 
 Once mean reversion is reached (p < 0.05), the model runs for an additional 100 generations and then stops. The following is then recorded for each model:
@@ -214,15 +214,15 @@ These data are stored in file as csv files and can are directly imported into th
 
 Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
 
-### Initialization and input data  
-**Initialization**  
+## INITIALIZATION AND INPUTS  
+###Initialization  
 The model initiates with a random set of values for state-variables, 100 individuals whose species IDs are drawn at random from a uniform distribution. These values are saved, so that a simplex model could be programmed to replicate an analysis. 
 
-**Inputs**  
+###Inputs
 The modeling platform requires no input data other than those parameters that are chosen at random.
 
-### Design concepts  
-**Ecological complexity**  
+## DESIGN CONCEPTS 
+###Ecological complexity  
 Our IBM platform assembles models from random combinations of variables and processes to generate output data that allow the user to test the general influence of particular variables, processes, or dynamics.
 
 *Spatial complexity*  
@@ -254,19 +254,20 @@ Our IBMs simulate three levels of resource complexity.
 
 _Note:_ The average total number of individual resource particles (e.g., ‘a’, ‘b’, ‘c’) entering the system at a given time and inflow rate was made to be consistent across levels of resource complexity.
 
-**Nutrient limited growth**  
+###Nutrient limited growth  
 Individual growth and activity is fueled and limited by resources. Individuals cannot grow in the absence of resources. Without resources, individuals eventually go dormant or die.
 
-**Energetic costs**  
+###Energetic costs  
 All life history processes impose an energetic cost that is manifested as a reduction in cell quota. In some cases these energetic costs are the results of multiplicative outcomes. For example, the energetic cost of actively dispering x units is the product of x and the energetic cost of moving a single unit.
 
-**Emergence**  
+###Emergence  
 Community- and ecosystem-level patterns emerge from the life history and competitive dynamics at the individual level. These dynamics likewise emerge from initially random combinations of species-specific vital rates (e.g. of growth, dispersal, resuscitation, etc.).
 
-**Fluid dynamics**  
+###Fluid dynamics  
 IBMs are chosen at random to simulate fluid and non-fluid dynamics. Our IBM framework uses the Lattice-Boltzmann Method (LBM) to simulate fluid flow. An LBM discretizes the environment into a lattice and attaches to each position in the lattice a number of particle densities and velocities for each of nine directions of movement possible in a 2D environment (N, S, E, W, NE, NW, SE, SW, current position).
 
-**Ecological theory** --- Our IBM platform implicitly draws from multiple bodies of ecological theory.
+###Ecological theory
+Our IBM platform implicitly draws from multiple bodies of ecological theory.
 
 *Life history theory*   
 Life history theory seeks to understand aspects of ontogeny, reproduction, life span, etc. as the result of natural selection. Trade-offs play a central role in life history theory, where investing in one trait (e.g., rapid growth) leads to a decrease in another (e.g., growth efficiency). There are several trade-offs that emerge within the models.
@@ -285,36 +286,35 @@ Proposes that each ecological species has a unique range envirommental character
 *Ecological neutral theory and idiosyncrasy theory*  
 Our IBMs operate via random sampling and can vary from being completely neutral (all individuals having equal vital rates) to completely idiosyncratic (all individual and species are as different as possible). However, there is little chance that any given model will be 100% neutral or idiosyncratic. One aspect of neutral theory that our modeling adopts is the importance of stochastic life history processes. This process-based stochasticity is simulated via unweighted random draws among individuals. Once drawn from the community at random, individuals undergo life history processes according to probabilities that are effectively weighted by their cell quota and specific-specific vital rates.
 
-**Hypotheses**  
+###Hypotheses  
 We used the inherent ecological complexity of our modeling framework to test for robust ecological relationships related to our primary hypothesis that microscale properties of resource encounter rates have a stronger influence on growth,  abundance, and activity than macroscale properties of resource inflow and concentration.
 
-**Adaptation**  
+###Adaptation  
 Individuals can move towards their environmental optima. Populations can become aggregated in areas that provide favorable intersections of species optima. Species canevolve by the action of the environmental filter on subpopulation variation in state variables.
 
-**Objectives**  
+###Objectives  
 Individuals can seek conditions that match them to their environmental optima and can also seek to acquire resources through active searching, i.e., chemotaxis.
 
-**Learning**  
+###Learning  
 There is no aspect of individual-based learning in our modeling framework.
 
-**Prediction**  
+###Prediction  
 Individuals do not have the ability to anticipate conditions.
 
-**Sensing**  
+###Sensing  
 In models that include chemotaxis, individuals can sense the proximity of usable resources. In models that include fluid dynamics, individuals can move against the direction of flow.
 
-**Interaction**  
+###Interaction  
 At the moment, individuals interact through excluding each other from resources (e.g. preemption) and by producing resources (i.e., cross-feeding). There is currently no communication.
 
-**Stochasticity**  
+###Stochasticity  
 The occurrence of life history processes are conducted via random sampling. In this way, population and community dynamics result, in part, from demographic stochasticity. Likewise, the emergence of suites of life history traits proceeds from initially random combinations of traits.
 
-**Collectives**  
+###Collectives  
 Individuals belong to species. Species belong to communities. Depending on the model, communities belong to trophic levels.
 
-### Submodels & Equations
-
-**Cell quota model of Droop**  
+## SUBMODELS AND EQUATIONS
+###Cell quota model of Droop  
 In simplex models, individuals grow according to their amounts of endogenous resources (cell quota).
 
 Droop (1968, 1983) gave a relationship between specific growth rate ($\mu$) and cell quota ($Q$):
@@ -323,7 +323,7 @@ $$\mu = \mu'_{m} (1 - k_{q}/Q)$$
 
 where $k_{q}$ is the minimum cell quota needed for life, also referred to as the subsistence quota. $\mu'$ is the 
 
-**Maintenance cost of Pirt**  
+###Maintenance cost of Pirt  
 Pirt (1965) states "The variation, with growth rate, of the yield of organism from the substrate used as energy source is attributed to consumption of energy at a constant rate for cell maintenance." He derives a relationships between the growth yield (biomass), the growth rate, and metabolic maintenance.
 
 simplex models use Pirt's concept of a constant maintenance requirement. simplex also draws from Pirt's simple relation for substrate use:  
@@ -332,41 +332,35 @@ $$use(total) = use(maintenance) + use(growth)$$
 
 Respiration and activity without growth is not accounted for.
 
-## Notes on simplex source code
+# Notes on simplex source code
 Our models operate primarily on lists in a programmatic way, e.g., quickly sorting lists, and removing and returning an element from lists with very little overhead. Likewise, our models generate and hold a lot of information about all the particles and elements in the system, which can become a computationally intensive task. To this end, the modeling coded is written in Python, an easy to read high-level programming language that has many scientific, plotting, and animation libraries. Python gives greater control over the operating system than data analysis languages (e.g. R, Matlab) that can be comparatively slow at purely computational tasks and can greatly limit the amount of memory held in any data object, and even fail to import large amounts of data. Python can also obtain C-like speeds when implementing certain software, e.g., Cython. The output is a broad array of information held in a single csv file.
 
-## Speed & Memory
+## SPEED & MEMORY
 Our models do not complete until the time series of total abundance values reaches a state of mean reversion (i.e., stationarity). Because simplex models can range from quickly flowing systems with high disturbance to barely flowing and highly stable but depleted systems, simulations can potentially take several minutes or more to complete. Likewise, the ability to simulate many complex scenarios also allows for very large total abundances, the values of which cannot be predicted *a priori* and can even potentially outstrip a computer's memory. 
 
 Tests of our models' efficiency were ran on a Mid 2010 MacBook Pro (OS X 10.9.5) with a 2.4 GHz Intel Core 2 Duo processor and 4GB of Memory. This system probably represents a below average capacity for modern personal computers, which for this study, was desirable as simplex should be able to be ran on both personal computers and high capacity remote servers. I present results for time to completion and required memory in the Results.
 
 
-#Results
-## Unit tests
+# Results
+## UNIT TESTS
 ### Accuracy and computation
 
-**Diversity**  
+*Diversity*  
 Our models pass all unit tests for 15 diversity indices, ensuring that each index returns either the correct calculated value, or 'NaN' if given any values that cannot be used (e.g., negative numbers, string characters, empty lists).
 
-## Efficiency
+## EFFICIENCY
 ### Results from 100 randomly assembled models
 
-**Speed & Memory**  
-Analyses from 100 randomly assembled models can be run using the SpeedMemory.Rmd file located in the results/TestResults directory.
+*Speed & Memory*  
+Analyses from 100 randomly assembled models can be run using the SpeedMemory.Rmd file located in the results/TestResults directory. On average, our models require 96.60 +- 32.70 seconds to run, had an average total abundance (*N*) of 31,367 +- 879. The longest any model took to complete was 49 minutes.  The shortest any model took to complete was 5.8 seconds. On average, our models required 161 +- 4.3 megabytes of RAM. The longest running model requried 261MB of RAM and had generated the greatest total abundance (*N* = 68,808). The least amount of memory any model required was 90MB.
 
-*Speed*
-On average, our models require 96.60 +- 32.70 seconds to run, had an average total abundance (*N*) of 31,367 +- 879. The longest any model took to complete was 49 minutes.  The shortest any model took to complete was 5.8 seconds. 
-
-*Memory*
-On average, our models required 161 +- 4.3 megabytes of RAM. The longest running model requried 261MB of RAM and had generated the greatest total abundance (*N* = 68,808). The least amount of memory any model required was 90MB.
-
-## Products
+## PRODUCTS
 ### Output data
 
-**SimData.csv**  
+*SimData.csv*  
 A .csv file where each row is a run of a randomly assembled model and each column holds a piece of data about the system that was modeled (e.g., length, width, mean total abundance, number of incoming resources, etc.).
 
 ### Animations
 
-**.avi movie files**  
+*.avi movie files*  
 Our modeling platform can generate animations of models and store them in various image file formats. It does this using the matplotlib animation libary. Choosing whether to animate or not animate a model is done by commenting out lines of code in model.py.
