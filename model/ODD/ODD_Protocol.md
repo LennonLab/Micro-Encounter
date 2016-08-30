@@ -1,12 +1,11 @@
 ## Model description following the ODD Protocol
-The ODD protocol is standard for describing individual-based models (IBMs), see Grimm et al. 2006.
-ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
+The ODD protocol is standard for describing individual-based models (IBMs), see Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
 
 ### Purpose
-The purpose of our modeling framework is to simulate life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The proximate goal was to generate high degrees of variation in the assembly and structure of populations and communities by assembling many different models from random combinations of state-variables and processes. The ultimate goal was to provide a simulation-based platform for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities.
+Our modeling framework simulates life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The goal is to provide a simulation-based framework for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities. This is done by simulating dimensions of ecological complexity, variation in model parameters and processes, varying physical dynamics, and by allowing realistic life history trade-offs to emerge from random combinations of trait values.
 
 ### Entities & their state variables
-**Individual organisms**--Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a simplex model chooses an individual from the list of cell quotas (the probability of reproducing is determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
+**Individual organisms** --- Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a model chooses an individual from the list of cell quotas (the probability of reproducing is partly determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
 
 	Example:
 	IndIDs = [1,  2, 33, 14]
@@ -18,19 +17,26 @@ The purpose of our modeling framework is to simulate life history of individual 
 
 These are the lists of attributes for individual organisms:
 
-* time each particle spends in the system (aka residence time)
+* time each individual spends in the system
 * species ID
 * individual ID
 * 2D spatial location
-* endogenous levels of 3 resources (resource specific cell quotas)
-* individual-level metabolic maintenance cost
-* individual-level maximum dispersal rate
-* pedigree, i.e., direct lineage 
-* individual resource use efficiency for each resource
+* endogenous level of a single primary limiting resource (i.e., cell quota)
+* species-specific:
+	* metabolic maintenance cost
+	* maximum dispersal rate
+	* maximum growth rate
+	* resource use efficiency
+	* environmental optima
+* individual-level (varies as a normally distributed random variable with the specific-specific value as the mean):
+	* metabolic maintenance cost
+	* maximum dispersal rate
+	* maximum growth rate
+	* resource use efficiency
 * products of individual-level metabolism
 
 
-**Species**--Each species is characterized by the individuals that share a common set of traits, such as maximum growth rate, metabolic maintenance cost. Species information is stored in Python dictionaries. In this way, if simplex requires the species ID of an individual it will access the species ID list where each element corresponds to a specific individual. But, if simplex requires the maximum growth rate for an individual, then it finds the species ID and then uses that to accesses the Python dictionary for maximum specific growth rates of species.
+**Species** --- Each species is characterized by the individuals that share a common set of traits, such as maximum growth rate and environmental optima. Species information is stored in Python dictionaries. In this way, if simplex requires the species ID of an individual it will access the species ID list where each element corresponds to a specific individual. But, if simplex requires the maximum growth rate for an individual, then it finds the species ID and then uses that to access the Python dictionary for maximum specific growth rates of species.
 
 	Example:
 	IndIDs = [1,  2, 33, 14]
@@ -40,60 +46,52 @@ These are the lists of attributes for individual organisms:
 	The individual with ID of 1 belongs to species 12, which has a
   theoretical maximum growth rate of 0.9.
 
-The following are they types of species-level information that are stored in Python dictionaries: 
+The following are the types of species-level information that are stored in Python dictionaries: 
 
 * metabolic maintenance cost
 * maximum dispersal rate
 * maximum theoretical growth rate
 * resource use efficiency for each resource
+* environmental optima
 
-**Resource particles**--Individual resource particles are distinguished by collections of elements within lists. Each specific position in the list corresponds to the same resource particle. 
+
+**Resources** --- Resources are simulated at two levels (molecules, particles). Resource particles are designated as 'a', 'b', or 'c'. Particles are then joined together to form molecules (e.g., 'aaaa'). Depending on the model, chemical complexity is simulated by introducing bonds (e.g., '-') that must be broken in order to consume resource particles (e.g., 'aa-aa'). The breaking of these bonds is done via random draws of positions along the molecule, where for example an 'aa-aa' is less likely to be split than is an 'a-a-a-a' particle.
+
+Depending on the model, resource molecules can enter the system in clusters. The degree of spatial aggregation of incoming resource molecules is determined by a 2-dimensional Gaussian distribution, where the standard deviation (dispersion) is chosen at random at the start of the model and the mean (x-y position) is chosen at random at each time point.
+
+Each molecule or resource particle is distinguished by information stored in lists, where each position in each list corresponds to the same molecule or independent particle.
 
 	Example:
-	resIDs = [4,  6, 17, 1]
-	size =  [100, 87, 156.3, 0.001]
-	Xpos =   [56, 34, 567, 2]
-	Ypos =   [876, 98, 32, 45]
+	resIDs = ['a',  'bb', 'aaaa', 'b']
+	Xpos =   [5.6, 3.4, 5.67, 2.0]
+	Ypos =   [8.76, 9.8, 3.2, 4.5]
 	
-	The particle with ID of 4 has a size of 100 and is 
-	located at position x=56, y=876
+	The particle with ID of 0 is 'a' and is 
+	located at position x=5.6, y=8.76
 	
-The following are the types of information stored about each resource particle:
+The following are the types of information stored about each resource (molecule, particle):
 
 * time in the system
-* particle ID
+* resource type: a, b, c, or d
+* size and complexity, e.g., 'a', 'bb', 'cc-cc'
 * 2D spatial location
-* whether the particle is Nitrogen, Carbon, or Phosphorus
-* type of Nitrogen, Carbon, or Phosphorus the resource is
-* size of the particle
 
-
-**Inert tracers particles**--These are objects that move/flow into and through the environment. They only interact with physical barriers. 
-The use of tracers particles allows for attributes of a system that flows or physically turns over to be quantified (e.g., hydraulic residence time). Like other individual-level objects in simplex models, tracers are distinguished by collections of elements within lists. Each specific position in the list corresponds to the same resource particle.
-
-This information stored about each resource particle:
-
-* time in the system
-* 2D spatial location
-* particle ID
-
-**Physcial barriers**--These objects are simulated as discrete 2D spatial coordinates that cannot be occupied by any individual entities. The number, size, and location of physical barriers are chosen at random by simplex at the start of each model.
+**Physcial barriers** --- These objects are simulated as discrete 2D spatial coordinates that cannot be occupied by any individual entities. The number, size, and location of physical barriers are chosen at random at the start of each model.
 
 ###System level state variables
-Each run of simplex begins with random choices for the values of:
+Each run of an IBM begins with random choices for the values of:
 
-* width (5 to 100)
-* height (5 to 100)
+* width (5 to 20)
+* height (5 to 20)
 * basal flow rate (1.0 to 0.0)
 * number, size, and location of physical barriers 
 * number and direction of environmental gradients
-* rate of stochastic disturbance
-* rate of fluctuation in basal flow rate
-* degree of fluctuation 
+* rate of stochastic fluctuation in basal flow rate
+* degree of stochastic fluctuation 
 * degree of syncronized flow of individual particles
 	* completely in-sync or completely out of sync 
 
-For example
+For example:
 
 	from randparams.py:
 	
@@ -117,92 +115,95 @@ For example
     ...	
 
 ###Spatial and temporal scales
-The two general aspects of scale are grain (a.k.a. 
-resolution) and extent (e.g. total area).
+The two general aspects of scale are grain (a.k.a. resolution) and extent (e.g. total area).
 
-**Spatial extent**--The environment of simplex models is two dimensional and can vary along each axis from 5 to 100 discrete units. This makes for a potential total extent of 25 to 10,000 discrete patches, each with a grain of 1 square unit. 
+**Spatial extent** --- The environment of the IBMs is two dimensional and can vary along each axis from 5 to 20 discrete units. This makes for a potential total extent of 25 to 10,000 discrete patches, each with a grain of 1 square unit.
 
-Note that all particles move in decimal units the limit of which is determined by Python's decimal precision. This means that individual particles can occupy practically infinite locations within patches and likewise, squeeze through barriers (which only occupy integer x-y coordinates).
+Note that all individuals and/or resources move in decimal units the limit of which is determined by Python's decimal precision. This means that individual particles can occupy practically infinite locations within patches and likewise, squeeze through barriers (which only occupy integer x-y coordinates).
 
-**Temporal extent**--Extent of time in simplex models refers to residence time, i.e., the average amount of time that individual particles spend in the system. Residence time for inert tracer particles can vary across five orders of magnitude. 
+**Temporal extent** --- Each IBM was run to a state of mean reversion in total abundance, that is, a point where the number of individuals in the system fluctuates around an average value. Greater detail is given under 'Process overview and scheduling'.
 
-**Grain**--Grain is the smallest unit over which change can happen. 
-For example, as per the original ODD documentation: “One time step represents one year and simulations were run for 100 years. One grid cell represents 1 ha and the model landscape comprised 1,000 x 1,000 ha; i.e., 10,000 square kilometers”. In contrast, the smallest grain achievable by simplex is determined by slowest rate at which individuals can undergo BIDE (birth, immigration, death, emigration) processes. For example, under high residence times, an individual can move across 0.00001% of the x or y axis in one time step. Under low residence times, an individual can move across 10% or greater of the x or y axis in one time step.
+**Grain** --- Grain is the smallest unit over which change can happen. For example, as per the original ODD documentation: “One time step represents one year and simulations were run for 100 years.”  In our IBMs, one time step represented a single generation.
 
 ### Process overview and scheduling
-**Assembly**--The user runs a program that chooses random values for system-level state variables including whether disturbance, immigration, speciation, fluid dynamics, etc. will occur and at what rates.
+**Assembly** --- The user runs a core program (i.e., model.py) that chooses random values for system-level state variables including:
 
-**Core simulation process**--simplex models begin simulation immediately after assembly from random combinations of state-variables and processes. 
-Instead of operating by definitive time steps (i.e. days, generations), simplex models advance turnover of the environmental matrix according to the initial rate of flow. 
-If the initial rate of flow is 1.0, then the environmental matrix and inert particles would flow 1.0 units of distance. After each iteration of flow, each individual is given the chance to consume, grow, reproduce, starve, die, and to disperse towards resources and environmental optima.
+* Number of incoming resource molecules:
+	*  0 to 90 per time step
+* Maximum specific growth rate:
+	*  10 - 50% of cell quota
+* Maximum maintenance cost for individuals:
+	*  1 - 5% of cell quota
+* Maximum specific dispersal rate:
+	*  1 to 10% of the environment
+* Maximum specific resuscitation rate:
+	*  probability of 0.1 - 1.0
+* Maximum maintenance energy reduction factor:
+	*  Going dormant can reduce maintenance energy between 20 and 100 times
+* Incoming resource aggregation:
+	*  Determined by the standard deviation of a Normal distribution (0.1 - 0.4)
 
-**Duration: A run to mean reversion**--Once assembled, a simplex model simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change in, say, total abundance. Mean reversion captures whether a system is fluctuating around a mean value. Once 100 generations have occurred within a model, simplex examines whether a point of mean reversion has occured by conducting an Augmented Dickey-Fuller (ADF) Test, which is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. A model is stopped once mean reversion is determined to occurred and, unless the number of desired simulations (i.e. models) has been reached, simplex simply constructs another model from random combinations of state-variables and processes, and then runs it to mean reversion.
+The core program also decides at random whether fluid dynamics will occur and at what rate of flow.
 
-### Fluid dynamics
-simplex uses an efficient and powerful method for 
-simulating fluid flow, i.e., a Lattice-Boltzmann Method 
-(LBM). An LBM discretizes the environment into a lattice 
-and attaches to each position in the lattice a number of 
-particle densities and velocities for each of nine 
-directions of movement possible in a 2D environment 
-(N, S, E, W, NE, NW, SE, SW, current position).
+**Core simulation process** --- The IBM begins to run immediately after assembly. After each iteration of resource inflow where varied number of molecules and particles enter the system, each individual is given the chance to consume, grow, reproduce, starve, die, and to disperse towards resources and environmental optima.
 
-**Active dispersal**--simplex models allow individuals to move towards their environmental optima. Rather than a single environmental optima resulting from a single environmental gradient, simplex allows environmental optima to occur as intersections among environmental gradients. Hence, individuals potentially have multiple optima resulting from unique and equally optimal intersection of up to 10 environmental gradients.
+**Duration: A run to mean reversion** --- Once assembled, each IBM simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change. Mean reversion captures whether a system is fluctuating around a mean value. At each time point past 200 generations, the modeling program conducts an Augmented Dickey-Fuller (ADF) test on the previous 100 generations to determine whether a state of mean reversion has been reached. The ADF is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. Once mean reversion is reached (p < 0.05), the model runs for an additional 100 generations. A model is stopped once mean reversion is determined to have occurred. Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
 
-**Simulated life history**--simplex models simulate growth, reproduction, and death via weighted random sampling. This simulate the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
+### Fluid and non-fluid dynamics
+IBMs were chosen at random to simulate fluid and non-fluid dynamics. Our IBM framework used the Lattice-Boltzmann Method (LBM) to simulate fluid flow. An LBM discretizes the environment into a lattice and attaches to each position in the lattice a number of particle densities and velocities for each of nine directions of movement possible in a 2D environment (N, S, E, W, NE, NW, SE, SW, current position).
 
-*Inflow/Entrance:* Resources and individuals enter from any point in the environment. Species identities of inflowing propagules are chosen at random from a log-series distribution, which often approximates the distribution 
-of abundance among species in ecological communities (see Hubbell 2001). Along with a species ID and species-
-specific maximum rates of resource uptake, active dispersal, resource efficiencies, cell maintenance, 
-and environmental optima, each propagule was given a unique ID and a multi-resource cell quota that represent 
-the state of internal resources. The average of these cell quotas determine the probability of reproduction. 
+**Simulated life history** --- Our IBMs simulate growth, reproduction, and death via weighted random sampling. This simulate the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
 
-*Dispersal:* Individuals are allowed to actively move along environmental gradients (sometimes against the 
-direction of environmenta flow) and towards their optima. A better match to one's environmental optima increases 
-the chance of reproduction and the individual's ability to perform (consume, grow). 
+*Immigration:* Individuals enter from any point in the environment. Species identities of inflowing propagules are chosen at random from a uniform distribution. Along with a species ID and species-specific maximum rates of resource uptake, active dispersal, resource efficiencies, cell maintenance, an environmental optima, each propagule is given a unique ID and a starting cell quota that represents the state of internal resources. The cell quota also determines the chance of reproduction. 
 
-*Consumption & growth:* Sampled individuals consume resources according to their specific maximum rates of 
-uptake and grow according to specific resource efficiencies and maintenance costs. Uptake increases the individual 
-cell quotas and decreases ambient resources. Individual cell quotas are then decreased according to a specific 
-physiological maintenance cost. 
+*Dispersal:* Our IBMs allow individuals to move towards resource particles. This happens by choosing a random sample of resource particles from the environment, and then moving the individual towards the nearest consumable resource particle at a rate determined by its cell quota and maximum dispersal rate.
 
-*Reproduction:* Reproduction in simplex is currently limited to clonal reproduction with the possibility of 
-mutation. Individuals reproduce with a probability determined by the combination of mean cell quota and the 
-proportional match to the environmental optima. The cell quota of each resource is evenly divided between the 
-individual and its daughter. The daughter is given a unique individual ID and the species ID of its mother, 
-unless in the case of speciation, but is allowed small mutations in individual-level state variables.
+*Consumption & growth:* Sampled individuals consume resources according to their species-specific maximum rates of uptake and grow according to species-specific resource efficiencies and maintenance costs. Uptake increases the individual cell quotas and decreases ambient resources. Individual cell quotas are then decreased according to a specific physiological maintenance cost. Likewise, faster rates of uptake incurred a larger energetic cost and hence, lower growth efficiency. 
 
-*Speciation:* Speciation is simulated within simplex as a discrete event but is accompanied by mutations in the 
-values of species-level state variables. This allows for diversity to arise within the system, which the 
-environmental filter can then select on.
+*Reproduction:* Reproduction is limited to asexual reproduction with the possibility of mutation. Individuals reproduce with a probability determined by the combination of mean cell quota and the proportional match to the environmental optima. The cell quota of each resource is evenly divided between the individual and its daughter. The daughter is given a unique individual ID and the species ID of its mother, but is allowed small mutations in individual-level life history parameters.
 
-*Death:* Individuals sampled at random will die if their smallest resource specific cell quota (i.e., N, C, P)
-is equal to or less than 0. 
+*Death:* Individuals sampled at random will die if their cell quota is equal to or less than maintenance energy.
 
-*Emigration:* Individuals, resource particles, and inert tracers are considered to have left or to have flowed out 
-when they pass beyond edges of the environment.
+*Emigration:* Emigration can result from fluid flow, from random spatial movement, or from active dispersal. Individuals and resource particles are considered to have left the local environment when they pass beyond the 2-dimensional edges.
 
 ### Design concepts
 
-**Basic principles.** 
-*Ecological complexity*: simplex assembles models from random combinations of constraints (state-variables) and processes to generate output data that allow the user to test the general influence of a particular state-variable, process, or combination thereof using univariate and multivariate tests.  
+**Ecological complexity** --- Our IBM platform assembles models from random combinations of variables and processes to generate output data that allow the user to test the general influence of particular variables, processes, or dynamics.
 
-*Nutrient limited growth*: All models assembled by simplex employ the universal concept that individual growth and activity is fueled and limited by resources.  
+*Spatial complexity:*
 
-*Resource diversity & heterogeneity*: simplex allows the user to explore the influence of the number and abundances of different resources on ecological diversity and ecosystem processes.
+*Trophic complexity:*
 
-**Theories**
-*Constraint-based theory*: simplex was originally built to explore the influence of ecosystem residence time (volume/flow rate) on community assembly and structure. That is, the idea that both ecological processes and physical constraints shape ecological diversity. 
+*Resource complexity:*
 
-*Chemostat theory*: simplex operates much like an unhinged bioreactor or chemostat. That is, particles flow through a system of a defined size at an average rate, and are limited in growth by their residence time.
+**Nutrient limited growth** --- Idividual growth and activity is fueled and limited by resources. 
 
-*Ecological neutral theory*: simplex operates via random sampling and can vary from being completely neutral (all individuals having equal vital rates) to completely idiosyncratic (all individual and species are as different as possible). The one aspect of neutral theory that simplex adopts without question is the importance of stochastic life history processes (i.e. weighted or unweighted random fluctuations in population sizes). 
+**Energetic costs** ---
 
-**Hypotheses.**
-These are entirely up to the user to formulate and test according to simplex's capabilities and analytical tools.
+**Emergence** --- 
 
-**Modeling approaches.**
-Simplex operations via two main modeling approaches, other than being individual-based, i.e., random sampling and computaitonal fluid dynamics.
+**Theories** --- Our IBM platform implicitly draws from multiple ecological theories.
+
+*Life history theory*   
+Life history theory seeks to understand aspects of ontogeny, reproduction, life span, etc. as the result of natural selection. Trade-offs play a central role in life history theory, where investing in one trait (e.g., rapid growth) leads to a decrease in another (e.g., growth efficiency).
+
+*Resource-limitation theory*  
+Proposes that growth-limiting resources are the primary determinants of competition and community structure. Our IBMs enforce resource limitation by making all biological processes dependent on levels of endogenous resources.
+
+*Ecological niche theory*  
+Proposes that each ecological species has a unique range envirommental characteristics within which it can experience positive growth. The more similar the niche of two species, the more intense the competition is likely to be between them. While definitions of ecological niches and how to test niche theory has long been argued, the importance of the ecological niche is a central principle of ecological theory. Our IBMs inherently give each species an ecological niche by assigning each species an environmental optima, a specific resource to grow on, traits that produce life history trade-offs and differential success in specific environments.
+
+*Ecological neutral theory*  
+Our IBMs operate via random sampling and can vary from being completely neutral (all individuals having equal vital rates) to completely idiosyncratic (all individual and species are as different as possible). The one aspect of neutral theory that simplex adopts without question is the importance of stochastic life history processes (i.e. weighted or unweighted random fluctuations in population sizes). 
+
+**Hypotheses** --- We used the inherent ecological complexity of our modeling framework to test for robust ecological relationships related to the following hypotheses:
+
+*Encounter limits growth*
+
+*Encounter drives seed bank dynamics*
+
+
+**Modeling approaches** --- Our IBM framework operates via two main modeling approaches other than being individual-based, i.e., random sampling and the inclusion of dimensions of ecological complexity.
 
 **Emergence.**
 simplex uses random sampling and random assembly its models to avoid imposing strong constraints on the properties that emerge and to allow unanticipated combinations of traits and ecological structure to emerge.
