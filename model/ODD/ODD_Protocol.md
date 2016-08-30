@@ -297,36 +297,20 @@ $$\mu = \mu'_{m} (1 - k_{q}/Q)$$
 where $k_{q}$ is the minimum cell quota needed for life, also referred to as the subsistence quota. $\mu'$ is the 
 
 **Maintenance cost of Pirt**
-Pirt (1965) states "The variation, with growth rate, of the yield of organism from the substrate used as 
-energy source is attributed to consumption of energy at a constant rate for cell maintenance." He derives 
-a relationships between the growth yield (biomass), the growth rate, and metabolic maintenance.
+Pirt (1965) states "The variation, with growth rate, of the yield of organism from the substrate used as energy source is attributed to consumption of energy at a constant rate for cell maintenance." He derives a relationships between the growth yield (biomass), the growth rate, and metabolic maintenance.
 
-simplex models use Pirt's concept of a constant maintenance requirement. simplex also draws from 
-Pirt's simple relation for substrate use:  
+simplex models use Pirt's concept of a constant maintenance requirement. simplex also draws from Pirt's simple relation for substrate use:  
 
 $$use(total) = use(maintenance) + use(growth)$$
 
 Respiration and activity without growth is not accounted for.
 
-**Log-series metacommunity**
-simplex models draw immigrating individuals from a theoretical log-series distribution.
-Hubbell (2001) states that the regional community (i.e., metacommmunity) often has a log-series species 
-abundance distribution. The probability density function (pdf) of the log-series is:
-
-$$f(k) = -1/ln(1 - p) * p^{k}/k$$
-
-Hubbell (2001) provides explicit detail of the log-series.
-
 ## Notes on simplex source code
-simplex models operate primarily on lists in a programmatic way, e.g., quickly sorting lists, and removing and returning an element from lists with very little overhead. Likewise, simplex models generate and hold a lot of information about all the particles and elements in the system, which can become a computationally intensive task. To this end, simplex modeling coded is written in Python, an easy to read high-level programming language that has many scientific, plotting, and animation libraries. Python gives greater control over the operating system than data analysis languages (e.g. R, Matlab) that can be comparatively slow at purely computational tasks and can greatly limit the amount of memory held in any data object, and even fail to import large amounts of data. Python can also obtain C-like speeds when implementing certain software, e.g., Cython, Sage.
-
-The output of simplex is a broad array of information held in seven .csv files. The most important of these is SimData.csv, and is intended to be analyzed in the freely available R (https://www.r-project.org/) and RStudio (https://www.rstudio.com/) environments. The R statistical computing language is well-suited to the analysis of simplex output and contains many packages for multivariate analysis and higher-order statistical analysis that Python is only beginning to accumulate. Consequently, we provide R source code in .R files and .Rmd (RMarkdown) files, complete with basic and advanced statistical analyses for analyzing diversity, regression models, ordination, variance partitioning, and for generating pdf documents (via Knitr) that integrate prose, code, and figures for manuscripts. 
-
-The reader can view example R-based analysis files that users can use to examine simplex's simulated data: https://github.com/LennonLab/simplex/tree/master/results/analyses.
+Our models operate primarily on lists in a programmatic way, e.g., quickly sorting lists, and removing and returning an element from lists with very little overhead. Likewise, our models generate and hold a lot of information about all the particles and elements in the system, which can become a computationally intensive task. To this end, the modeling coded is written in Python, an easy to read high-level programming language that has many scientific, plotting, and animation libraries. Python gives greater control over the operating system than data analysis languages (e.g. R, Matlab) that can be comparatively slow at purely computational tasks and can greatly limit the amount of memory held in any data object, and even fail to import large amounts of data. Python can also obtain C-like speeds when implementing certain software, e.g., Cython. The output is a broad array of information held in a single csv file.
 
 ## Speed & Memory
 
-Simplex models do not complete until the time series of total abundance values reaches a state of mean reversion (i.e., stationarity). Because simplex models can range from quickly flowing systems with high disturbance to barely flowing and highly stable but depleted systems, simulations can potentially take several minutes or more to complete. Likewise, the ability to simulate many complex scenarios also allows for very large total abundances, the values of which cannot be predicted *a priori* and can even potentially outstrip a computer's memory. 
+Our models do not complete until the time series of total abundance values reaches a state of mean reversion (i.e., stationarity). Because simplex models can range from quickly flowing systems with high disturbance to barely flowing and highly stable but depleted systems, simulations can potentially take several minutes or more to complete. Likewise, the ability to simulate many complex scenarios also allows for very large total abundances, the values of which cannot be predicted *a priori* and can even potentially outstrip a computer's memory. 
 
 I ran simplex on a Mid 2010 MacBook Pro (OS X 10.9.5) with a 2.4 GHz Intel Core 2 Duo processor and 4GB of Memory. This system probably represents a below average capacity for modern personal computers, which for this study, was desirable as simplex should be able to be ran on both personal computers and high capacity remote servers. I present results for time to completion and required memory in the Results.
 
