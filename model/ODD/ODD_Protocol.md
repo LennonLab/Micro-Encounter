@@ -149,164 +149,143 @@ The core program also decides at random whether fluid dynamics will occur and at
 
 **Duration: A run to mean reversion** --- Once assembled, each IBM simulates ecological processes (birth, death, dispersal, growth, consumption, etc.) until the system reaches a point of mean reversion, i.e., the tendency of a system to reverse a directional change. Mean reversion captures whether a system is fluctuating around a mean value. At each time point past 200 generations, the modeling program conducts an Augmented Dickey-Fuller (ADF) test on the previous 100 generations to determine whether a state of mean reversion has been reached. The ADF is well-explained here: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing. Once mean reversion is reached (p < 0.05), the model runs for an additional 100 generations. A model is stopped once mean reversion is determined to have occurred. Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
 
-### Fluid and non-fluid dynamics
-IBMs were chosen at random to simulate fluid and non-fluid dynamics. Our IBM framework used the Lattice-Boltzmann Method (LBM) to simulate fluid flow. An LBM discretizes the environment into a lattice and attaches to each position in the lattice a number of particle densities and velocities for each of nine directions of movement possible in a 2D environment (N, S, E, W, NE, NW, SE, SW, current position).
 
 **Simulated life history** --- Our IBMs simulate growth, reproduction, and death via weighted random sampling. This simulate the partly probabilistic and partly deterministic nature of environmental filtering and individual-level interactions. 
 
-*Immigration:* Individuals enter from any point in the environment. Species identities of inflowing propagules are chosen at random from a uniform distribution. Along with a species ID and species-specific maximum rates of resource uptake, active dispersal, resource efficiencies, cell maintenance, an environmental optima, each propagule is given a unique ID and a starting cell quota that represents the state of internal resources. The cell quota also determines the chance of reproduction. 
+*Immigration*
+Individuals enter from any point in the environment. Species identities of inflowing propagules are chosen at random from a uniform distribution. Along with a species ID and species-specific maximum rates of resource uptake, active dispersal, resource efficiencies, cell maintenance, an environmental optima, each propagule is given a unique ID and a starting cell quota that represents the state of internal resources. The cell quota also determines the chance of reproduction. 
 
-*Dispersal:* Our IBMs allow individuals to move towards resource particles. This happens by choosing a random sample of resource particles from the environment, and then moving the individual towards the nearest consumable resource particle at a rate determined by its cell quota and maximum dispersal rate.
+*Dispersal*
+Our IBMs allow individuals to move towards resource particles. This happens by choosing a random sample of resource particles from the environment, and then moving the individual towards the nearest consumable resource particle at a rate determined by its cell quota and maximum dispersal rate.
 
-*Consumption & growth:* Sampled individuals consume resources according to their species-specific maximum rates of uptake and grow according to species-specific resource efficiencies and maintenance costs. Uptake increases the individual cell quotas and decreases ambient resources. Individual cell quotas are then decreased according to a specific physiological maintenance cost. Likewise, faster rates of uptake incurred a larger energetic cost and hence, lower growth efficiency. 
+*Consumption & growth*
+Sampled individuals consume resources according to their species-specific maximum rates of uptake and grow according to species-specific resource efficiencies and maintenance costs. Uptake increases the individual cell quotas and decreases ambient resources. Individual cell quotas are then decreased according to a specific physiological maintenance cost. Likewise, faster rates of uptake incurred a larger energetic cost and hence, lower growth efficiency. 
 
-*Reproduction:* Reproduction is limited to asexual reproduction with the possibility of mutation. Individuals reproduce with a probability determined by the combination of mean cell quota and the proportional match to the environmental optima. The cell quota of each resource is evenly divided between the individual and its daughter. The daughter is given a unique individual ID and the species ID of its mother, but is allowed small mutations in individual-level life history parameters.
+*Reproduction*
+Reproduction is limited to asexual reproduction with the possibility of mutation. Individuals reproduce with a probability determined by the combination of mean cell quota and the proportional match to the environmental optima. The cell quota of each resource is evenly divided between the individual and its daughter. The daughter is given a unique individual ID and the species ID of its mother, but is allowed small mutations in individual-level life history parameters.
 
-*Death:* Individuals sampled at random will die if their cell quota is equal to or less than maintenance energy.
+*Death* 
+Individuals sampled at random will die if their cell quota is equal to or less than maintenance energy.
 
-*Emigration:* Emigration can result from fluid flow, from random spatial movement, or from active dispersal. Individuals and resource particles are considered to have left the local environment when they pass beyond the 2-dimensional edges.
+*Emigration* 
+Emigration can result from fluid flow, from random spatial movement, or from active dispersal. Individuals and resource particles are considered to have left the local environment when they pass beyond the 2-dimensional edges.
+
+### Initialization and input data
+
+**Initialization**
+The model initiates with a random set of values for state-variables, 100 individuals whose species IDs are drawn at random from a uniform distribution. These values are saved, so that a simplex model could be programmed to replicate an analysis. 
+
+**Inputs**
+The modeling platform requires no input data other than those parameters that are chosen at random.
 
 ### Design concepts
 
 **Ecological complexity** --- Our IBM platform assembles models from random combinations of variables and processes to generate output data that allow the user to test the general influence of particular variables, processes, or dynamics.
 
-*Spatial complexity:*
+*Spatial complexity*
+Our IBMs simulate three levels of spatial complexity.
 
-*Trophic complexity:*
+* White noise: Locations of individual organisms and resource molecules changed at each time step in an uncorrelated way. Hence, every organism and resource particle had the same chance of moving to any location within the environment at each time step in the model. This white-noise model created a well-mixed environment with no dispersal limitation. 
+* Aggregation and random walks: Resource molecules enter the environment in clusters. Individuals undergo random walks. The average length of the random walk was a species-specific parameter, and larger dispersal distances carried greater energetic costs. The degree of spatial dispersion among incoming resource clusters was chosen at random. 
+* Aggregation and chemotaxis: Resource molecules enter in clusters but individuals were capable of sensing resource molecules based on resource density and distance. 
 
-*Resource complexity:*
+*Trophic complexity*
+Our IBMs simulate four levels of trophic complexity, with the last being a combination of two others.
 
-**Nutrient limited growth** --- Idividual growth and activity is fueled and limited by resources. 
+* The first level had only one trophic interaction, which we refer to as a simple "consumer-resource" model. At this level of trophic complexity, all individuals were solely consumers of inflowing resources. 
+* The second level of trophic complexity allowed for the consumption of resources contained in dead bacteria (e.g., Rozen et al., 2009), which is a trophic interaction that we referred to as "scavenging". 
+* The third level of trophic complexity simulated a situation in which one group of consumer species generated a metabolic byproduct that could be taken up by a second group of consumer species, which in turn generated a byproduct that served as a resource for a third group of species. This situation was meant to simulate conditions that are characteristic of cross-feeding or syntrophy (Pande et al., 2015). A final level of trophic complexity was characterized by a combination scavenging and cross-feeding, which we saw as more ecologically realistic and complex than scavenging or cross-feeding alone.
 
-**Energetic costs** ---
+*Resource complexity* 
+Our IBMs simulate three levels of resource complexity. 
 
-**Emergence** --- 
+* Monoculture: The simplest condition wherein only one type of resource molecule was supplied. These molecules had no chemical complexity and could be consumed without extracellular enzymatic breakdown (Figure 1). Resource molecules were represented by strings of individual particles (e.g., ‘aaaa’) that could be broken down from each end when encountered by organisms. The number, size, and dispersion of resource molecules were chosen at random (Table 1).
 
-**Theories** --- Our IBM platform implicitly draws from multiple ecological theories.
+* Polyculture: The second level supplied three different types of resources (e.g., ‘aaaa’, ‘bbbb’, ‘cccc’) that could only be used by a specialist consumer (Figure 1). 
+
+* Lock and key: Simulates the structural complexity of resource molecules, i.e., chemical complexity. Consumers must break down resource molecules at specific locations. For example, a molecule would have a hyphen that simulates a chemical bond separating two groups of resource particles (e.g., ‘aaaa-aaaa’). In order to consume a resource particle, i.e., ‘a’, individuals would need to cleave the ‘aaaa-aaaa’ molecule at the bond and then consume an ‘a’ from one of the two resulting ‘aaaa’ molecules. Because molecules are cleaved at random locations, there is a 1/9 chance of cleaving the ‘aaaa-aaaa’ particle and, likewise, a 1/5 chance of cleaving a ‘bb-bb’ particle, and a 2/8 chance of cleaving a ‘bb-bb-bb’ particle (Figure 1). Therefore, a molecule with a proportionately larger number of bonds requires greater time, and hence, energy to break down.
+
+*Note:* The average total number of individual resource particles (e.g., ‘a’, ‘b’, ‘c’) entering the system at a given time and inflow rate was made to be consistent across levels of resource complexity.
+
+**Nutrient limited growth** --- Individual growth and activity is fueled and limited by resources. Individuals cannot grow in the absence of resources. Without resources, individuals eventually go dormant or die.
+
+**Energetic costs** --- All life history processes impose an energetic cost that is manifested as a reduction in cell quota. In some cases these energetic costs are the results of multiplicative outcomes. For example, the energetic cost of actively dispering x units is the product of x and the energetic cost of moving a single unit.
+
+**Emergence** --- Community- and ecosystem-level patterns emerge from the life history and competitive dynamics at the individual level. These dynamics likewise emerge from initially random combinations of species-specific vital rates (e.g. of growth, dispersal, resuscitation, etc.).
+
+**Fluid dynamics** --- IBMs are chosen at random to simulate fluid and non-fluid dynamics. Our IBM framework uses the Lattice-Boltzmann Method (LBM) to simulate fluid flow. An LBM discretizes the environment into a lattice and attaches to each position in the lattice a number of particle densities and velocities for each of nine directions of movement possible in a 2D environment (N, S, E, W, NE, NW, SE, SW, current position).
+
+**Ecological theory** --- Our IBM platform implicitly draws from multiple bodies of ecological theory.
 
 *Life history theory*   
-Life history theory seeks to understand aspects of ontogeny, reproduction, life span, etc. as the result of natural selection. Trade-offs play a central role in life history theory, where investing in one trait (e.g., rapid growth) leads to a decrease in another (e.g., growth efficiency).
+Life history theory seeks to understand aspects of ontogeny, reproduction, life span, etc. as the result of natural selection. Trade-offs play a central role in life history theory, where investing in one trait (e.g., rapid growth) leads to a decrease in another (e.g., growth efficiency). There are several trade-offs that emerge within the models.
+
+* Mobility vs. metabolic maintenance: Greater active dispersal allows organisms to find resources
+* Growth rate vs. metabolic maintenance
+* Generalist vs. specialist
+* R vs. K selection
 
 *Resource-limitation theory*  
-Proposes that growth-limiting resources are the primary determinants of competition and community structure. Our IBMs enforce resource limitation by making all biological processes dependent on levels of endogenous resources.
+Proposes that growth-limiting resources are the primary determinants of competition and community structure. Our IBMs enforce resource limitation by making all biological processes dependent on levels of endogenous resources. Resources are the primary sources of inter- and intra-specific competition among individuals.
 
 *Ecological niche theory*  
-Proposes that each ecological species has a unique range envirommental characteristics within which it can experience positive growth. The more similar the niche of two species, the more intense the competition is likely to be between them. While definitions of ecological niches and how to test niche theory has long been argued, the importance of the ecological niche is a central principle of ecological theory. Our IBMs inherently give each species an ecological niche by assigning each species an environmental optima, a specific resource to grow on, traits that produce life history trade-offs and differential success in specific environments.
+Proposes that each ecological species has a unique range envirommental characteristics within which it can experience positive growth. The more similar the niche of two species, the more intense the competition is likely to be between them. While definitions of ecological niches and how to test niche theory has long been argued, the importance of the ecological niche is a central principle of ecological theory. Our IBMs inherently give each species an ecological niche by assigning each species an environmental optima, a specific resource to use which a subset of other species can also grow on, and unique combination of traits that produce life history trade-offs and differential success in specific environments.
 
-*Ecological neutral theory*  
-Our IBMs operate via random sampling and can vary from being completely neutral (all individuals having equal vital rates) to completely idiosyncratic (all individual and species are as different as possible). The one aspect of neutral theory that simplex adopts without question is the importance of stochastic life history processes (i.e. weighted or unweighted random fluctuations in population sizes). 
+*Ecological neutral theory and idiosyncrasy theory*
+Our IBMs operate via random sampling and can vary from being completely neutral (all individuals having equal vital rates) to completely idiosyncratic (all individual and species are as different as possible). However, there is little chance that any given model will be 100% neutral or idiosyncratic. One aspect of neutral theory that our modeling adopts is the importance of stochastic life history processes. This process-based stochasticity is simulated via unweighted random draws among individuals. Once drawn from the community at random, individuals undergo life history processes according to probabilities that are effectively weighted by their cell quota and specific-specific vital rates.
 
-**Hypotheses** --- We used the inherent ecological complexity of our modeling framework to test for robust ecological relationships related to the following hypotheses:
+**Hypotheses** --- We used the inherent ecological complexity of our modeling framework to test for robust ecological relationships related to our primary hypothesis that microscale properties of resource encounter rates have a stronger influence on growth,  abundance, and activity than macroscale properties of resource inflow and concentration.
 
-*Encounter limits growth*
-
-*Encounter drives seed bank dynamics*
-
-
-**Modeling approaches** --- Our IBM framework operates via two main modeling approaches other than being individual-based, i.e., random sampling and the inclusion of dimensions of ecological complexity.
-
-**Emergence.**
-simplex uses random sampling and random assembly its models to avoid imposing strong constraints on the properties that emerge and to allow unanticipated combinations of traits and ecological structure to emerge.
-
-* Abundance
-	* Total community abundance
-	* Trait-related population size
-	* Effective population size
-	* Abundance-biomass relation
-* Community assembly
-	* Species turnover
-	* Biomass turnover
-	* Extinction rate
-	* Succession
-* Community structure
-	* Species richness
-	* Species evenness
-	* Trait diversity
-* Population structure
-	* Demography
-	* Subpopulation trait variation
-* Life history tradeoffs
-	* Mobility vs. metabolic maintenance
-	* Growth rate vs. metabolic maintenance
-	* Generalist vs. specialist
-	* R vs. K selection
-
-**Adaptation** 
-Individuals can move towards their environmental optima. Populations can become aggregated in areas that provide 
+**Adaptation** --- Individuals can move towards their environmental optima. Populations can become aggregated in areas that provide 
 favorable intersections of species optima. Species canevolve by the action of the environmental filter on subpopulation variation in state variables.
 
-**Objectives**
-Individual seek conditions that match them to the environment (e.g., positions along environmental gradients). Individuals also seek to acquire resources through active searching. In the future, individuals will seek to avoid predation.
+**Objectives** --- Individuals can seek conditions that match them to their environmental optima and can also seek to acquire resources through active searching, i.e., chemotaxis.
 
-**Learning**
-There is no aspect of individual-based learning in simplex, as of yet.
+**Learning** --- There is no aspect of individual-based learning in our modeling framework.
 
-**Prediction**
-Individuals in simplex do not have the ability to anticipate conditions.
+**Prediction** --- Individuals do not have the ability to anticipate conditions.
 
-**Sensing**
-Individuals only sense in the sense that they can move towards environmental optima and, in the future, 
-resources. Otherwise, all encounters are the result of random walks or fluid flow.
+**Sensing** --- In models that include chemotaxis, individuals can sense the proximity of usable resources. In models that include fluid dynamics, individuals can move against the direction of flow.
 
-**Interaction**
-At the moment, individuals only interact indirectly through excluding each other from resources (e.g. 
-preemption). In the future, individuals will interact as predator-prey, mutualists, resource-dependents, etc. 
-Likewise, there is currently no communication, though quorum sensing would be cool.
+**Interaction** --- At the moment, individuals interact through excluding each other from resources (e.g. preemption) and by producing resources (i.e., cross-feeding). There is currently no communication.
 
-**Stochasticity**
-The occurrence of nearly all processes of birth, death, life, immigration, dispersal, emigration, consumption, etc. are conducted via random sampling. In this way, population and community dynamics result, in part, from demographic 
-stochasticity. Likewise, the emergence of life history traits proceeds from initially random combinations of traits.
+**Stochasticity** --- The occurrence of life history processes are conducted via random sampling. In this way, population and community dynamics result, in part, from demographic stochasticity. Likewise, the emergence of suites of life history traits proceeds from initially random combinations of traits.
 
-**Collectives**
-Individuals belong to species. Species belong to communities. In the future, simplex will allow communities to belong to trophic levels.
+**Collectives** --- Individuals belong to species. Species belong to communities. Depending on the model, communities belong to trophic levels.
 
-**Observation**
-Many simplex models shoudl be run to examine trends in the variation generated. The following is recorded for each simplex model:
+**Observation** --- Many models should be run to examine trends in the variation generated. The following is recorded for each model:
 
 * Values of randomly chosen state variables
-* Total abundance, $N$
-* Species richness, $S$
-* Avg growth rate (per species & per capita) 
-* Avg maintenance cost (per species & per capita) 
-* Avg resource efficiency (per species & per capita) 
-* Avg active dispersal rate (per species & per capita) 
-* Compositional turnover
-	* Bray-Curtis
-	* Sorensen's
-* Species turnover
-	* Whittaker's $\beta$ 
-* Species evenness
-	* Smith and Wilson's evenness, $E_{var}$
-	* Simpson's evenness, $E_{1/D}$ 
-* Species diversity
-	* Shannon's diversity, $H'$ 
-	* Simpson's diversity, $D_{1/D}$
-* Dominance
-	* Absolute, $N_{max}$
-	* Relative, $N_{max}/N$
-* Productivity
-	* Individuals
-	* Carbon, Nitrogen, Phosphorus
-* Residence time
-	* Ecosystem, $(length * width)/flowrate$
-	* Individual, avg time spent in the system before dying or emigrating
-	* Resource, avg time spent in the system before washing out or being consumed
-	* Tracer, avg time spent in the system before washing out
-* Individual residence time distribution (RTD)
-* Resource particle RTD
-* Tracer particle RTD
+* Mean and variance for:
+	* Total abundance, $N$
+	* Species richness, $S$
+	* Growth rate (per species & per capita) 
+	* Maintenance cost (per species & per capita) 
+	* Resource efficiency (per species & per capita) 
+	* Active dispersal rate (per species & per capita) 
+	* Compositional turnover
+		* Bray-Curtis
+		* Sorensen's
+	* Species turnover
+		* Whittaker's $\beta$ 
+	* Species evenness
+		* Smith and Wilson's evenness, $E_{var}$
+		* Simpson's evenness, $E_{1/D}$ 
+	* Species diversity
+		* Shannon's diversity, $H'$ 
+		* Simpson's diversity, $D_{1/D}$
+	* Dominance
+		* Absolute, $N_{max}$
+		* Relative, $N_{max}/N$
+	* Productivity
+		* In number of individuals
+		* In amount of cell quota
+	* Individual residence time, i.e., amount of time individuals spend in the system
 
-These data are stored in file as R-formatted data.frames. These files can be directly imported into an R or Python environment.
+These data are stored in file as csv files and can are directly imported into the Python environment via the scripts provided in the project repository: https://github.com/LennonLab/Micro-Encounter/tree/master/fig-scripts
 
-###Initialization
-The model initiates with a random set of values for state-variables, 100 to 10,000 randomly drawn individuals from a 
-theoretical log-series metacommunity. These values are saved, so that a simplex model could be programmed to replicate an analysis.
 
-###Input data
-simplex models require no input data, but it might be cool to use an api to grab environmental data or other 
-data from a website to parameterize a simplex model.
-
-###Submodels & Equations
+### Submodels & Equations
 
 **Cell quota model of Droop**
 In simplex models, individuals grow according to their amounts of endogenous resources (cell quota).
