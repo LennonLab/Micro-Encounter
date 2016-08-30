@@ -1,5 +1,5 @@
 ## Model description following the ODD Protocol
-The ODD protocol is standard for describing individual-based models (IBMs), see Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
+The ODD protocol is standard for describing individual-based models (IBMs), Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
 
 ### Purpose
 Our modeling framework simulates life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The goal is to provide a simulation-based framework for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities. This is done by simulating dimensions of ecological complexity, variation in model parameters and processes, varying physical dynamics, and by allowing realistic life history trade-offs to emerge from random combinations of trait values.
@@ -114,7 +114,7 @@ For example:
     m = choice([0.0, 0.0001, 0.0005, 0.001, 0.005])
     ...	
 
-###Spatial and temporal scales
+### Spatial and temporal scales
 The two general aspects of scale are grain (a.k.a. resolution) and extent (e.g. total area).
 
 **Spatial extent** --- The environment of the IBMs is two dimensional and can vary along each axis from 5 to 20 discrete units. This makes for a potential total extent of 25 to 10,000 discrete patches, each with a grain of 1 square unit.
@@ -205,29 +205,29 @@ These data are stored in file as csv files and can are directly imported into th
 Unless the number of desired models has been reached, the IBM framework simply constructs another model and runs it to mean reversion.
 
 ### Initialization and input data
+**Initialization** --- The model initiates with a random set of values for state-variables, 100 individuals whose species IDs are drawn at random from a uniform distribution. These values are saved, so that a simplex model could be programmed to replicate an analysis. 
 
-**Initialization**
-The model initiates with a random set of values for state-variables, 100 individuals whose species IDs are drawn at random from a uniform distribution. These values are saved, so that a simplex model could be programmed to replicate an analysis. 
-
-**Inputs**
-The modeling platform requires no input data other than those parameters that are chosen at random.
+**Inputs** --- The modeling platform requires no input data other than those parameters that are chosen at random.
 
 ### Design concepts
-
 **Ecological complexity** --- Our IBM platform assembles models from random combinations of variables and processes to generate output data that allow the user to test the general influence of particular variables, processes, or dynamics.
 
 *Spatial complexity*
 Our IBMs simulate three levels of spatial complexity.
 
 * White noise: Locations of individual organisms and resource molecules changed at each time step in an uncorrelated way. Hence, every organism and resource particle had the same chance of moving to any location within the environment at each time step in the model. This white-noise model created a well-mixed environment with no dispersal limitation. 
+
 * Aggregation and random walks: Resource molecules enter the environment in clusters. Individuals undergo random walks. The average length of the random walk was a species-specific parameter, and larger dispersal distances carried greater energetic costs. The degree of spatial dispersion among incoming resource clusters was chosen at random. 
+
 * Aggregation and chemotaxis: Resource molecules enter in clusters but individuals were capable of sensing resource molecules based on resource density and distance. 
 
 *Trophic complexity*
 Our IBMs simulate four levels of trophic complexity, with the last being a combination of two others.
 
 * The first level had only one trophic interaction, which we refer to as a simple "consumer-resource" model. At this level of trophic complexity, all individuals were solely consumers of inflowing resources. 
+
 * The second level of trophic complexity allowed for the consumption of resources contained in dead bacteria (e.g., Rozen et al., 2009), which is a trophic interaction that we referred to as "scavenging". 
+
 * The third level of trophic complexity simulated a situation in which one group of consumer species generated a metabolic byproduct that could be taken up by a second group of consumer species, which in turn generated a byproduct that served as a resource for a third group of species. This situation was meant to simulate conditions that are characteristic of cross-feeding or syntrophy (Pande et al., 2015). A final level of trophic complexity was characterized by a combination scavenging and cross-feeding, which we saw as more ecologically realistic and complex than scavenging or cross-feeding alone.
 
 *Resource complexity* 
@@ -239,7 +239,7 @@ Our IBMs simulate three levels of resource complexity.
 
 * Lock and key: Simulates the structural complexity of resource molecules, i.e., chemical complexity. Consumers must break down resource molecules at specific locations. For example, a molecule would have a hyphen that simulates a chemical bond separating two groups of resource particles (e.g., ‘aaaa-aaaa’). In order to consume a resource particle, i.e., ‘a’, individuals would need to cleave the ‘aaaa-aaaa’ molecule at the bond and then consume an ‘a’ from one of the two resulting ‘aaaa’ molecules. Because molecules are cleaved at random locations, there is a 1/9 chance of cleaving the ‘aaaa-aaaa’ particle and, likewise, a 1/5 chance of cleaving a ‘bb-bb’ particle, and a 2/8 chance of cleaving a ‘bb-bb-bb’ particle (Figure 1). Therefore, a molecule with a proportionately larger number of bonds requires greater time, and hence, energy to break down.
 
-*Note:* The average total number of individual resource particles (e.g., ‘a’, ‘b’, ‘c’) entering the system at a given time and inflow rate was made to be consistent across levels of resource complexity.
+_Note:_ The average total number of individual resource particles (e.g., ‘a’, ‘b’, ‘c’) entering the system at a given time and inflow rate was made to be consistent across levels of resource complexity.
 
 **Nutrient limited growth** --- Individual growth and activity is fueled and limited by resources. Individuals cannot grow in the absence of resources. Without resources, individuals eventually go dormant or die.
 
