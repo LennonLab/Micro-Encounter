@@ -341,7 +341,6 @@ Our models do not complete until the time series of total abundance values reach
 Tests of our models' efficiency were ran on a Mid 2010 MacBook Pro (OS X 10.9.5) with a 2.4 GHz Intel Core 2 Duo processor and 4GB of Memory. This system probably represents a below average capacity for modern personal computers, which for this study, was desirable as simplex should be able to be ran on both personal computers and high capacity remote servers. I present results for time to completion and required memory in the Results.
 
 
-# Results
 ## UNIT TESTS
 ### Accuracy and computation
 
@@ -356,11 +355,9 @@ Analyses from 100 randomly assembled models can be run using the SpeedMemory.Rmd
 
 ## PRODUCTS
 ### Output data
-
 *SimData.csv*  
 A .csv file where each row is a run of a randomly assembled model and each column holds a piece of data about the system that was modeled (e.g., length, width, mean total abundance, number of incoming resources, etc.).
 
 ### Animations
-
 *.avi movie files*  
 Our modeling platform can generate animations of models and store them in various image file formats. It does this using the matplotlib animation libary. Choosing whether to animate or not animate a model is done by commenting out lines of code in model.py.
