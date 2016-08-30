@@ -159,7 +159,7 @@ def nextFrame(arg):
 
         SpeciesIDs, IndX, IndY, IndIDs, Qs, RX, RY, RIDs, RList, RVals, Gs, Ms, \
         Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(24)]
-        
+
         if u0 == max(Rates):
             #sim += 1
 
@@ -233,7 +233,7 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
-                
+
     if ct == 200:
         BurnIn = 'done'
         Ns = [Ns[-1]] # only keep the most recent N value
