@@ -3,11 +3,11 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
 import statsmodels.tsa.stattools as sta
-from random import choice, randint
+from random import choice
 from math import isnan
 
 import numpy as np
-from numpy import mean, var
+from numpy import mean
 import sys
 import os
 
@@ -18,21 +18,6 @@ sys.path.append(mydir + "GitHub/Micro-Encounter/model/randparams")
 import randparams as rp
 sys.path.append(mydir + "GitHub/Micro-Encounter/model/spatial")
 import spatial
-
-GenPath = mydir + 'GitHub/Micro-Encounter/results/simulated_data/'
-
-
-OUT1 = open(GenPath + 'SimData.csv','w')
-print>>OUT1,'RowID,MeanIndProduction,VarIndProduction,ResInflow,MaxGrowthRate,MaxMetMaint,MaxActiveDispersal,StartingSeed,\
-width,height,MeanTotalAbundance,VarTotalAbundance,ImmigrationRate,MeanResourceConcentration,VarResourceConcentration,\
-MeanResourceParticles,VarResourceParticles,MeanPerCapitaGrowth,VarPerCapitaGrowth,MeanPerCapitaMaint,\
-VarPerCapitaMaint,MeanPerCapitaActiveDispersal,VarPerCapitaActiveDispersal,MeanSpecGrowth,VarSpecGrowth,\
-MeanSpecDisp,VarSpecDisp,MeanSpecMaint,VarSpecMaint,MeanAvgDist,VarAvgDist,MeanDormFreq,VarDormFreq,\
-TrophicComplexityLevel,ResourceComplexityLevel,SpatialComplexityLevel,MeanEncounter,VarEncounter,\
-IncomingResAgg,MeanIndAgg,VarIndAgg,MeanResAgg,VarResAgg,MeanDeaths,VarDeaths,RunTime'
-OUT1.close()
-
-
 
 
 def nextFrame(arg):
@@ -57,17 +42,8 @@ def nextFrame(arg):
     numDead = 0
     ct += 1
     #print ct
-    plot_system = 'no'
-
-    listlen = [len(SpeciesIDs), len(Qs), len(IndIDs), len(IndX), len(IndY), len(GrowthList), len(MaintList), len(DispList), len(ADList), len(EVList), len(TLList)]
-    if min(listlen) != max(listlen):
-        print ct, 'In model.py'
-        print 'min(listlen) != max(listlen)'
-        print listlen
-        sys.exit()
 
     encounters = 0
-
     # Inflow of resources
     RList, RVals, RX, RY,  RIDs, RID = bide.ResIn(std, ct, RList, RVals, RX, RY,  RID,\
     RIDs, r, width, height, u0, TrophicComplexityLevel, SpatialComplexityLevel, \
@@ -83,7 +59,7 @@ def nextFrame(arg):
     SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Dispersal
-    if SpatialComplexityLevel < 3 and len(Qs) > 0:
+    if SpatialComplexityLevel < 3:
         SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, \
         MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.dispersal(SpeciesIDs,\
 	Qs, IndIDs, IndID, IndX, IndY, width, height, GrowthDict, \
@@ -91,14 +67,14 @@ def nextFrame(arg):
         GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID, TrophicComplexityLevel, \
         SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numDead)
 
-    elif SpatialComplexityLevel == 3 and len(Qs) > 0:
+    elif SpatialComplexityLevel == 3:
         RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, width, height, GD, RD, DispD, GrowthList,\
         MaintList, DispList, ADList, TLList, EVList, numDead = bide.chemotaxis(RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID,\
         IndX, IndY, width, height, GrowthDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, TLList, EVList,\
         TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, BiologicalComplexityLevel, numDead)
 
     # Resource Dispersal
-    if SpatialComplexityLevel == 1 and len(RVals) > 0:
+    if SpatialComplexityLevel == 1:
         RList, RVals, RX, RY, RID, RIDs = bide.res_dispersal(ct, RList, RVals, RX, RY, RID, RIDs, r,\
         width, height, u0, TrophicComplexityLevel, SpatialComplexityLevel, \
         ResourceComplexityLevel, BiologicalComplexityLevel)
@@ -106,57 +82,53 @@ def nextFrame(arg):
     PRODI = 0
     p1 = len(Qs)
 
-    # Modify enzyme field
-    # enzyme_field = field.EnzymeField(enzyme_field, IndX, IndY, ADList, Qs, width)
-
     # Consume
-    if len(Qs) > 0:
-        RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, encounters = bide.consume(enzyme_field, \
-        RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, \
-        width, height, GrowthDict, MaintDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, \
-        TLList, EVList, TrophicComplexityLevel, SpatialComplexityLevel, \
-        ResourceComplexityLevel, BiologicalComplexityLevel)
+    RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, encounters = bide.consume(enzyme_field, \
+    RList, RVals, RIDs, RID, RX, RY, SpeciesIDs, Qs, IndIDs, IndID, IndX, IndY, \
+    width, height, GrowthDict, MaintDict, RD, DispDict, GrowthList, MaintList, DispList, ADList, \
+    TLList, EVList, TrophicComplexityLevel, SpatialComplexityLevel, \
+    ResourceComplexityLevel, BiologicalComplexityLevel)
 
     # Reproduction
-    if len(Qs) > 0:
-        SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, MaintList, \
-        DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numDead = bide.reproduce(SpeciesIDs, Qs, IndIDs, IndID, \
-        IndX, IndY,  width, height, GrowthDict, DispDict, RD, MaintDict, MainFactorDict, \
-        RPFDict, EnvD, envgrads, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, \
-        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-        BiologicalComplexityLevel, numDead)
+    SpeciesIDs, Qs, IndIDs, ID, IndX, IndY, GrowthDict, DispDict, GrowthList, MaintList, \
+    DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, numDead = bide.reproduce(SpeciesIDs, Qs, IndIDs, IndID, \
+    IndX, IndY,  width, height, GrowthDict, DispDict, RD, MaintDict, MainFactorDict, \
+    RPFDict, EnvD, envgrads, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RID, RIDs, \
+    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
+    BiologicalComplexityLevel, numDead)
 
     # maintenance
-    if len(Qs) > 0:
-        SpeciesIDs, IndX, IndY, IndIDs, Qs, GrowthList, MaintList, DispList, ADList,\
-        EVList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
-        RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID,\
-        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-        BiologicalComplexityLevel, numDead)
+    SpeciesIDs, IndX, IndY, IndIDs, Qs, GrowthList, MaintList, DispList, ADList,\
+    EVList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.maintenance(SpeciesIDs, IndX, IndY, MaintDict, MainFactorDict, \
+    RPFDict, EnvD, IndIDs, Qs, GrowthList, MaintList, DispList, ADList, EVList, TLList, RList, RVals, RX, RY, RIDs, RID,\
+    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
+    BiologicalComplexityLevel, numDead)
 
     # transition to or from dormancy
-    if len(Qs) > 0:
-        SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList, IndIDs, Qs, GrowthList, \
-        MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.transition(SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList,\
-        IndIDs, Qs, MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, MainFactorDict, RPFDict, \
-        TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
-        BiologicalComplexityLevel, numDead)
-    
+    SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList, IndIDs, Qs, GrowthList, \
+    MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, numDead = bide.transition(SpeciesIDs, IndX, IndY, GrowthList, DispList, ADList, EVList,\
+    IndIDs, Qs, MaintList, TLList, RList, RVals, RX, RY, RIDs, RID, MainFactorDict, RPFDict, \
+    TrophicComplexityLevel, SpatialComplexityLevel, ResourceComplexityLevel, \
+    BiologicalComplexityLevel, numDead)
+
     p2 = len(Qs)
     PRODI = p2 - p1
 
-    ax = fig.add_subplot(111)
+    ax1 = fig.add_subplot(2,2,1) # initiate 1st plot
+    ax2 = fig.add_subplot(2,2,2) # initiate 2nd plot
+    ax3 = fig.add_subplot(2,2,3) # initiate 3rd plot
+    ax4 = fig.add_subplot(2,2,4) # initiate 4th plot
+
     plt.tick_params(axis='both', which='both', bottom='off', top='off', \
         left='off', right='off', labelbottom='off', labelleft='off')
 
     N = len(IndIDs)
 
-    #if N == 0 or N > 20000:
-    if N > 10000:
+    if N == 0 or N > 20000:
 
         TrophicComplexityLevel = choice([1,2,3]) #
-        SpatialComplexityLevel = choice([1,3]) # goes up to 3
-        ResourceComplexityLevel = choice([3]) # goes up to 3 but needs enzyme breakdown
+        SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+        ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
         BiologicalComplexityLevel = 2
 
         RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ = [0]*13
@@ -193,14 +165,19 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
 %Dormant: '+str(pD) + '\n# of inflowing resources: ' + str(r) + ', Aggregation: ' + str(round(std,2))]
 
     txt.set_text(' '.join(Title))
-    ax.set_ylim(0, height)
-    ax.set_xlim(0, width)
+    #ax1.set_ylim(0, height)
+    #ax1.set_xlim(0, width)
 
+    plot_system = 'yes'
     if plot_system == 'yes':
 
         ##### PLOTTING THE SYSTEM ##############################################
         resource_scatImage.remove()
         Ind_scatImage.remove()
+        plot2.remove()
+        plot3.remove()
+        plot4.remove()
+        
         colorlist = []
 
         ind_sizelist = []
@@ -218,13 +195,19 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
             ind_sizelist.append(Qs[i] * 1000)
 
 
-        resource_scatImage = ax.scatter(RX, RY, s = res_sizelist, c = 'w',
+        resource_scatImage = ax1.scatter(RX, RY, s = res_sizelist, c = 'w',
                     edgecolor = 'SpringGreen', lw = 2.0, alpha=0.7)
 
-        Ind_scatImage = ax.scatter(IndX, IndY, s = ind_sizelist, c = colorlist,
+        Ind_scatImage = ax1.scatter(IndX, IndY, s = ind_sizelist, c = colorlist,
                     edgecolor = '0.2', lw = 0.2, alpha=0.8)
+                    
+        ax2 = fig.add_subplot(2,2,2) # initiate 2nd plot
+        ax3 = fig.add_subplot(2,2,3) # initiate 3rd plot
+        ax4 = fig.add_subplot(2,2,4) # initiate 4th plot
 
-
+        plot2 = ax2.scatter([0],[0], alpha=0)
+        plot3 = ax3.scatter([0],[0], alpha=0)
+        plot4 = ax4.scatter([0],[0], alpha=0)
 
     if len(Ns) >= 50:
 
@@ -292,34 +275,17 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
         if len(Ns) >= 20:
 
             print '%4s' % sim, ' r:','%4s' %  r, ' R:','%4s' % int(round(mean(Rs))), ' N:','%5s' % int(round(mean(Ns))), \
-            ' Dormant:', '%5s' % round(mean(ADs),3), ' Encounters:','%5s' % round(mean(encList),2), '   Spatial:', SpatialComplexityLevel#, \
-            #'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel#, \
+            ' Dormant:', '%5s' % round(mean(ADs),3), ' Encounters:','%5s' % round(mean(encList),2), '   Spatial:', SpatialComplexityLevel, \
+            'Resource:', ResourceComplexityLevel, 'Trophic:', TrophicComplexityLevel#, \
             #'Agg(I):', round(mean(Iagg), 2), 'Agg(R):', round(mean(Ragg),2)
-
-            OUT1 = open(GenPath + '/SimData.csv','a')
-
-            outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, seedCom, \
-            width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
-            mean(Gs), var(Gs), mean(Ms), var(Ms), mean(Ds), var(Ds), \
-            mean(SpecGrowth), var(SpecGrowth), mean(SpecDisp), var(SpecDisp), \
-            mean(SpecMaint),  var(SpecMaint), mean(AVG_DIST), var(AVG_DIST), \
-            mean(ADs), var(ADs), TrophicComplexityLevel, ResourceComplexityLevel, \
-            SpatialComplexityLevel, mean(encList), var(encList), std, mean(Iagg), \
-            var(Iagg), mean(Ragg), var(Ragg), mean(Deadlist), var(Deadlist), ct]
-
-            outlist = str(outlist).strip('[]')
-            outlist = str(outlist).strip('')
-
-            print>>OUT1, outlist
-            OUT1.close()
 
             Rates = np.roll(Rates, -1, axis=0)
             u0 = Rates[0]
 
             if static == 'no':
                 TrophicComplexityLevel = choice([1,2,3,4]) #
-                SpatialComplexityLevel = choice([1,3]) # goes up to 3
-                ResourceComplexityLevel = choice([3]) # goes up to 3 but needs enzyme breakdown
+                SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+                ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
                 BiologicalComplexityLevel = 2
 
             RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
@@ -344,17 +310,19 @@ Spatial complexity: ' + str(SpatialComplexityLevel) + '     N: '+str(N)+',  Reso
                 enzyme_field = [0]*(width*height)
 
             ####################### REPLACE ENVIRONMENT ########################
-            ax = fig.add_subplot(111)
-
-
-
+            ax1 = fig.add_subplot(2,2,1)
+            ax2 = fig.add_subplot(2,2,2) # initiate first plot
+            ax3 = fig.add_subplot(2,2,3) # initiate first plot
+            ax4 = fig.add_subplot(2,2,4) # initiate first plot
+            
+            
 ############################# Conditions #######################################
 
 fixed = True
 
 TrophicComplexityLevel = choice([1,2,3,4]) #
-SpatialComplexityLevel = choice([1,3]) # goes up to 3
-ResourceComplexityLevel = choice([3]) # goes up to 3 but needs enzyme breakdown
+SpatialComplexityLevel = choice([1,2,3]) # goes up to 3
+ResourceComplexityLevel = choice([1,2,3]) # goes up to 3 but needs enzyme breakdown
 BiologicalComplexityLevel = 2
 
 ################ Randomly chosen variables ##################################
@@ -380,10 +348,18 @@ static = 'no'
 BurnIn = 'not done'
 
 ############### INITIALIZE GRAPHICS ############################################
-fig = plt.figure(figsize=(12, 8))
-ax = fig.add_subplot(111) # initiate first plot
-Ind_scatImage = ax.scatter([0],[0], alpha=0)
-resource_scatImage = ax.scatter([0],[0], alpha=0)
+fig = plt.figure()
+
+ax1 = fig.add_subplot(2,2,1) # initiate 1st plot
+ax2 = fig.add_subplot(2,2,2) # initiate 2nd plot
+ax3 = fig.add_subplot(2,2,3) # initiate 3rd plot
+ax4 = fig.add_subplot(2,2,4) # initiate 4th plot
+
+Ind_scatImage = ax1.scatter([0],[0], alpha=0)
+resource_scatImage = ax1.scatter([0],[0], alpha=0)
+plot2 = ax2.scatter([0],[0], alpha=0)
+plot3 = ax3.scatter([0],[0], alpha=0)
+plot4 = ax4.scatter([0],[0], alpha=0)
 
 Title = ['','']
 txt = fig.suptitle(' '.join(Title), fontsize = 12)

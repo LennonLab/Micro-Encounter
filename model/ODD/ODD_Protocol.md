@@ -1,16 +1,16 @@
 # Model description following the ODD Protocol  
-The ODD protocol is standard for describing individual-based models (IBMs), Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
+The ODD protocol is an accepted standard for describing individual-based models (IBMs), Grimm et al. 2006. ODD stands for Overview, Design concepts, and Details. Here, we descibe our IBM framework according to the ODD protocol.
 
 ## PURPOSE  
-Our modeling framework simulates life history of individual organisms, the encounter of organisms with resource particles, the emergence of microbial seed banks, and the evolution of traits in spatially explicit environments under stochastic conditions. The goal is to provide a simulation-based framework for examining conditions under which encounter rates have a robust influence on the emergence of seed banks and the growth and activity dynamics of communities. This is done by simulating dimensions of ecological complexity, variation in model parameters and processes, varying physical dynamics, and by allowing realistic life history trade-offs to emerge from random combinations of trait values.
+Our modeling platform simulates the life history of individual organisms and their encounters with resource particles under varying degrees of ecological complexity to explore and understand the emergence of microbial seed banks. Additionally, our platform provides a individual-based simulation framework for how understanding how microscale properties (e.g., encounter rates) and macroscale properties (e.g., resource concentration) differentially influence the emergence of seed banks and the growth and activity dynamics of communities. The models produced by our platform simulate dimensions of complexity in space, resources, and trophic interactions and include large degrees of variation in model parameters and ecological processes. The resulting complexity also results in realistic life history trade-offs emerging from combinations of randomly chosen trait values.
 
 ## ENTITIES  
 ###Individual organisms  
-Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from lists. Each specific position in the list corresponds to the same individual. For example, in simulating growth, a model chooses an individual from the list of cell quotas (the probability of reproducing is partly determined by endogenous resources). The first position in this list as well in all other lists of individual attributes corresponds to the same individual.
+Individuals are distinguished by collections of elements within lists. Individuals undergo changes when randomly sampled from these lists. Each specific position in each list corresponds to the same individual. For example, in simulating growth, a model will choose a random position from the list of cell quotas. The first position in this list as well in other lists corresponds to the same individual.
 
 	Example:
 	IndIDs = [1,  2, 33, 14]
-	Quota =  [0.1, 0.99, 0.14, 0.05]
+	Quotas =  [0.1, 0.99, 0.14, 0.05]
 	Xpos =   [45, 23, 456, 1]
 	Ypos =   [765, 87, 21, 34]
 	
