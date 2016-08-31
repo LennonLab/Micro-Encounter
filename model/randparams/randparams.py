@@ -12,7 +12,6 @@ def get_rand_params(fixed):
     rates = []
 
     rates = np.array([0.1])
-
     width  = 10 #randint(5, 10)
     height = 10 #randint(5, 10)
 
@@ -22,21 +21,18 @@ def get_rand_params(fixed):
         y = np.random.uniform(0, height)
         envgrads.append([x, y])
 
-    m = 0.0
-    speciation = 0.0
-    alpha = 0.99
-    r = choice([1, 2, 3, 4])#, 5, 6, 7, 8, 9, 10])#, 12, 14, 16, 20, 24, 28, 32, 40, 50, 70, 90]) # resource particles flowing in per time step
+    m = 0 #np.random.uniform(0.01, 0.1)
+    r = choice([1, 10, 1, 10, 1, 10]) # resource particles flowing in per time step
 
     gmax = np.random.uniform(0.1, 0.5) # max specific growth rate
     maintmax = np.random.uniform(0.025, 0.05)
 
-    dmax = np.random.uniform(0.01, 0.1)  # max dispersal probability
+    dmax = np.random.uniform(0.5, 0.5)  # max dispersal probability
     pmax = np.random.uniform(0.001, 0.01)  # max probability of going active
     mmax = randint(30, 50)  # max maintenance factor
-    std = np.random.uniform(0.1, 0.4)
-    maxgen = randint(1, 10)
+    std = np.random.uniform(0.1, 0.1)
 
     # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
 
-    plist = [width, height, alpha, speciation, seedCom, m, r, gmax, maintmax, dmax, envgrads, rates, pmax, mmax, std, maxgen]
+    plist = [width, height, seedCom, m, r, gmax, maintmax, dmax, envgrads, rates, pmax, mmax, std]
     return plist
