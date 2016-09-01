@@ -19,6 +19,26 @@ def check_list_lengths(lists, function, ct):
         sys.exit()
 
 
+def GetRAD(vector):
+    RAD = []
+    unique = list(set(vector))
+
+    for val in unique:
+        RAD.append(vector.count(val)) # the abundance of each Sp_
+
+    return RAD, unique # the rad and the specieslist
+
+
+def per_capita(ValDict, SpeciesIDs):
+
+    species, vals = [ValDict.keys(), ValDict.values()]
+    for i, sp in enumerate(species):
+        sp_val = SpeciesIDs.count(sp) * vals[i]
+
+    return sp_val/len(SpeciesIDs) # the rad and the specieslist
+
+
+
 def ResIn(ResLists, RID, params, ct, ComplexityLevels):
 
     Rvals, RX, RY, RIDs = ResLists
