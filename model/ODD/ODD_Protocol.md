@@ -10,9 +10,9 @@ Individuals are distinguished by collections of elements within lists. Individua
 
 	Example:
 	IndIDs = [1,  2, 33, 14]
-	Quotas =  [0.1, 0.99, 0.14, 0.05]
-	Xpos =   [45, 23, 456, 1]
-	Ypos =   [765, 87, 21, 34]
+	CellQuotas =  [0.1, 0.99, 0.14, 0.05]
+	IndX =   [45, 23, 456, 1]
+	IndY =   [765, 87, 21, 34]
 	
 	The individual with ID of 1 has a cell quota of 0.1 and is located at position x=45, y=765
 
