@@ -8,7 +8,6 @@ import os
 
 
 def check_list_lengths(lists, function, ct):
-
     lengths = []
     for lst in lists:
         lengths.append(len(lst))
@@ -22,7 +21,6 @@ def check_list_lengths(lists, function, ct):
 def GetRAD(vector):
     RAD = []
     unique = list(set(vector))
-
     for val in unique:
         RAD.append(vector.count(val)) # the abundance of each Sp_
 
@@ -30,7 +28,6 @@ def GetRAD(vector):
 
 
 def per_capita(ValDict, SpeciesIDs):
-
     species, vals = [ValDict.keys(), ValDict.values()]
     for i, sp in enumerate(species):
         sp_val = SpeciesIDs.count(sp) * vals[i]
@@ -49,7 +46,6 @@ def ResIn(ResLists, RID, params, ct, ComplexityLevels):
     Xmean = float(np.random.uniform(0.001*width, 0.999*width))
 
     for i in range(r):
-
         RIDs.append(RID)
         RID += 1
 
@@ -57,63 +53,48 @@ def ResIn(ResLists, RID, params, ct, ComplexityLevels):
             #http://stackoverflow.com/questions/1957273/how-do-i-generate-a-random-string-of-length-x-a-z-only-in-python
             # all resource particles are of the same type
             ri = choice(['a', 'aa', 'aaaa'])
-            if ri == 'a':
-                n = randint(1, 40)
-            elif ri == 'aa':
-                n = randint(1, 20)
-            elif ri == 'aaaa':
-                n = randint(1, 10)
+            if ri == 'a': n = randint(1, 40)
+            elif ri == 'aa': n = randint(1, 20)
+            elif ri == 'aaaa': n = randint(1, 10)
             ri = ''.join(ri for _ in xrange(n))
 
         elif RC == 2:
             # Three types of resource particles.
             ri = choice(['a', 'bb', 'cccc'])
-            if ri == 'a':
-                n = randint(1, 40)
-            elif ri == 'bb':
-                n = randint(1, 20)
-            elif ri == 'cccc':
-                n = randint(1, 10)
+            if ri == 'a': n = randint(1, 40)
+            elif ri == 'bb': n = randint(1, 20)
+            elif ri == 'cccc': n = randint(1, 10)
 
             ri = ''.join(ri for _ in xrange(n))
 
         elif RC == 3:
             # Three types of resource particles that vary in the effort/energy needed to break them down
             ri = choice(['a-', 'bb-', 'c-cc-c-'])
-            if ri == 'a-':
-                n = randint(1, 40)
-            elif ri == 'bb-':
-                n = randint(1, 20)
-            elif ri == 'c-cc-c-':
-                n = randint(1, 10)
+            if ri == 'a-': n = randint(1, 40)
+            elif ri == 'bb-': n = randint(1, 20)
+            elif ri == 'c-cc-c-': n = randint(1, 10)
 
             ri = ''.join(ri for _ in xrange(n))
 
-        RIDs.append(ri)
-        Rtype = ri[0]
-        Rvals.append(ri.count(Rtype))
+        Rvals.append(ri)
 
         if SC == 1:
-
             RY.append(float(np.random.uniform(0.001*height, 0.999*height)))
             RX.append(float(np.random.uniform(0.001*width, 0.999*width)))
 
         elif SC <= 3:
-
             vals = np.random.normal([Ymean, Xmean], std)
 
-            if vals[0] < 0.001*height:
-                vals[0] = 0.001*height
-            elif vals[0] > 0.999*height:
-                vals[0] = 0.999*height
+            if vals[0] < 0.001*height: vals[0] = 0.001*height
+            elif vals[0] > 0.999*height: vals[0] = 0.999*height
 
-            if vals[1] < 0.001*width:
-                vals[1] = 0.001*width
-            elif vals[1] > 0.999*width:
-                vals[1] = 0.999*width
+            if vals[1] < 0.001*width: vals[1] = 0.001*width
+            elif vals[1] > 0.999*width: vals[1] = 0.999*width
 
             RY.append(vals[0])
             RX.append(vals[1])
+
+    ResLists = Rvals, RX, RY, RIDs
 
     return [ResLists, RID]
 
@@ -131,10 +112,10 @@ def immigration(IndLists, IndDicts, IndID, params, ct, ComplexityLevels):
 
     check_list_lengths(IndLists, 'immigration', ct)
 
-    if ct > 1: seed = 1
+    if ct > 1: seedCom = 1
     if ct == 1: SC = 1
 
-    for m in range(seed):
+    for m in range(seedCom):
         prop = np.random.randint(1, 100)
         SpeciesIDs.append(prop)
 
@@ -145,55 +126,47 @@ def immigration(IndLists, IndDicts, IndID, params, ct, ComplexityLevels):
         elif SC <= 3:
             vals = np.random.normal([Ymean, Xmean], std)
 
-            if vals[0] < 0.001*height:
-                vals[0] = 0.001*height
-            elif vals[0] > 0.999*height:
-                vals[0] = 0.999*height
+            if vals[0] < 0.001*height: vals[0] = 0.001*height
+            elif vals[0] > 0.999*height: vals[0] = 0.999*height
 
-            if vals[1] < 0.001*width:
-                vals[1] = 0.001*width
-            elif vals[1] > 0.999*width:
-                vals[1] = 0.999*width
+            if vals[1] < 0.001*width: vals[1] = 0.001*width
+            elif vals[1] > 0.999*width: vals[1] = 0.999*width
 
             IndY.append(vals[0])
             IndX.append(vals[1])
 
-            IndIDs.append(IndID)
-            IndID += 1
+        IndIDs.append(IndID)
+        IndID += 1
 
+        Q = float(np.random.uniform(0.1, 0.1))
+        CellQuotas.append(Q)
 
-            Q = float(np.random.uniform(0.1, 0.1))
-            CellQuotas.append(Q)
+        if prop not in GrowthDict:
 
-            if prop not in GrowthDict:
+            # species trophic level
+            TrophicDict[prop] = choice(['a', 'b', 'c'])
 
-                # species trophic level
-                TrophicDict[prop] = choice(['a', 'b', 'c'])
+            # species growth rate
+            GrowthDict[prop] = np.random.uniform(gmax/10, gmax)
 
-                # species growth rate
-                #g = np.random.uniform(g_max/1, g_max)
-                GrowthDict[prop] = np.random.uniform(gmax/10, gmax)
+            # species maintenance
+            MaintDict[prop] = np.random.uniform(maintmax/10, maintmax)
 
-                # species maintenance
-                MaintDict[prop] = np.random.uniform(maintmax/10, maintmax)
+            # species maintenance reduction factor
+            MainFactorDict[prop] = np.random.uniform(10, mmax)
 
-                # species maintenance reduction factor
-                MainFactorDict[prop] = np.random.uniform(10, mmax)
+            # species resuscitation factor
+            RPFDict[prop] = np.random.uniform(pmax/10, pmax)
 
-                # species resuscitation factor
-                RPFDict[prop] = np.random.uniform(pmax/10, pmax)
+            # species active dispersal rate
+            DispDict[prop] = np.random.uniform(dmax/10, dmax)
 
-                # species active dispersal rate
-                DispDict[prop] = np.random.uniform(dmax/10, dmax)
-
-            ADList.append('a')
+        ADList.append('a')
 
     IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
     IndDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
 
     return [IndLists, IndDicts, IndID]
-
-
 
 
 
@@ -209,12 +182,16 @@ def maintenance(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
     for j in range(n):
 
         i = randint(0, len(IndIDs)-1)
-
         Q = CellQuotas[i]
         spID = SpeciesIDs[i]
-        Q -= MaintDict[spID] # maintanence influenced by species id
+        mfd = MainFactorDict[spID]  # multiplicative maintenance factor (is greater than 1)
+        maint = MaintDict[spID]
+        state = ADList[i]
 
-        if Q <= MaintDict[spID]*0.001:   # starved
+        if state == 'd': maint = maint/mfd
+
+        Q -= maint
+        if Q <= maint:   # starved
 
             if TC >= 3:
                 r = 'd'
@@ -224,9 +201,8 @@ def maintenance(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
 
                 r = ''.join(r for _ in xrange(n))
                 Rvals.append(r)
-
-                RX.append(RX[i])
-                RY.append(RY[i])
+                RX.append(IndX[i])
+                RY.append(IndY[i])
                 RIDs.append(RID)
                 RID += 1
 
@@ -242,7 +218,6 @@ def maintenance(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
 
     IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
     IndDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
-
 
     return [IndLists, ResLists, RID, numDead]
 
@@ -263,22 +238,19 @@ def transition(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
         i = randint(0, len(IndIDs)-1)
         spID = SpeciesIDs[i]
         state = ADList[i]
+        Q = CellQuotas[i]
 
         mfd = MainFactorDict[spID]  # multiplicative maintenance factor (is greater than 1)
         maint = MaintDict[spID]
 
         if state == 'd':
-
             x = np.random.binomial(1, RPFDict[spID]) # make this probability a randomly chosen variable
             if x == 1:
                 ADList[i] = 'a'
-                MaintDict[spID] = maint*mfd # metabolic maintenance increases
+                Q -= maint/mfd
 
         if state == 'a':
-
-            Q = CellQuotas[i]
-            if Q <= maint*mfd:  # go dormant
-                MaintDict[spID] = maint/mfd # metabolic maintenance decreases
+            if Q <= maint:  # go dormant
                 ADList[i] = 'd'
 
             if Q < 0.0:
@@ -311,9 +283,7 @@ def transition(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
     IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
     ResLists = Rvals, RX, RY, RIDs
 
-
-    return [IndLists, ResLists, numDead]
-
+    return [IndLists, ResLists, RID, numDead]
 
 
 
@@ -327,10 +297,8 @@ def consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels):
     SC, TC, RC = ComplexityLevels
 
     encounters = 0
-
     n = len(IndIDs)
     for ii in range(n):
-
         i = randint(0, n-1)
 
         # Trophic level
@@ -338,7 +306,7 @@ def consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels):
         tl = TrophicDict[spID]
         Q = CellQuotas[i]
 
-        mfd = MainFactorDict[spID]  # multiplicative maintenance factor (is greater than 1)
+        mfd = MainFactorDict[spID]
         x1 = IndX[i]
         y1 = IndY[i]
 
@@ -350,39 +318,30 @@ def consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels):
 
             r = len(RIDs)
             Try = min([40, r])
-
             j = randint(0, r-1)
-            # The food
             R = Rvals[j]
 
-            if R.startswith('-'):
-                R = R[1:]
-            if R.endswith('-'):
-                R = R[:-1]
+            if R.startswith('-'): R = R[1:]
+            if R.endswith('-'): R = R[:-1]
 
             Rtype = R[0]
-
             if Rtype == '-':
                 print 'Rtype is a hyphen'
                 sys.exit()
 
-            if Rtype == 'd':
-                tl = str(Rtype)
+            if Rtype == 'd': tl = str(Rtype)
 
-            if tl == Rtype: # individual is capable of consuming the resource type
-
+            if tl == Rtype: # is capable of consuming the resource type
                 x2 = RX[j]
                 y2 = RY[j]
                 dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
                 ind_radius = np.mean(CellQuotas[i])
-                Rval = Rvals[j]
+                Rval = R.count(Rtype)
                 res_radius = Rval/20.0
-
                 tl = TrophicDict[spID] # need to reset this in case of no match
 
                 if dist <= ind_radius + res_radius:
-
                     if ADList[i] == 'd':
                         ADList[i] = 'a'
                         MaintDict[spID] = MaintDict[spID]*mfd # metabolic maintenance increases
@@ -392,7 +351,6 @@ def consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels):
                         eat = 'yes'
 
                     ct = Try
-
                     if '-' in R:
                         pos = randint(1, len(R)-1)
 
@@ -400,86 +358,52 @@ def consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels):
                             pieces = [R[:pos], R[pos:]]
 
                             for index, piece in enumerate(pieces):
-                                if piece.startswith('-'):
-                                    piece = piece[1:]
+                                if piece.startswith('-'): piece = piece[1:]
 
-                                if piece.endswith('-'):
-                                    piece = piece[:-1]
+                                if piece.endswith('-'): piece = piece[:-1]
 
-                            if '-' in pieces[0] and '-' in pieces[1]:
-
-                                Rvals[j] = pieces[0].count(Rtype)
-
-                                Rvals.append(pieces[1].count(Rtype))
-                                RIDs.append(RID)
-                                RID += 1
-                                RX.append(x2)
-                                RY.append(y2)
-
-                            else:
-                                for index, piece in enumerate(pieces):
-
-                                    if '-' not in piece:
-                                        eat = 'yes'
-
-                                        Rvals[j] = piece.count(Rtype)
-
-                                        R = pieces[index]
-                                        Rval = pieces[index].count(Rtype)
-
-                                        Rvals.append(pieces[index-1].count(Rtype))
-                                        RIDs.append(RID)
-                                        RID += 1
-                                        RX.append(x2)
-                                        RY.append(y2)
-                                        break
+                            # Split the molecule but do not consume
+                            Rvals[j] = pieces[0]
+                            Rvals.append(pieces[1])
+                            RIDs.append(RID)
+                            RID += 1
+                            RX.append(x2)
+                            RY.append(y2)
 
 
-                    elif '-' not in R and RC < 3:
+                    elif '-' not in R:
                         eat = 'yes'
 
                         if len(R) > 1:
-
-                            pieces = [R[:1], R[1:]] # individual consumes one letter at a time
-
-                            Rvals[j] = len(pieces[0])
-                            Rvals.append(len(pieces[1]))
+                            pieces = [R[:1], R[1:]]
+                            Rvals[j] = pieces[0]
+                            Rvals.append(pieces[1])
                             RIDs.append(RID)
                             RID += 1
                             RX.append(x2)
                             RY.append(y2)
 
                     if eat == 'yes':
-
                         encounters += 1
-                        # The individual's cell quota
-                        Q = CellQuotas[i]
-
-                        # The species
-                        sp = SpeciesIDs[i]
-                        mu = GrowthDict[sp]
-
+                        mu = GrowthDict[spID]
                         # Increase cell quota & decrease resource particle size
                         Q += (mu * Q)
                         if Q > 1.0: Q = 1.0
 
-                        levels = [2,4]
+                        levels = [2, 4]
                         if TC in levels and Rtype != 'c':
                             # b's are by-products of consuming a's
                             # c's are by-products of consuming b's
 
-                            if Rtype == 'a':
-                                R = R.replace('a', 'b')
-                            if Rtype == 'b':
-                                R = R.replace('b', 'c')
+                            if Rtype == 'a': R = R.replace('a', 'b')
+                            if Rtype == 'b': R = R.replace('b', 'c')
 
-                            Rvals[j] = R.count(Rtype)
+                            Rvals[j] = R
                             RIDs[j] = RID
                             RID += 1
 
                         else:
-                            # no resources produced as by-products of consuming other resources
-                            # print 'reducing R'
+                            # no resources produced as by-products
                             Rvals.pop(j)
                             RIDs.pop(j)
                             RX.pop(j)
@@ -505,15 +429,12 @@ def reproduce(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels
     Rvals, RX, RY, RIDs = ResLists
     SC, TC, RC = ComplexityLevels
 
-
     n = len(IndIDs)
     for j in range(n):
 
         i = randint(0, len(IndIDs)-1)
-
         state = ADList[i]
-        if state == 'd':
-            continue
+        if state == 'd': continue
 
         Q = CellQuotas[i]
         pq = float(np.mean(Q))
@@ -529,7 +450,6 @@ def reproduce(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels
 
                 r = ''.join(r for _ in xrange(n))
                 Rvals.append(r)
-
                 RX.append(RX[i])
                 RY.append(RY[i])
                 RIDs.append(RID)
@@ -582,8 +502,6 @@ def reproduce(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels
 
 
 
-
-
 def res_dispersal(ResLists, RID, params, ct, ComplexityLevels):
 
     Rvals, RX, RY, RIDs = ResLists
@@ -601,8 +519,6 @@ def res_dispersal(ResLists, RID, params, ct, ComplexityLevels):
 
 
 
-
-
 def dispersal(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels, numDead):
 
     SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
@@ -615,7 +531,6 @@ def dispersal(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels
     for j in range(n):
 
         i = randint(0, len(IndIDs)-1)
-
         spID = SpeciesIDs[i]
         X = IndX[i]
         Y = IndY[i]
@@ -626,8 +541,7 @@ def dispersal(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels
             IndX[i] = float(np.random.uniform(0.001*width, 0.999*width))
 
         state = ADList[i]
-        if state == 'd':
-            continue
+        if state == 'd': continue
 
         if SC == 2:
             dist = DispDict[spID]
@@ -700,14 +614,12 @@ def chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevel
 
         n = len(IndIDs)
         i = randint(0, n-1)
-
         state = ADList[i]
-        if state == 'd':
-            continue
+
+        if state == 'd': continue
 
         spID = SpeciesIDs[i]
         disp = DispDict[spID]
-
         tl = TrophicDict[spID] # Trophic level
         x1 = IndX[i]
         y1 = IndY[i]
@@ -723,22 +635,18 @@ def chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevel
         while ct < Try and RIDs is not []:
 
             ct += 1
-
             r = len(RIDs)
             Try = min([40, r])
             j = randint(0, r-1)
 
             # The food
             R = Rvals[j]
-            if R.startswith('-'):
-                R = R[1:]
-            if R.endswith('-'):
-                R = R[:-1]
+            if R.startswith('-'): R = R[1:]
+            if R.endswith('-'): R = R[:-1]
             Rtype = R[0]
 
 
-            if tl == Rtype: # individual is capable of consuming the resource type
-
+            if tl == Rtype: # is capable of consuming the resource type
                 x2 = RX[j]
                 y2 = RY[j]
                 dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
@@ -750,15 +658,15 @@ def chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevel
 
 
         # A cost for active dispersal
-        r = CellQuotas[i]
+        Q = CellQuotas[i]
         maint = MaintDict[spID]
-        if r - maint*disp > maint:
-            r -= maint*disp
+        if Q - maint*disp > maint:
+            Q -= maint*disp
         else:
-            dist = (r - maint)/maint
-            r -= maint*disp
+            dist = (Q - maint)/maint
+            Q -= maint*disp
 
-        if r < 0.0:
+        if Q < 0.0:
 
             if TC >= 3:
                 r = 'd'
@@ -769,9 +677,8 @@ def chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevel
 
                 r = ''.join(r for _ in xrange(n))
                 Rvals.append(r)
-
-                RX.append(RX[i])
-                RY.append(RY[i])
+                RX.append(IndX[i])
+                RY.append(IndY[i])
                 RIDs.append(RID)
                 RID += 1
 
@@ -784,19 +691,12 @@ def chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevel
             numDead += 1
             continue
 
-        CellQuotas[i] = r
+        CellQuotas[i] = Q
 
-        if x1 > targetX:
-            x1 -= dist*disp
-
-        elif x1 < targetX:
-            x1 += dist*disp
-
-        if y1 > targetY:
-            y1 -= dist*disp
-
-        elif y1 < targetY:
-            y1 += dist*disp
+        if x1 > targetX: x1 -= dist*disp
+        elif x1 < targetX: x1 += dist*disp
+        if y1 > targetY: y1 -= dist*disp
+        elif y1 < targetY: y1 += dist*disp
 
         if x1 > 0.999 * width: x1 = width * 0.999
         elif x1 < 0.001 * width: x1 = 0.001 * width
