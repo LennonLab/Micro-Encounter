@@ -28,6 +28,7 @@ ComplexityLevels = [choice([1,2,3]), choice([1,2,3,4]), choice([1,2,3])]
 
 #Randomly chosen values for: width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std
 params = rp.get_rand_params()
+width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
 
 #######################  Lists & Dictionaries  #################################
 RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
@@ -37,7 +38,8 @@ ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, SpecEff, Deadlist \
 IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs,\
         MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(17)]
 
-IndDicts = [{}, {}, {}, {}, {}, {}, {}] # GrowthDict, MaintDict, MainFactorDict, RPFDict, ResDict, DispDict, TrophicDict
+# GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
+IndDicts = [{}, {}, {}, {}, {}, {}]
 
 
 #######################  Other variables  ######################################
@@ -48,7 +50,6 @@ BurnIn = 'not done'
 
 while sim < num_sims:
 
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
     numDead, encounters = 0, 0
     ct += 1
 
@@ -73,7 +74,7 @@ while sim < num_sims:
     p1 = len(IndList[0])
 
     # Consumption
-    if len(IndList[0]) > 0:
+    if len(IndLists[0]) > 0:
         ResLists, RID, IndLists, encounters = bide.consume(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels)
 
     # Reproduction
@@ -88,9 +89,9 @@ while sim < num_sims:
     if len(IndLists[0]) > 0:
         IndLists, ResLists, RID, numDead = bide.transition(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead)
 
-
     p2 = len(IndLists[0])
     PRODI = p2 - p1
+
     N = len(IndLists[0])
     Ns.append(N)
     numD = ADList.count('d')
@@ -101,52 +102,42 @@ while sim < num_sims:
             AugmentedDickeyFuller = sta.adfuller(Ns)
             val, p = AugmentedDickeyFuller[0:2]
 
-            if p >= 0.05: Ns.pop(0)
+            if p >= 0.05:
+                Ns.pop(0)
 
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
 
-
     if BurnIn == 'done':
         PRODIs.append(PRODI)
 
         if len(ResLists[0]) > 0:
-            RDens = len(ResList[0])/(height*width)
-            RDENs.append(RDens)
+            RDens.append(len(ResList[0])/(height*width))
 
         Rvals, RX, RY, RIDs = ResLists
-        R = len(RX)
-        Rs.append(R)
+        Rs.append(len(RX))
         encList.append(encounters)
 
-        if N >= 1:
-            SpeciesIDs, IndX, IndY, CellQuotas, GrowthList, MaintList, DispList, ADList = IndLists
+        if N > 1:
+            SpeciesIDs, IndX, IndY, CellQuotas, ADList = IndLists
+            Iagg.append(spatial.morisitas(IndX, IndY, width, height))
 
-            if N >= 2:
-                Imor = spatial.morisitas(IndX, IndY, width, height)
-                Iagg.append(Imor)
-
-            if R >= 1:
+            if R > 1:
                 q = min([20, R])
-                avg_dist2 = spatial.nearest_neighbor(IndX, RX, IndY, RY, q)
-                AVG_DIST.append(avg_dist2)
+                AVG_DIST.append(spatial.nearest_neighbor(IndX, RX, IndY, RY, q))
+                Ragg.append(spatial.morisitas(RX, RY, width, height))
 
-                if R >= 2:
-                    Rmor = spatial.morisitas(RX, RY, width, height)
-                    Ragg.append(Rmor)
-
-            GrowthDict, MaintDict, MainFactorDict, RPFDict, ResDict, DispDict, TrophicDict = IndDicts
+            GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
 
             SpecDisp.append(mean(DispDict.values()))
             SpecMaint.append(mean(MaintDict.values()))
             SpecGrowth.append(mean(GrowthDict.values()))
-            SpecEff.append(mean(ResDict.values()))
 
-            Gs.append(mean(GrowthList))
+            Gs.append(bide.per_capita(GrowthDict, SpeciesIDs))
+            Ms.append(bide.per_capita(MaintDict, SpeciesIDs))
+            Ds.append(bide.per_capita(DispDict, SpeciesIDs))
             Qs.append(mean(CellQuotas))
-            Ms.append(mean(MaintList))
-            Ds.append(mean(DispList))
 
             numD = ADList.count('d')
             ADs.append(numD/len(ADList))
@@ -170,14 +161,12 @@ while sim < num_sims:
             outlist = str(outlist).strip('')
             with open(mydir + '/results/simulated_data/SimData.csv', 'a') as text_file: outlist
 
-            # Complexity levels: spatial, trophic, resource
             ComplexityLevels = [choice([1,2,3]), choice([1,2,3,4]), choice([1,2,3])]
-
             RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
             ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, SpecEff, Deadlist = [list([]) for _ in xrange(12)]
             IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(17)]
-            IndDicts = [{}, {}, {}, {}, {}, {}, {}]
             width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = rp.get_rand_params()
+            IndDicts = [{}, {}, {}, {}, {}, {}, {}]
 
             p = 0
             BurnIn = 'not done'
