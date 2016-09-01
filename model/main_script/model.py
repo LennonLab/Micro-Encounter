@@ -17,7 +17,7 @@ import spatial
 sys.path.append(mydir + "/model/col_labels")
 
 labels = linecache.getline(mydir + '/model/col_labels/labels.txt', 1)
-with open(mydir + '/results/simulated_data/SimData.csv', 'w') as text_file:
+with open(mydir + '/results/simulated_data/SimData.csv', 'w+') as text_file:
     text_file.write(labels)
 
 
@@ -31,20 +31,20 @@ params = rp.get_rand_params()
 width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
 
 #######################  Lists & Dictionaries  #################################
-RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
-ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, SpecEff, Deadlist \
-        = [list([]) for _ in xrange(12)]
-
-IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs,\
-        MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(17)]
+ComplexityLevels = [choice([1,2,3]), choice([1,2,3,4]), choice([1,2,3])]
+Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*11
+ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, Deadlist = [list([]) for _ in xrange(7)]
+IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(15)]
 
 # GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
 IndDicts = [{}, {}, {}, {}, {}, {}]
-
+ResLists = [[], [], [], []]
+IndLists = [[], [], [], [], [], []]
 
 #######################  Other variables  ######################################
 num_sims, LowerLimit, sim, p, ct = 100, 30, 1, 0, 0
 BurnIn = 'not done'
+Nlim = 300
 
 #######################  Main Simulation Loop  #################################
 
@@ -63,14 +63,13 @@ while sim < num_sims:
     if ComplexityLevels[0] < 3 and len(IndLists[0]) > 0: # spatial complexity
         IndList, IndDicts, IndID, ResList, RID, numDead = bide.dispersal(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels, numDead)
 
-    elif ComplexityLevels[0] == 3 and len(IndList[0]) > 0: # spatial complexity
+    elif ComplexityLevels[0] == 3 and len(IndLists[0]) > 0: # spatial complexity
         ResList, RID, IndList, IndDicts, IndID, numDead = bide.chemotaxis(IndLists, IndDicts, IndID, ResLists, RID, params, ComplexityLevels, numDead)
 
     # Resource Dispersal
     if ComplexityLevels[0] == 1 and len(ResLists[0]) > 0: # spatial complexity
         ResLists, RID = bide.res_dispersal(ResLists, RID, params, ct, ComplexityLevels)
 
-    PRODI = 0
     p1 = len(IndList[0])
 
     # Consumption
@@ -97,7 +96,12 @@ while sim < num_sims:
     numD = ADList.count('d')
 
 
+    if N > Nlim:
+        BurnIn = 'done'
+        Ns = [Ns[-1]] # only keep the most recent N value
+
     if len(Ns) >= 50:
+
         if BurnIn == 'not done':
             AugmentedDickeyFuller = sta.adfuller(Ns)
             val, p = AugmentedDickeyFuller[0:2]
@@ -110,17 +114,17 @@ while sim < num_sims:
                 Ns = [Ns[-1]] # only keep the most recent N value
 
     if BurnIn == 'done':
+
+        #print sim, ct, N
         PRODIs.append(PRODI)
-
-        if len(ResLists[0]) > 0:
-            RDens.append(len(ResList[0])/(height*width))
-
         Rvals, RX, RY, RIDs = ResLists
+
+        RDENs.append(len(Rvals)/(height*width))
         Rs.append(len(RX))
         encList.append(encounters)
 
         if N > 1:
-            SpeciesIDs, IndX, IndY, CellQuotas, ADList = IndLists
+            SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
             Iagg.append(spatial.morisitas(IndX, IndY, width, height))
 
             if R > 1:
@@ -143,31 +147,41 @@ while sim < num_sims:
             ADs.append(numD/len(ADList))
             Deadlist.append(numDead)
 
-        if len(Ns) >= 20:
+        if len(Ns) >= 20 or N > Nlim:
 
-            print '%4s' % sim, ' r:','%4s' %  r, ' R:','%4s' % int(round(mean(Rs))), ' N:','%5s' % int(round(mean(Ns))), \
-            ' Dormant:', '%5s' % round(mean(ADs),3), ' Encounters:','%5s' % round(mean(encList),2), '   Spatial:', ComplexityLevels[0]
+            if len(Ns) >= 20:
 
-            outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, seedCom, \
-            width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
-            mean(Gs), var(Gs), mean(Ms), var(Ms), mean(Ds), var(Ds), \
-            mean(SpecGrowth), var(SpecGrowth), mean(SpecDisp), var(SpecDisp), \
-            mean(SpecMaint),  var(SpecMaint), mean(AVG_DIST), var(AVG_DIST), \
-            mean(ADs), var(ADs), ComplexityLevels[1], ComplexityLevels[2], \
-            ComplexityLevels[0], mean(encList), var(encList), std, mean(Iagg), \
-            var(Iagg), mean(Ragg), var(Ragg), mean(Deadlist), var(Deadlist), ct]
+                print '%4s' % sim, ' r:','%4s' %  r, ' R:','%4s' % int(round(mean(Rs))), ' N:','%5s' % int(round(mean(Ns))), \
+                ' Dormant:', '%5s' % round(mean(ADs),3), ' Encounters:','%5s' % round(mean(encList),2), '   Spatial:', ComplexityLevels[0],\
+                ' Trophic:', ComplexityLevels[1], ' Resource:', ComplexityLevels[2]
 
-            outlist = str(outlist).strip('[]')
-            outlist = str(outlist).strip('')
-            with open(mydir + '/results/simulated_data/SimData.csv', 'a') as text_file: outlist
+                outlist = [sim, mean(PRODIs), var(PRODIs), r, gmax, maintmax, dmax, seedCom, \
+                width-0.2, height, mean(Ns), var(Ns), m, mean(RDENs), var(RDENs), mean(Rs), var(Rs), \
+                mean(Gs), var(Gs), mean(Ms), var(Ms), mean(Ds), var(Ds), \
+                mean(SpecGrowth), var(SpecGrowth), mean(SpecDisp), var(SpecDisp), \
+                mean(SpecMaint),  var(SpecMaint), mean(AVG_DIST), var(AVG_DIST), \
+                mean(ADs), var(ADs), ComplexityLevels[1], ComplexityLevels[2], \
+                ComplexityLevels[0], mean(encList), var(encList), std, mean(Iagg), \
+                var(Iagg), mean(Ragg), var(Ragg), mean(Deadlist), var(Deadlist), ct]
+
+                outlist = str(outlist).strip('[]')
+                outlist = str(outlist).strip('')
+
+                OUT = open(mydir + '/results/simulated_data/SimData.csv', 'a')
+                print>>OUT, outlist
+                OUT.close()
 
             ComplexityLevels = [choice([1,2,3]), choice([1,2,3,4]), choice([1,2,3])]
-            RDens, RDiv, RRich, Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*14
-            ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, SpecEff, Deadlist = [list([]) for _ in xrange(12)]
-            IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, RDIVs, RRICHs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(17)]
+            Mu, Maint, ct, IndID, RID, N, T, R, PRODI, PRODQ, numD = [0]*11
+            ADList, ADs, AVG_DIST, SpecDisp, SpecMaint, SpecGrowth, Deadlist = [list([]) for _ in xrange(7)]
+            IndLists, ResLists, Gs, Ms, Qs, Ds, Rs, PRODIs, Ns, RDENs, MUs, MAINTs, encList, Ragg, Iagg = [list([]) for _ in xrange(15)]
             width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = rp.get_rand_params()
-            IndDicts = [{}, {}, {}, {}, {}, {}, {}]
+
+            IndDicts = [{}, {}, {}, {}, {}, {}]
+            ResLists = [[], [], [], []]
+            IndLists = [[], [], [], [], [], []]
 
             p = 0
             BurnIn = 'not done'
             sim += 1
+            ct = 0
