@@ -12,17 +12,14 @@ def get_rand_params():
 
     m = 0 #np.random.uniform(0.01, 0.1)
     r = randint(1, 1) # resource particles flowing in per time step
-
-    gmax = np.random.uniform(0.5, 0.5) # max specific growth rate
-    maintmax = np.random.uniform(0.01, 0.01)
-
-    dmax = np.random.uniform(0.01, 0.01)  # max dispersal probability
-    pmax = np.random.uniform(0.01, 0.01)  # max probability of going active
-    mmax = randint(100, 100)  # max maintenance factor
     std = np.random.uniform(0.4, 0.4)
 
-    # TO EXPLORE A SINGLE SET OF VALUES FOR MODEL PARAMETERS
+    gmax = np.random.uniform(50, 50) # max specific growth rate
+    dmax = np.random.uniform(0.01, 0.01)  # max dispersal probability
+    pmax = np.random.uniform(0.01, 0.01)  # max probability of going active
+
+    maintmax = np.random.uniform(10, 100)
+    mmax = randint(10, 10)  # max maintenance factor
 
     plist = [width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std]
     return plist
-    
