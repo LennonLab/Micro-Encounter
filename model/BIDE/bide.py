@@ -153,7 +153,7 @@ def immigration(IndLists, IndDicts, IndID, params, ct, ComplexityLevels):
             MaintDict[prop] = np.random.uniform(maintmax/10, maintmax)
 
             # species maintenance reduction factor
-            MainFactorDict[prop] = np.random.uniform(10, mmax)
+            MainFactorDict[prop] = np.random.uniform(1, mmax)
 
             # species resuscitation factor
             RPFDict[prop] = np.random.uniform(pmax/10, pmax)
@@ -188,10 +188,11 @@ def maintenance(IndLists, IndDicts, ResLists, RID, ComplexityLevels, numDead):
         maint = MaintDict[spID]
         state = ADList[i]
 
-        if state == 'd': maint = maint/mfd
+        if state == 'd':
+            maint = maint/mfd
 
         Q -= maint
-        if Q <= maint:   # starved
+        if Q <= 0:   # starved
 
             if TC >= 3:
                 r = 'd'

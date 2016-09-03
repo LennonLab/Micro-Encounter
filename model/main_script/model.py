@@ -42,9 +42,9 @@ ResLists = [[], [], [], []]
 IndLists = [[], [], [], [], [], []]
 
 #######################  Other variables  ######################################
-num_sims, LowerLimit, sim, p, ct = 100, 30, 1, 0, 0
+num_sims, LowerLimit, sim, p, ct = 100000, 30, 1, 0, 0
 BurnIn = 'not done'
-Nlim = 300
+Nlim = 1000
 
 #######################  Main Simulation Loop  #################################
 
@@ -52,7 +52,7 @@ while sim < num_sims:
 
     numDead, encounters = 0, 0
     ct += 1
-
+    
     # Inflow of resources
     ResLists, RID = bide.ResIn(ResLists, RID, params, ct, ComplexityLevels)
 
