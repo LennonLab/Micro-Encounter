@@ -1,12 +1,68 @@
 from __future__ import division
 import sys
 import numpy as np
+from random import choice, sample, randint
 from scipy import stats
 from scipy.stats import gaussian_kde
 from scipy.optimize import fsolve
 import math
 
 
+
+def get_complexity_levels():
+
+    SC1 = choice(['-wellmixed-', '-brownian-', '-static-'])
+    SC2 = choice(['-chemotaxis-', '-randwalk-'])
+    SC3 = choice(['-random-', '-aggregated-'])
+    SC = SC1 + SC2 + SC3
+
+    RC1 = choice(['-monoculture-', '-polyculture-'])
+    RC2 = choice(['-polymers-'])
+    RC3 = choice(['-lockandkey-', '-simple-'])
+    RC = RC1 + RC2 + RC3
+
+    TC = choice(['-none-', '-crossfeeding-', '-scavenging-'])
+    #TC = sample(TC, randint(1, len(TC)))
+    #TC = '-'.join(TC)
+    
+    return [SC, TC, RC]
+
+
+
+def check_list_lengths(lists, function, ct):
+    lengths = []
+    for lst in lists:
+        lengths.append(len(lst))
+
+    if min(lengths) != max(lengths):
+        print ct, function, 'min(listlen) != max(listlen)'
+        print lengths
+        sys.exit()
+
+
+def GetRAD(vector):
+    RAD = []
+    unique = list(set(vector))
+    for val in unique:
+        RAD.append(vector.count(val)) # the abundance of each Sp_
+
+    return RAD, unique # the rad and the specieslist
+
+
+def per_capita(ValDict, SpeciesIDs):
+    
+    if len(SpeciesIDs) == 0:
+        return float('nan')
+    
+    species, vals = [ValDict.keys(), ValDict.values()]
+    sp_val = 0
+    
+    for i, sp in enumerate(species):
+        sp_val += SpeciesIDs.count(sp) * vals[i]
+
+    return sp_val/len(SpeciesIDs) # the rad and the specieslist
+    
+    
 ############### RARITY #########################################################
 def percent_ones(sad):
     """ percent of species represented by a single individual """
@@ -15,7 +71,7 @@ def percent_ones(sad):
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     return 100 * sad.count(1)/len(sad)
 
@@ -27,7 +83,7 @@ def percent_pt_one(sad):
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     N = sum(sad)
     S = len(sad)
@@ -50,16 +106,16 @@ def Rlogskew(sad):
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
 
     S = len(sad)
 
     if S <= 2.0:
-        return 'NaN'
+        return float('nan')
 
     if max(sad) == min(sad):
-        return 'NaN'
+        return float('nan')
 
     sad = np.log10(sad)
     mu = np.mean(sad)
@@ -84,12 +140,12 @@ def Preston(sad):
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     N = sum(sad)
 
     if N <= 0:
-        return 'NaN'
+        return float('nan')
 
     Nmax = max(sad)
 
@@ -114,11 +170,11 @@ def Berger_Parker(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     return max(sad)/sum(sad)
 
@@ -128,14 +184,14 @@ def McNaughton(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     if len(sad) == 1:
-        return 'NaN'
+        return float('nan')
 
     sad.sort(reverse=True)
     return 100 * (sad[0] + sad[1])/sum(sad)
@@ -150,16 +206,16 @@ def Shannons_H(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
     H = 0
     for i in sad:
@@ -173,16 +229,16 @@ def simpsons_dom(sad): # ALSO CONSIDERED A DOMINANCE MEASURE
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
 
     D = 0.0
@@ -203,19 +259,19 @@ def e_shannon(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if len(sad) <= 1:
-        return 'NaN'
+        return float('nan')
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
 
     H = Shannons_H(sad)
@@ -236,16 +292,16 @@ def simplest_gini(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
     sad = sorted(sad)  # increasing order
     n = len(sad)
@@ -270,16 +326,16 @@ def e_Mcintosh(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
     S = len(sad)
     N = sum(sad)
@@ -296,16 +352,16 @@ def EQ(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
     sad.reverse()
     S = len(sad)
 
@@ -327,16 +383,16 @@ def NHC(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
     sad.sort()
     sad.reverse()
@@ -351,16 +407,16 @@ def e_heip(sad):
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) <= 0:
-        return 'NaN'
+        return float('nan')
 
     x = sum(1 for n in sad if n < 0)
     if x >= 1:
-        return 'NaN'
+        return float('nan')
 
     sad = filter(lambda a: a != 0, sad)
 
     if sum(sad) == 0:
-        return 'NaN'
+        return float('nan')
 
     S = len(sad)
     N = float(sum(sad))
