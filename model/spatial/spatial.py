@@ -89,6 +89,9 @@ def morisitas(Xs, Ys, w, h):
         a += len(box)**2
         b += len(box)
 
+    if b <= 1:
+        return float('nan')
+        
     Imor = len(Boxes) * (a - b)/(b**2 - b)
 
     return Imor

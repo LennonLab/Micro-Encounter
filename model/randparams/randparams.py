@@ -10,16 +10,16 @@ def get_rand_params():
     width  = 10 #randint(5, 10)
     height = 10 #randint(5, 10)
 
-    m = 0 #np.random.uniform(0.01, 0.1)
-    r = randint(1, 1) # resource particles flowing in per time step
+    m = np.random.uniform(0.001, 0.001)
+    r = randint(2, 2) # resource particles flowing in per time step
     std = np.random.uniform(0.4, 0.4)
 
-    gmax = np.random.uniform(50, 50) # max specific growth rate
-    dmax = np.random.uniform(0.01, 0.01)  # max dispersal probability
+    gmax = np.random.uniform(0.1, 0.1) # max specific growth rate
+    dmax = np.random.uniform(0.5, 0.5)  # max dispersal rate
     pmax = np.random.uniform(0.01, 0.01)  # max probability of going active
 
-    maintmax = np.random.uniform(10, 100)
-    mmax = randint(10, 10)  # max maintenance factor
+    maintmax = np.random.uniform(10, 10)
+    mmax = randint(20, 20)  # max maintenance factor
 
     plist = [width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std]
     return plist
