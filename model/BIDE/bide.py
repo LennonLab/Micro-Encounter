@@ -3,698 +3,690 @@ from __future__ import division
 from random import randint, choice
 import numpy as np
 import math
-import string
+import time
 import sys
 import os
 
 mydir = os.path.expanduser("~/GitHub/Micro-Encounter")
-sys.path.append(mydir + "/model/metrics")
-import metrics
 
-
-def checkQ(Q, line):
-    if Q < 0:
-        print 'line',line,': error: Q < 0:', Q
+def checkVal(val, line):
+    if val < 0:
+        print 'line',line,': error: val < 0:', val
         sys.exit()
     return
 
 
-def dead(IndLists, ResLists, RID, i, Q, TC, RC):
+def get_closest(RIDs, RX, RY, RZ, Rtypes, restype, coords):
 
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
+    closest = 'none'
+    res_indices = [xi for xi, x in enumerate(Rtypes) if x == restype or x == 'dead']
 
-    if 'scavenging' in TC and 'none' not in TC:
+    if len(res_indices) == 0:
+        return closest
+
+    x1, y1, z1 = coords
+    Try = min([40, len(res_indices)])
+    minDist, ct = 10**10, 0
+
+    while ct < Try:
+        ct += 1
+        j = randint(0, len(res_indices)-1)
+        x = RX[j]
+        y = RY[j]
+        z = RZ[j]
+
+        dist = math.sqrt((x1 - x)**2 + (y1 - y)**2 + (z1 - z)**2)
+
+        if dist < minDist:
+            minDist = dist
+            closest = RIDs[j]
+
+        return closest
+
+
+
+def dead(IndDict, ResLists, i, Q, TC, RC):
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+
+    Q = IndDict[i]['quota']
+    x = IndDict[i]['x']
+    y = IndDict[i]['y']
+    z = IndDict[i]['z']
+
+    if '-scavenging-' in TC:
         Rvals.append(Q)
         Rtypes.append('dead')
-        RX.append(IndX[i])
-        RY.append(IndY[i])
-        RIDs.append(RID)
-        RID += 1
+        RX.append(x)
+        RY.append(y)
+        RZ.append(z)
+        RIDs.append(time.clock())
 
-    CellQuotas.pop(i)
-    SpeciesIDs.pop(i)
-    IndIDs.pop(i)
-    IndX.pop(i)
-    IndY.pop(i)
-    ADList.pop(i)
+    del IndDict[i]
 
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [IndLists, ResLists, RID]
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [IndDict, ResLists]
 
 
 
-def ResIn(ResLists, ResDict, RID, params, ct, ComplexityLevels):
+def ResIn(ResLists, ResDict, params, ct, ComplexityLevels):
 
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
     SC, TC, RC = ComplexityLevels
 
-    Ymean = np.random.uniform(0.001*height, 0.999*height)
-    Xmean = np.random.uniform(0.001*width, 0.999*width)
-    sizemax = 100
+    Ymean = np.random.uniform(0, height)
+    Xmean = np.random.uniform(0, width)
+    Zmean = np.random.uniform(0, length)
+    sizemax = 10000
 
-    for i in range(r):
-        RIDs.append(RID)
-        RID += 1
-        Rvals.append(randint(1, sizemax))
-        pmin, pmax = float(), float() # default is 'simple'
-        ri = str()
+    res_in = 0
+    x = np.random.binomial(1, r)
+    if x == 1:
+        res_in += 1
+        RIDs.append(time.clock())
+        Rvals.append(randint(sizemax, sizemax))
+        RY.append(np.random.uniform(0, height)) # default is random
+        RX.append(np.random.uniform(0, width)) # default is random
+        RZ.append(np.random.uniform(0, length)) # default is random
+        pmin, pmax = 1.0, 1.0 # default is 'simple'
+        ri = 'a' # default is monoculture
 
         if '-polyculture-' in RC:
-            ri = choice(['a','b','c','d','e'])
-            #ri = choice(string.lowercase) # default is polyculture
-        elif '-monoculture-' in RC:
-            ri = 'a'
+            ri = choice(['a', 'b', 'c']) #ri = choice(string.lowercase) # default is polyculture
 
-        if '-simple-' in RC:
-            pmin, pmax = 1.0, 1.0
-        elif '-lockandkey-' in RC:
-            pmin, pmax = 0.05, 0.1
+        if '-lockandkey-' in RC:
+            pmin, pmax = 0.1, 0.5
+
+        RY[-1] = np.random.normal(Ymean, std)
+        RX[-1] = np.random.normal(Xmean, std)
+        RZ[-1] = np.random.normal(Zmean, std)
 
         if ri not in ResDict:
-            ResDict[ri] = round(np.random.uniform(pmin, pmax), 3)
-
+            ResDict[ri] = np.random.uniform(pmin, pmax)
         Rtypes.append(ri)
 
-        if '-aggregated-' in SC:
-            vals = np.random.normal([Ymean, Xmean], std)
-            RY.append(vals[0])
-            RX.append(vals[1])
-
-        elif '-random-' in SC:
-            RY.append(np.random.uniform(0.001*height, 0.999*height))
-            RX.append(np.random.uniform(0.001*width, 0.999*width))
-
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-
-    return [ResLists, ResDict, RID]
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [ResLists, ResDict, res_in]
 
 
 
-def immigration(IndLists, IndDicts, IndID, params, ct, ComplexityLevels):
+def immigration(IndDict, SpDicts, params, ct, ComplexityLevels):
 
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
     SC, TC, RC = ComplexityLevels
 
-    Ymean = np.random.uniform(0.001*height, 0.999*height)
-    Xmean = np.random.uniform(0.001*width, 0.999*width)
+    Ymean = np.random.uniform(0, height)
+    Xmean = np.random.uniform(0, width)
+    Zmean = np.random.uniform(0, length)
 
-    if ct > 1: seedCom = 1
-    for m in range(seedCom):
-        prop = np.random.randint(1, 100)
-        SpeciesIDs.append(prop)
+    if ct > 1:
+        seed = np.random.binomial(1, m)
 
-        CellQuotas.append(np.random.uniform(100, 100))
-        if '-aggregated-' in SC:
-            vals = np.random.normal([Ymean, Xmean], std)
-            IndY.append(vals[0])
-            IndX.append(vals[1])
+    for num in range(seed):
+        IndID = time.clock()
+        spID = np.random.randint(1, 100)
+        IndDict[IndID] = {'species' : int(spID)}
+        IndDict[IndID]['quota'] = np.random.uniform(100, 1000)
+        IndDict[IndID]['state'] = choice(['active'])
+        IndDict[IndID]['closest'] = 'none'
+        IndDict[IndID]['xdir'] = choice([1, -1])
+        IndDict[IndID]['ydir'] = choice([1, -1])
+        IndDict[IndID]['zdir'] = choice([1, -1])
 
-        elif '-random-' in SC:
-            IndY.append(np.random.uniform(0.001*height, 0.999*height))
-            IndX.append(np.random.uniform(0.001*width, 0.999*width))
+        vals = np.random.normal([Ymean, Xmean, Zmean], std)
 
-        IndIDs.append(IndID)
-        IndID += 1
+        IndDict[IndID]['y'] = vals[0]
+        IndDict[IndID]['x'] = vals[1]
+        IndDict[IndID]['z'] = vals[2]
 
-        pred = np.random.binomial(1, 0.01)
-
-        if prop not in GrowthDict:
-            TrophicDict[prop] = {'resource': str(), 'crossfeed_to': str(), 'prey_of': int(), 'predator_of': int(), 'mutualist_with': int()}
-
-            if '-monoculture-' in RC:
-                TrophicDict[prop]['resource'] = 'a'
-
-            elif '-polyculture-' in RC:
-                TrophicDict[prop]['resource'] = choice(['a','b','c','d','e'])
-                #TrophicDict[prop]['resource'] = choice(string.lowercase)
+        if spID not in GrowthDict:
+            TrophicDict[spID] = {'resource': str(), 'crossfeed_to': str()}
 
             if '-crossfeeding-' in TC:
-                TrophicDict[prop]['crossfeeds_to'] = choice(['a','b','c','d','e'])
+                rlist = ['a', 'b', 'c']
+                r = choice(rlist)
+                rlist.pop(rlist.index(r))
+
+                TrophicDict[spID]['resource'] = r
+                #TrophicDict[prop]['resource'] = choice(string.lowercase)
+
+                TrophicDict[spID]['crossfeeds_to'] = choice(rlist)
                 #TrophicDict[prop]['crossfeeds_to'] = choice(string.lowercase)
 
-            if '-predprey-' in TC and pred == 1:
-                prey_of = int()
-                pred_of = int()
-
-                while prey_of is not prop and pred_of is not prop:
-                    prey_of = np.random.randint(1, 100)
-                    pred_of = np.random.randint(1, 100)
-                    if prey_of != pred_of and prop not in [prey_of, pred_of]:
-                        break
-
-                TrophicDict[prop]['prey_of'] = prey_of
-                TrophicDict[prop]['predator_of'] = pred_of
+            elif '-none-' in TC or '-scavenging-' in TC:
+                if '-monoculture-' in RC:
+                    TrophicDict[spID]['resource'] = 'a'
+                elif '-polyculture-' in RC:
+                    TrophicDict[spID]['resource'] = choice(['a', 'b', 'c'])
 
             # species growth rate
-            GrowthDict[prop] = np.random.uniform(gmax/1, gmax)
+            GrowthDict[spID] = np.random.uniform(gmax/10, gmax)
 
             # species maintenance
-            MaintDict[prop] = randint(1, maintmax)
+            MaintDict[spID] = np.random.uniform(mmax/10, mmax)
 
             # species maintenance reduction factor
-            MainFactorDict[prop] = randint(1, mmax)
+            MainFactorDict[spID] = np.random.uniform(mfact/10, mfact)
 
             # species resuscitation factor
-            RPFDict[prop] = np.random.uniform(pmax/1, pmax)
+            RPFDict[spID] = np.random.uniform(pmax/10, pmax)
 
             # species active dispersal rate
-            DispDict[prop] = np.random.uniform(dmax/1, dmax)
+            DispDict[spID] = np.random.uniform(dmax/10, dmax)
 
-        ADList.append('a')
-
-    metrics.check_list_lengths(IndLists, 'immigration', ct)
-
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    IndDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
-    return [IndLists, IndDicts, IndID]
+    SpDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
+    return [IndDict, SpDicts]
 
 
 
 
-def maintenance(IndLists, IndDicts, ResLists, ResDict, RID, ComplexityLevels, numDead):
+def maintenance(IndDict, SpDicts, ResLists, ResDict, ComplexityLevels, numDead):
 
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
     SC, TC, RC = ComplexityLevels
 
+    IndIDs = list(IndDict.keys())
     n = len(IndIDs)
-    if n == 0: return [IndLists, ResLists, ResDict, RID, numDead]
+    if n == 0:
+        return [IndDict, ResLists, ResDict, numDead]
 
-    for j in range(n):
-        i = randint(0, len(IndIDs)-1)
-        Q = CellQuotas[i]
-        spID = SpeciesIDs[i]
+    while len(IndIDs) > 0:
+        i = choice(IndIDs)
+        Q = IndDict[i]['quota']
+        state = IndDict[i]['state']
+        spID = IndDict[i]['species']
         mfd = MainFactorDict[spID]
-        maint = MaintDict[spID]
-        state = ADList[i]
+        maint = float(MaintDict[spID])
 
-        if state == 'd':
+        if state == 'dormant':
             maint = maint/mfd
 
-        if Q >= maint/mfd:
-            #checkQ(Q, 182)
-            Q -= maint/mfd
-            #checkQ(Q, 184)
-            CellQuotas[i] = Q
+        if Q > maint:
+            Q -= maint
+            IndDict[i]['quota'] = Q
 
         else:
-            IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-            ResLists = Rvals, Rtypes, RX, RY, RIDs
-            IndLists, ResLists, RID = dead(IndLists, ResLists, RID, i, Q, TC, RC)
+            ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+            IndDict, ResLists = dead(IndDict, ResLists, i, Q, TC, RC)
             numDead += 1
 
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    IndDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
-    return [IndLists, ResLists, ResDict, RID, numDead]
+        IndIDs.pop(IndIDs.index(i))
+
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    SpDicts = GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict
+    return [IndDict, ResLists, ResDict, numDead]
 
 
 
+def transition(IndDict, SpDicts, ResLists, ResDict, ComplexityLevels, numDead):
 
-def transition(IndLists, IndDicts, ResLists, ResDict, RID, ComplexityLevels, numDead):
-
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
     SC, TC, RC = ComplexityLevels
 
+    IndIDs = list(IndDict.keys())
     n = len(IndIDs)
     if n == 0:
-        return [IndLists, ResLists, ResDict, RID, numDead]
+        return [IndDict, ResLists, ResDict, numDead]
 
-    for j in range(n):
-        i = randint(0, len(IndIDs)-1)
-        spID = SpeciesIDs[i]
-        state = ADList[i]
-        Q = CellQuotas[i]
+    while len(IndIDs) > 0:
+        i = choice(IndIDs)
+        IndIDs.pop(IndIDs.index(i))
 
-        mfd = MainFactorDict[spID]
-        maint = MaintDict[spID]
+        Q = IndDict[i]['quota']
+        state = IndDict[i]['state']
+        spID = IndDict[i]['species']
+        maint = float(MaintDict[spID])
+        rpd = RPFDict[spID]
 
-        if Q < maint/mfd:
-            IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-            ResLists = Rvals, Rtypes, RX, RY, RIDs
-            IndLists, ResLists, RID = dead(IndLists, ResLists, RID, i, Q, TC, RC)
+        x = np.random.binomial(1, rpd)
+        if state == 'dormant' and x == 1:
+            IndDict[i]['state'] = 'active'
+
+        elif state == 'active' and Q <= maint*4:
+            IndDict[i]['state'] = 'dormant'
+
+        else: continue
+
+        if Q < maint:
+            ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+            IndDict, ResLists = dead(IndDict, ResLists, i, Q, TC, RC)
             numDead += 1
-            continue
 
-        if state == 'd':
-            x = np.random.binomial(1, RPFDict[spID])
-            if x == 1: ADList[i] = 'a'
-
-        if state == 'a':
-            if Q <= maint: ADList[i] = 'd'
-
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [IndLists, ResLists, ResDict, RID, numDead]
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [IndDict, ResLists, ResDict, numDead]
 
 
 
 
-def consume(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead):
+def consume(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead):
 
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
     SC, TC, RC = ComplexityLevels
 
-    maxQ = 1000
-    encounters = 0
+    maxQ, encounters = 1000, 0
+    IndIDs = IndDict.keys()
     n = len(IndIDs)
     r = len(RIDs)
+    if n >= 0 and r == 0:
+        return [ResLists, ResDict, IndDict, encounters, numDead]
 
-    if n == 0 and r == 0:
-        return [ResLists, ResDict, RID, IndLists, encounters, numDead]
+    while len(IndIDs) > 0:
+        i = choice(IndIDs)
+        IndIDs.pop(IndIDs.index(i))
+        Q = IndDict[i]['quota']
+        spID = IndDict[i]['species']
+        state = IndDict[i]['state']
+        x1 = IndDict[i]['x']
+        y1 = IndDict[i]['y']
+        z1 = IndDict[i]['z']
 
-    elif r == 0 and n > 0:
-        if '-predprey-' in TC and 'none' not in TC:
-            ResLists, ResDict, RID, IndLists, encounters, numDead = predation(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, encounters, numDead)
-            SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-            Rvals, Rtypes, RX, RY, RIDs = ResLists
+        closest = IndDict[i]['closest']
 
-        return [ResLists, ResDict, RID, IndLists, encounters, numDead]
+        if closest not in RIDs or 'randwalk' in SC:
+            restype = TrophicDict[spID]['resource']
 
-    n = len(IndIDs)
-    r = len(RIDs)
-
-    for ii in range(n):
-        i = randint(0, n-1)
-
-        # Trophic level
-        spID = SpeciesIDs[i]
-        Q = CellQuotas[i]
-        x1 = IndX[i]
-        y1 = IndY[i]
-
-        restype = TrophicDict[spID]['resource']
-        res_indices = [xi for xi, x in enumerate(Rtypes) if x == restype or x == 'dead']
-
-        if len(res_indices) == 0: continue
-
-        Try = min([20, len(res_indices)])
-        ct = 0
-
-        while ct < Try and RIDs != []:
-            ct += 1
-
-            r = len(res_indices)
-            Try = min([20, r])
-            j = randint(0, r-1)
-            Rtype = Rtypes[j]
-
-            if restype == Rtype or Rtype == 'dead': # is capable of consuming the resource type
-                x2 = RX[j]
-                y2 = RY[j]
-                dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-
-                Rval = Rvals[j]
-                if dist <= Q + Rval:
-
-                    if ADList[i] == 'd':
-                        ADList[i] = 'a'
-
-                    ct = Try
-                    p = ResDict[Rtype]
-                    k = np.random.binomial(1, p)
-                    #print k, p
-
-                    if k == 1:
-                        encounters += 1
-
-                        p2 = np.random.uniform(0, 1.0)
-                        res_piece1 = Rval * p2
-                        res_piece2 = Rval - res_piece1
-
-                        Rvals[j] = float(res_piece1)
-                        Rvals.append(res_piece2)
-                        RIDs.append(RID)
-                        Rtypes.append(Rtype)
-                        RID += 1
-                        RX.append(x2)
-                        RY.append(y2)
-
-                        mu = GrowthDict[spID] * Q
-                        Rval = Rvals[j]
-
-                        if mu >= Rval:
-                            Q += Rval
-                            Rval = 0.0
-
-                        elif mu < Rval:
-                            Q += mu
-                            Rval -= mu
-
-                        if Q > maxQ:
-                            Rval += maxQ - Q
-                            Q = maxQ
-
-                        if Rval == 0.0:
-                            Rvals.pop(j)
-                            RIDs.pop(j)
-                            Rtypes.pop(j)
-                            RX.pop(j)
-                            RY.pop(j)
-
-                        else:
-                            if 'polyculture' in RC:
-                                if 'crossfeeding' in TC and 'none' not in TC:
-                                    Rtype = TrophicDict[spID]['crossfeeds_to']
-
-                                    if 'simple' in RC:
-                                        pmin, pmax = 1.0, 1.0
-                                    if 'lockandkey' in RC:
-                                        pmin, pmax = 0.05, 0.1
-
-                                    if Rtype not in ResDict:
-                                        ResDict[Rtype] = round(np.random.uniform(pmin, pmax), 3)
-
-                            Rvals[j] = Rval
-                            Rtypes[j] = Rtype
-                            RIDs[j] = RID
-                            RID += 1
-
-                        CellQuotas[i] = Q
-
-
-    if 'predprey' in TC and 'none' not in TC:
-        ResLists, ResDict, RID, IndLists, encounters, numDead = predation(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, encounters, numDead)
-        SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-        Rvals, Rtypes, RX, RY, RIDs = ResLists
-
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [ResLists, ResDict, RID, IndLists, encounters, numDead]
-
-
-
-
-def predation(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, encounters, numDead):
-
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
-    SC, TC, RC = ComplexityLevels
-
-    maxQ = 1000
-    n = len(IndIDs)
-
-    for ii in range(n):
-        i = randint(0, n-1)
-
-        pred = SpeciesIDs[i]
-        prey = TrophicDict[pred]['predator_of']
-        if prey == 0:
-            continue
-
-        predQ = CellQuotas[i]
-        predx = IndX[i]
-        predy = IndY[i]
-
-        prey_indices = [i for i, x in enumerate(SpeciesIDs) if x == prey]
-        Try = min([20, len(prey_indices)])
-
-        ct = 0
-        while ct < Try and IndX != []:
-            ct += 1
-
-            r = len(prey_indices)
-            Try = min([20, r])
-            j = randint(0, r-1)
-
-            preyx = IndX[j]
-            preyy = IndY[j]
-            dist = math.sqrt((predx - preyx)**2 + (predy - preyy)**2)
-
-            preyQ = CellQuotas[j]
-
-            if dist <= predQ + preyQ:
-                if ADList[i] == 'd':
-                    ADList[i] = 'a'
-
-                mu = GrowthDict[pred]
-                if mu >= preyQ:
-                    predQ += preyQ
-                    preyQ = 0
-
-                elif mu < preyQ:
-                    predQ += mu
-                    preyQ -= mu
-
-                if predQ > maxQ:
-                    preyQ += maxQ - predQ
-                    predQ = maxQ
-
-                IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-                ResLists = Rvals, Rtypes, RX, RY, RIDs
-                IndLists, ResLists, RID = dead(IndLists, ResLists, RID, j, preyQ, TC, RC)
-                numDead += 1
+            coords = [x1, y1, z1]
+            IndDict[i]['closest'] = get_closest(RIDs, RX, RY, RZ, Rtypes, restype, coords)
+            closest = IndDict[i]['closest']
+            if closest == 'none':
                 continue
 
-                CellQuotas[i] = int(predQ)
+        j = RIDs.index(closest)
+        Rval = Rvals[j]
+        Rtype = Rtypes[j]
+        x2 = RX[j]
+        y2 = RY[j]
+        z2 = RZ[j]
 
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [ResLists, ResDict, RID, IndLists, encounters, numDead]
+        dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+
+        i_radius = ((0.75*Q)/math.pi)**(1.0/3)
+        r_radius = 100 * ((0.75*Rval)/math.pi)**(1.0/3)
+
+        #print 'dists', dist, r_radius, i_radius, 'Rtype:', Rtype, SC
+        if dist <= i_radius + r_radius:
+            if state == 'dormant':
+                IndDict[i]['state'] = 'active'
+
+            #print 'dists', dist, r_radius, i_radius, 'Rtype:', Rtype, SC
+            if np.random.binomial(1, ResDict[Rtype]) == 1:
+                encounters += 1
+                mu = GrowthDict[spID] * Q
+
+                if mu >= Rval:
+                    Q += Rval
+                    Rval = 0.0
+
+                elif mu < Rval:
+                    Q += mu
+                    Rval -= mu
+
+                if Q > maxQ:
+                    Rval += Q - maxQ
+                    Q = float(maxQ)
+
+                IndDict[i]['quota'] = Q
+                checkVal(Q, 348)
+
+                if Rval == 0:
+                    Rvals.pop(j)
+                    RIDs.pop(j)
+                    Rtypes.pop(j)
+                    RX.pop(j)
+                    RY.pop(j)
+                    RZ.pop(j)
+
+                    if len(RIDs) == 0:
+                        ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+                        return [ResLists, ResDict, IndDict, encounters, numDead]
+
+                else:
+                    r = np.random.uniform(0, Rval)
+                    rlist = [r, Rval - r]
+
+                    Rvals[j] = max(rlist)
+                    r2 = min(rlist)
+
+                    if '-crossfeeding-' in TC:
+                        Rtype = TrophicDict[spID]['crossfeeds_to']
+                        pmin, pmax = 1.0, 1.0 # 'simple' is default
+
+                        if '-lockandkey-' in RC:
+                            pmin, pmax = 0.1, 0.5
+
+                        if Rtype not in ResDict:
+                            ResDict[Rtype] = np.random.uniform(pmin, pmax)
+
+                    RIDs.append(time.clock())
+                    Rtypes.append(Rtype)
+                    Rvals.append(r2)
+                    RX.append(x2)
+                    RY.append(y2)
+                    RZ.append(z2)
+
+
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [ResLists, ResDict, IndDict, encounters, numDead]
 
 
 
-def reproduce(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead):
+def reproduce(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead):
 
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
     SC, TC, RC = ComplexityLevels
 
-    maxQ = 1000
-    PRODI = 0
+    maxQ, PRODI = 1000, 0
+    IndIDs = list(IndDict.keys())
     n = len(IndIDs)
-    if n == 0:
-        return [PRODI, IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
+    if n == 0: return [PRODI, IndDict, ResLists, ResDict, numDead]
 
-    for j in range(n):
-        i = randint(0, len(IndIDs)-1)
-        state = ADList[i]
-        spID = SpeciesIDs[i]
-        maint = MaintDict[spID]
-        mfd = MainFactorDict[spID]
+    while len(IndIDs) > 0:
+        i = choice(IndIDs)
+        IndIDs.pop(IndIDs.index(i))
 
-        if state == 'd': continue
+        age = time.clock() - i
+        Q = IndDict[i]['quota']
+        spID = IndDict[i]['species']
+        state = IndDict[i]['state']
+        i_radius = ((0.75*Q)/math.pi)**(1.0/3)
 
-        Q = CellQuotas[i]
-        #checkQ(Q, 463)
+        if state == 'dormant' or age < 0.12: continue
 
-        if Q < maint/mfd:
-            IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-            ResLists = Rvals, Rtypes, RX, RY, RIDs
-            IndLists, ResLists, RID = dead(IndLists, ResLists, RID, i, Q, TC, RC)
-            numDead += 1
-            continue
-
-        p = np.random.binomial(1, Q/maxQ)
-
-        if p == 1: # individual is large enough to reproduce
+        elif i_radius > 5.0 and np.random.binomial(1, Q/maxQ) == 1: # individual is large enough to reproduce
             PRODI += 1
-            spID = SpeciesIDs[i]
-            X = IndX[i]
-            Y = IndY[i]
+            i2 = time.clock()
 
-            CellQuotas[i] = Q/2
-            CellQuotas.append(Q/2)
-            IndID += 1
-            IndIDs.append(IndID)
-            SpeciesIDs.append(spID)
-            ADList.append('a')
+            IndDict[i]['quota'] = Q/2
+            IndDict[i2] = {'quota': Q/2}
+            IndDict[i2]['species'] = spID
+            IndDict[i2]['state'] = 'active'
+            IndDict[i2]['xdir'] = choice([1, -1])
+            IndDict[i2]['ydir'] = choice([1, -1])
+            IndDict[i2]['zdir'] = choice([1, -1])
+            IndDict[i2]['x'] = IndDict[i]['x']
+            IndDict[i2]['y'] = IndDict[i]['y']
+            IndDict[i2]['z'] = IndDict[i]['z']
+            IndDict[i2]['closest'] = IndDict[i]['closest']
 
-            newX = float(np.random.uniform(X-0.1, X+0.1, 1))
-            IndX.append(newX)
-            newY = float(np.random.uniform(Y-0.1, Y+0.1, 1))
-            IndY.append(newY)
-
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [PRODI, IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [PRODI, IndDict, ResLists, ResDict, numDead]
 
 
 
 
-def res_dispersal(ResLists, ResDict, RID, params, ct, ComplexityLevels):
+def res_dispersal(ResLists, params, ct, ComplexityLevels):
 
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
     SC, TC, RC = ComplexityLevels
 
     n = len(RIDs)
+    if n == 0: return [Rvals, Rtypes, RX, RY, RZ, RIDs]
+
     for j in range(n):
         i = randint(0, len(RIDs)-1)
 
-        if 'wellmixed' in SC:
-            RY[i] = float(np.random.uniform(0.001*height, 0.999*height))
-            RX[i] = float(np.random.uniform(0.001*width, 0.999*width))
-        elif 'brownian' in SC:
-            RY[i] += choice([-1,1]) * 0.01
-            RX[i] += choice([-1,1]) * 0.01
+        x = RX[i]
+        y = RY[i]
+        z = RZ[i]
+        rval = Rvals[i]
 
-    return [ResLists, ResDict, RID]
-
-
-
-def dispersal(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead):
-
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
-    SC, TC, RC = ComplexityLevels
-
-    n = len(IndIDs)
-    if n == 0:
-        return [IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
-
-    if 'chemotaxis' in SC or 'pred-prey' in TC:
-        fxn = 'chemotaxis'
-        IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead = chemotaxis(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead, fxn)
-        fxn = 'pred-prey'
-        return chemotaxis(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead, fxn)
-
-    if 'wellmixed' in SC or 'randwalk' in SC:
-        for j in range(n):
-            i = randint(0, len(IndIDs)-1)
-            spID = SpeciesIDs[i]
-            disp = DispDict[spID]
-
-            if 'wellmixed' in SC:
-                IndY[i] = float(np.random.uniform(0.001*height, 0.999*height))
-                IndX[i] = float(np.random.uniform(0.001*width, 0.999*width))
-
-            elif 'randwalk' in SC:
-                IndY[i] += choice([-1,1]) * disp
-                IndX[i] += choice([-1,1]) * disp
-
-                # A cost for active dispersal
-                Q = CellQuotas[i]
-                maint = MaintDict[spID]
-                mfd = MainFactorDict[spID]
-                Q -= maint*disp
-
-                if Q < maint/mfd:
-                    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-                    ResLists = Rvals, Rtypes, RX, RY, RIDs
-                    IndLists, ResLists, RID = dead(IndLists, ResLists, RID, i, Q, TC, RC)
-                    numDead += 1
-
-                else: CellQuotas[i] = Q
-
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
-
-
-
-
-def chemotaxis(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead, fxn):
-
-    SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-    width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
-    Rvals, Rtypes, RX, RY, RIDs = ResLists
-    SC, TC, RC = ComplexityLevels
-
-    n = len(IndIDs)
-    if n == 0: return [IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
-
-    for ii in range(n):
-        n = len(IndIDs)
-        i = randint(0, n-1)
-        state = ADList[i]
-
-        if state == 'd': continue
-
-        spID = SpeciesIDs[i]
-        disp = DispDict[spID]
-
-        if fxn == 'chemotaxis':
-            restype = TrophicDict[spID]['resource']
-        elif fxn == 'pred-prey':
-            restype = TrophicDict[spID]['predator_of']
-
-        x1 = IndX[i]
-        y1 = IndY[i]
-
-        res_indices = []
-        if fxn == 'chemotaxis':
-            res_indices = [xi for xi, x in enumerate(Rtypes) if x == restype]
-        elif fxn == 'pred-prey':
-            res_indices = [xi for xi, x in enumerate(SpeciesIDs) if x == restype or x == 'dead']
-
-        if len(res_indices) == 0: continue
-
-        Try = min([20, len(res_indices)])
-        minDist, targetX, targetY, dist, ct = 100, 0, 0, 0, 0
-
-        while ct < Try and RIDs is not []:
-            ct += 1
-            r = len(res_indices)
-            Try = min([20, r])
-            j = randint(0, r-1)
-
-            if fxn == 'chemotaxis':
-                Rtype = Rtypes[j]
-                x2 = RX[j]
-                y2 = RY[j]
-            elif fxn == 'pred-prey':
-                Rtype = SpeciesIDs[j]
-                x2 = IndX[j]
-                y2 = IndY[j]
-
-            if restype == Rtype: # is capable of consuming the resource type
-
-                dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-
-                if dist < minDist:
-                    minDist = dist
-                    if fxn == 'chemotaxis':
-                        targetX = RX[j]
-                        targetY = RY[j]
-                    elif fxn == 'pred-prey':
-                        targetX = IndX[j]
-                        targetY = IndY[j]
-
-        # A cost for active dispersal
-        Q = CellQuotas[i]
-        maint = MaintDict[spID]
-        mfd = MainFactorDict[spID]
-
-        Q -= maint*disp
-
-        if Q < maint/mfd:
-            IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-            ResLists = Rvals, Rtypes, RX, RY, RIDs
-            IndLists, ResLists, RID = dead(IndLists, ResLists, RID, i, Q, TC, RC)
-            numDead += 1
+        if rval <= 0:
+            Rvals.pop(i)
+            RIDs.pop(i)
+            Rtypes.pop(i)
+            RX.pop(i)
+            RY.pop(i)
+            RZ.pop(i)
             continue
 
-        if x1 > targetX:
-            x1 -= dist*disp
-        elif x1 < targetX:
-            x1 += dist*disp
-        if y1 > targetY:
-            y1 -= dist*disp
-        elif y1 < targetY:
-            y1 += dist*disp
+        n = len(RIDs)
+        if n == 0: return [Rvals, Rtypes, RX, RY, RZ, RIDs]
 
-        IndX[i] = x1
-        IndY[i] = y1
-        CellQuotas[i] = Q
+        if '-wellmixed-' in SC:
+            y = float(np.random.uniform(0, height))
+            x = float(np.random.uniform(0, width))
+            z = float(np.random.uniform(0, length))
 
-    IndLists = SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList
-    ResLists = Rvals, Rtypes, RX, RY, RIDs
-    return [IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead]
+        elif '-brownian-' in SC:
+            y += choice([-1,1]) * float(np.random.uniform(0, 1))
+            x += choice([-1,1]) * float(np.random.uniform(0, 1))
+            z += choice([-1,1]) * float(np.random.uniform(0, 1))
+
+            if y < 0: y = 0
+            elif y > height: y = height
+            if x < 0: x = 0
+            elif x > width: x = width
+            if z < 0: z = 0
+            elif z > length: z = 0
+
+        RX[i] = x
+        RZ[i] = z
+        RY[i] = y
+
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return ResLists
+
+
+
+def dispersal(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead):
+
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+    SC, TC, RC = ComplexityLevels
+
+    n = len(IndDict.keys())
+    if n == 0: return [IndDict, ResLists, ResDict, numDead]
+
+    if '-chemotaxis-' in SC:
+        IndDict, ResLists, ResDict, numDead = chemotaxis(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead)
+
+    elif '-wellmixed-' in SC or '-randwalk-' in SC:
+        IndIDs = IndDict.keys()
+
+        while len(IndIDs) > 0:
+
+            i = choice(IndIDs)
+            IndIDs.pop(IndIDs.index(i))
+
+            Q = IndDict[i]['quota']
+            spID = IndDict[i]['species']
+            x1 = IndDict[i]['x']
+            y1 = IndDict[i]['y']
+            z1 = IndDict[i]['z']
+            xdir = IndDict[i]['xdir']
+            ydir = IndDict[i]['ydir']
+            zdir = IndDict[i]['zdir']
+
+            maint = MaintDict[spID]
+            disp = DispDict[spID]
+            dist = 0.0
+
+            if '-wellmixed-' in SC:
+                x = np.random.uniform(0, width)
+                y = np.random.uniform(0, height)
+                z = np.random.uniform(0, length)
+                continue
+
+            elif '-randwalk-' in SC:
+                x = x1 + xdir * np.random.uniform(0, disp*width)
+                y = y1 + ydir * np.random.uniform(0, disp*height)
+                z = z1 + zdir * np.random.uniform(0, disp*length)
+
+                dist = math.sqrt((x1 - x)**2 + (y1 - y)**2 + (z1 - z)**2)
+
+            if x > width:
+                x = width
+                xdir = -1*xdir
+            elif x < 0:
+                x = 0
+                xdir = -1*xdir
+
+            if y > height:
+                y = height
+                ydir = -1*ydir
+            elif y < 0:
+                y = 0
+                ydir = -1*ydir
+
+            if z > length:
+                z = length
+                zdir = -1*zdir
+            elif z < 0:
+                z = 0
+                zdir = -1*zdir
+
+            if '-randwalk-' in SC:
+                # A cost for active dispersal
+                if Q - maint*(dist/width) <= 0.0:
+                    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+                    IndDict, ResLists = dead(IndDict, ResLists, i, Q, TC, RC)
+                    numDead += 1
+                else:
+                    Q -= maint*(dist/width)
+                    checkVal(Q, 470)
+                    IndDict[i]['quota'] = Q
+                    IndDict[i]['x'] = x
+                    IndDict[i]['xdir'] = xdir
+                    IndDict[i]['y'] = y
+                    IndDict[i]['ydir'] = ydir
+                    IndDict[i]['z'] = z
+                    IndDict[i]['zdir'] = zdir
+
+
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [IndDict, ResLists, ResDict, numDead]
+
+
+
+
+def chemotaxis(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead):
+
+    GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+    width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
+    Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+    SC, TC, RC = ComplexityLevels
+
+    IndIDs = list(IndDict.keys())
+    n = len(IndIDs)
+    if n == 0: return [IndDict, ResLists, ResDict, numDead]
+
+    while len(IndIDs) > 0:
+
+        i = choice(IndIDs)
+        IndIDs.pop(IndIDs.index(i))
+        state = IndDict[i]['state']
+        if state == 'dormant': continue
+
+        Q = IndDict[i]['quota']
+        x1 = IndDict[i]['x']
+        y1 = IndDict[i]['y']
+        z1 = IndDict[i]['z']
+        xdir = IndDict[i]['xdir']
+        ydir = IndDict[i]['ydir']
+        zdir = IndDict[i]['zdir']
+
+        spID = IndDict[i]['species']
+        maint = MaintDict[spID]
+        disp = DispDict[spID]
+
+        restype = TrophicDict[spID]['resource']
+        closest = IndDict[i]['closest']
+
+        if closest not in RIDs:
+            coords = [x1, y1, z1]
+            IndDict[i]['closest'] = get_closest(RIDs, RX, RY, RZ, Rtypes, restype, coords)
+
+        if closest not in RIDs:
+            x = x1 + xdir * np.random.uniform(0, disp*width)
+            y = y1 + ydir * np.random.uniform(0, disp*height)
+            z = z1 + zdir * np.random.uniform(0, disp*length)
+
+            dist = math.sqrt((x1 - x)**2 + (y1 - y)**2 + (z1 - z)**2)
+
+            if x > width:
+                x = width
+                xdir = -1*xdir
+            elif x < 0:
+                x = 0
+                xdir = -1*xdir
+
+            if y > height:
+                y = height
+                ydir = -1*ydir
+            elif y < 0:
+                y = 0
+                ydir = -1*ydir
+
+            if z > length:
+                z = length
+                zdir = -1*zdir
+            elif z < 0:
+                z = 0
+                zdir = -1*zdir
+
+            # A cost for active dispersal
+            if Q - maint*(dist/width) <= 0.0:
+                ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+                IndDict, ResLists = dead(IndDict, ResLists, i, Q, TC, RC)
+                numDead += 1
+            else:
+                Q -= maint*(dist/width)
+                checkVal(Q, 470)
+                IndDict[i]['quota'] = Q
+                IndDict[i]['x'] = x
+                IndDict[i]['xdir'] = xdir
+                IndDict[i]['y'] = y
+                IndDict[i]['ydir'] = ydir
+                IndDict[i]['z'] = z
+                IndDict[i]['zdir'] = zdir
+
+        elif closest in RIDs:
+            ri = RIDs.index(closest)
+            x2 = RX[ri]
+            y2 = RY[ri]
+            z2 = RZ[ri]
+
+            x = np.abs(x1 - x2)
+            if x1 > x2:
+                x1 -= np.random.uniform(0, disp*x)
+            elif x1 < x2:
+                x1 += np.random.uniform(0, disp*x)
+
+            y = np.abs(y1 - y2)
+            if y1 > y2:
+                y1 -= np.random.uniform(0, disp*y)
+            elif y1 < y2:
+                y1 += np.random.uniform(0, disp*y)
+
+            z = np.abs(z1 - z2)
+            if z1 > z2:
+                z1 -= np.random.uniform(0, disp*z)
+            elif z1 < z2:
+                z1 += np.random.uniform(0, disp*z)
+
+            dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+
+            if Q - maint*(dist/width)*1.0 <= 0.0:
+                ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+                IndDict, ResLists = dead(IndDict, ResLists, i, Q, TC, RC)
+                numDead += 1
+
+            else:
+                Q -= maint*(dist/width)*1.0
+                checkVal(Q, 657)
+                IndDict[i]['quota'] = Q
+                IndDict[i]['x'] = x1
+                IndDict[i]['y'] = y1
+                IndDict[i]['z'] = z1
+
+    ResLists = Rvals, Rtypes, RX, RY, RZ, RIDs
+    return [IndDict, ResLists, ResDict, numDead]

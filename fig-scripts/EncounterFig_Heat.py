@@ -8,62 +8,92 @@ import sys
 mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
-dat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-dat = dat.convert_objects(convert_numeric=True).dropna()
+df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
+#df = df.convert_objects(convert_numeric=True).dropna()
 
+#vlist = df['numDead'].tolist()
+#print list(set(vlist))
+#sys.exit()
 
-#-------------------------DATA FILTERS------------------------------------------
+#-------------------------DATA TRANSFORMATIONS -----------------------
+df2 = pd.DataFrame({'Encounters' : np.log10(df['Encounters'].groupby(df['sim']).mean())})
 
-dat = dat[dat['ResourceComplexityLevel'] != 3]
-#dat = dat[dat['TrophicComplexityLevel'] != 3]
-#dat = dat[dat['SpatialComplexityLevel'] == 3]
+df2['SpatialComplexity'] = df['SpatialComplexity'].groupby(df['sim']).unique()
+df2['SpatialComplexity'] = [df2['SpatialComplexity'][i][0] for i in df2['SpatialComplexity'].keys()]
 
-#dat = dat[dat['height'] <= 6]
-#dat = dat[dat['width'] <= 6]
+df2['TrophicComplexity'] = df['TrophicComplexity'].groupby(df['sim']).unique()
+df2['TrophicComplexity'] = [df2['TrophicComplexity'][i][0] for i in df2['TrophicComplexity'].keys()]
 
-dat['DormFreq'] = np.log10(dat['MeanDormFreq'])
-#dat['DormFreq'] = dat['MeanDormFreq']
-dat = dat[np.isfinite(dat['DormFreq'])]
-dat = dat[dat['DormFreq'] > -2]
+df2['ResourceComplexity'] = df['ResourceComplexity'].groupby(df['sim']).unique()
+df2['ResourceComplexity'] = [df2['ResourceComplexity'][i][0] for i in df2['ResourceComplexity'].keys()]
 
-dat['Encounters'] = np.log10(dat['MeanEncounter'])
-dat = dat[np.isfinite(dat['Encounters'])]
-dat = dat[dat['Encounters'] < 3]
+df2['D'] = df['numDead'].groupby(df['sim']).mean()
+df2['R'] = df['R'].groupby(df['sim']).mean()
+df2['Q'] = df['MeanCellQuota'].groupby(df['sim']).mean()
+df2['N'] = df['N'].groupby(df['sim']).mean()
+df2['DormantN'] = df['DormantN'].groupby(df['sim']).mean()
+df2['%Dormant'] = df2['DormantN']/df2['N']
+df2['Prod'] = df['PRODI'].groupby(df['sim']).mean()
+df2['ActiveN'] = df2['N'] - df2['DormantN']
 
-dat['Production'] = np.log10(dat['MeanIndProduction'])
-dat = dat[np.isfinite(dat['Production'])]
+#------------------------- DATA FILTERS -------------------
 
-dat['TotalAbundance'] = np.log10(dat['MeanTotalAbundance'])
-dat = dat[np.isfinite(dat['TotalAbundance'])]
+dat0 = pd.DataFrame(df2)
 
-dat['ActiveAbundance'] = np.log10(dat['MeanTotalAbundance'] * (1 - dat['MeanDormFreq']))
-dat = dat[np.isfinite(dat['ActiveAbundance'])]
+dat1 = df2[df2['SpatialComplexity'].str.contains('-none-')]
+dat1 = dat1[dat1['SpatialComplexity'].str.contains('-wellmixed-')]
+dat1 = dat1[dat1['ResourceComplexity'].str.contains('-lockandkey-')]
+#dat2 = dat1[~dat1['TrophicComplexity'].str.contains('-scavenging-')]
+
+dat2 = df2[df2['SpatialComplexity'].str.contains('-chemotaxis-')]
+dat2 = dat2[dat2['SpatialComplexity'].str.contains('-brownian-')]
+dat2 = dat2[dat2['ResourceComplexity'].str.contains('-simple-')]
+#dat2 = dat2[dat2['TrophicComplexity'].str.contains('-scavenging-')]
 
 #-------------------------------------------------------------------------------
 
 #### plot figure ###############################################################
 fs = 8 # fontsize
 fig = plt.figure()
-gd = 40
+gd = 30
 mct = 1
 bns = 'log'
 
 #### PLOT 1 #################################################################
 fig.add_subplot(2, 2, 1)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
-ylab = '% Dormancy, '+'$log$'+r'$_{10}$'
-#ylab = '% Dormancy'
-width = 1
+#ylab = '% Dormancy, '+'$log$'+r'$_{10}$'
+ylab = '% Dormancy'
 
-x = dat['Encounters'].tolist()
-y = dat['DormFreq'].tolist()
-plt.hexbin(x, y, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.jet)
+plt.xlim(-1.2, 2.0)
+plt.ylim(0.0, 0.7)
+xlim_list = [-1.4, -1.4, 2.2, 2.2]
+ylim_list = [-0.2, 0.8, -0.2, 0.8]
+
+x0 = dat0['Encounters'].tolist()
+y0 = dat0['%Dormant'].tolist()
+x0.extend(xlim_list)
+y0.extend(ylim_list)
+plt.hexbin(x0, y0, mincnt=0, gridsize = gd, bins=bns, cmap=plt.cm.binary)
+
+x1 = dat1['Encounters'].tolist()
+y1 = dat1['%Dormant'].tolist()
+x1.extend(xlim_list)
+y1.extend(ylim_list)
+plt.hexbin(x1, y1, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.winter)
+
+x2 = dat2['Encounters'].tolist()
+y2 = dat2['%Dormant'].tolist()
+x2.extend(xlim_list)
+y2.extend(ylim_list)
+plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
 plt.ylabel(ylab, fontsize=fs+5)
 plt.xlabel(xlab, fontsize=fs+5)
-#plt.ylim(-1.0, 0.1)
+
 plt.tick_params(axis='both', which='major', labelsize=fs)
-plt.legend(bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=3, mode="expand",prop={'size':fs})
+#plt.legend(bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=3, mode="expand",prop={'size':fs})
+
 
 #### PLOT 2 ################################
 fig.add_subplot(2, 2, 2)
@@ -71,15 +101,33 @@ fig.add_subplot(2, 2, 2)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Productivity, '+'$log$'+r'$_{10}$'
 
-x = dat['Encounters'].tolist()
-y = dat['Production'].tolist()
-plt.hexbin(x, y, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.jet)
+plt.xlim(-1.2, 2.0)
+plt.ylim(-1.9, 1.2)
+xlim_list = [-1.4, -1.4, 2.2, 2.2]
+ylim_list = [-2.1, -2.1, 1.4, 1.4]
+
+x0 = dat0['Encounters'].tolist()
+y0 = np.log10(dat0['Prod']).tolist()
+x0.extend(xlim_list)
+y0.extend(ylim_list)
+plt.hexbin(x0, y0, mincnt=0, gridsize = gd, bins=bns, cmap=plt.cm.binary)
+
+x1 = dat1['Encounters'].tolist()
+y1 = np.log10(dat1['Prod']).tolist()
+x1.extend(xlim_list)
+y1.extend(ylim_list)
+plt.hexbin(x1, y1, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.winter)
+
+x2 = dat2['Encounters'].tolist()
+y2 = np.log10(dat2['Prod']).tolist()
+x2.extend(xlim_list)
+y2.extend(ylim_list)
+plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
 plt.ylabel(ylab, fontsize=fs+5)
 plt.xlabel(xlab, fontsize=fs+5)
-#plt.ylim(-2.0, 2.0)
-#plt.xlim(0.1, 300)
 plt.tick_params(axis='both', which='major', labelsize=fs)
+
 
 #### PLOT 3 #################################################################
 fig.add_subplot(2, 2, 3)
@@ -87,15 +135,33 @@ fig.add_subplot(2, 2, 3)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Total abundance, '+'$log$'+r'$_{10}$'
 
-x = dat['Encounters'].tolist()
-y = dat['TotalAbundance'].tolist()
-plt.hexbin(x, y, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.jet)
+plt.xlim(-1.2, 2.0)
+plt.ylim(1.2, 3.2)
+xlim_list = [-1.4, -1.4, 2.2, 2.2]
+ylim_list = [1.0, 3.4, 1.0, 3.4]
+
+x0 = dat0['Encounters'].tolist()
+y0 = np.log10(dat0['N']).tolist()
+x0.extend(xlim_list)
+y0.extend(ylim_list)
+plt.hexbin(x0, y0, mincnt=0, gridsize = gd, bins=bns, cmap=plt.cm.binary)
+
+x1 = dat1['Encounters'].tolist()
+y1 = np.log10(dat1['N']).tolist()
+x1.extend(xlim_list)
+y1.extend(ylim_list)
+plt.hexbin(x1, y1, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.winter)
+
+x2 = dat2['Encounters'].tolist()
+y2 = np.log10(dat2['N']).tolist()
+x2.extend(xlim_list)
+y2.extend(ylim_list)
+plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
 plt.ylabel(ylab, fontsize=fs+5)
 plt.xlabel(xlab, fontsize=fs+5)
-#plt.xlim(0.15, 300)
-#plt.ylim(0.5, 3.1)
 plt.tick_params(axis='both', which='major', labelsize=fs)
+
 
 #### PLOT 4 #################################################################
 fig.add_subplot(2, 2, 4)
@@ -103,19 +169,34 @@ fig.add_subplot(2, 2, 4)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Active abundance, '+'$log$'+r'$_{10}$'
 
-x = dat['Encounters'].tolist()
-y = dat['ActiveAbundance'].tolist()
-plt.hexbin(x, y, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.jet)
+plt.xlim(-1.2, 2.0)
+plt.ylim(1.0, 3.2)
+xlim_list = [-1.4, -1.4, 2.2, 2.2]
+ylim_list = [0.8, 3.4, 0.8, 3.4]
+
+x0 = dat0['Encounters'].tolist()
+y0 = np.log10(dat0['ActiveN']).tolist()
+x0.extend(xlim_list)
+y0.extend(ylim_list)
+plt.hexbin(x0, y0, mincnt=0, gridsize = gd, bins=bns, cmap=plt.cm.binary)
+
+x1 = dat1['Encounters'].tolist()
+y1 = np.log10(dat1['ActiveN']).tolist()
+x1.extend(xlim_list)
+y1.extend(ylim_list)
+plt.hexbin(x1, y1, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.winter)
+
+x2 = dat2['Encounters'].tolist()
+y2 = np.log10(dat2['ActiveN']).tolist()
+x2.extend(xlim_list)
+y2.extend(ylim_list)
+plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
 plt.ylabel(ylab, fontsize=fs+5)
 plt.xlabel(xlab, fontsize=fs+5)
-#plt.xlim(0.15, 1000)
-#plt.ylim(-0.5, 3.1)
 plt.tick_params(axis='both', which='major', labelsize=fs)
 
 #### Final Format and Save #####################################################
 plt.subplots_adjust(wspace=0.4, hspace=0.4)
-plt.savefig(mydir + '/results/figures/EncounterFig_Heat_Spatial_RC2-SC3.png', dpi=600, bbox_inches = "tight")
-
-#plt.show()
-#plt.close()
+plt.savefig(mydir + '/results/figures/EncounterFig_Heat.png', dpi=600, bbox_inches = "tight")
+plt.close()

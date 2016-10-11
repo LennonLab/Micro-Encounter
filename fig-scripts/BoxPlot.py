@@ -1,118 +1,212 @@
 from __future__ import division
 import  matplotlib.pyplot as plt
-import random
-from random import shuffle
 import pandas as pd
 import numpy as np
 import os
 import sys
 
-import statsmodels.formula.api as smf
-from statsmodels.stats.outliers_influence import summary_table
-
 mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
-mdat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-mdat = mdat.convert_objects(convert_numeric=True).dropna()
 
-#print mdat.shape
-#sys.exit()
 
-#-------------------------DATA FILTERS------------------------------------------
+def setBoxColors(bp, clr):
+    plt.setp(bp['boxes'], color=clr)
+    plt.setp(bp['caps'], color=clr)
+    plt.setp(bp['whiskers'], color=clr)
+    plt.setp(bp['medians'], color=clr)
 
-#mdat = mdat[mdat['ResInflow'] < 10]
-#mdat = mdat[mdat['RowID'] > 3000]
-#mdat = mdat[mdat['MaxMetMaint'] < 0.002]
-#mdat = mdat[mdat['IncomingResAgg'] < 0.4]
-#mdat = mdat[mdat['MeanTotalAbundance'] > 200]
-mdat = mdat[mdat['MeanResourceParticles'] < 20]
 
-print mdat.shape
 
-#-------------------------END DATA FILTERS--------------------------------------
+df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
+#df = df.convert_objects(convert_numeric=True).dropna()
 
-color1 = 'm'
-color2 = 'steelblue'
-color3 = 'goldenrod'
+#-------------------------DATA FILTERS & TRANSFORMATIONS -----------------------
 
-#### plot figure ###############################################################
-fs = 6 # fontsize
+#http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.html
+#http://chrisalbon.com/python/pandas_apply_operations_to_groups.html
+#http://pandas.pydata.org/pandas-docs/stable/merging.html
+#http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.groupby.html
+#http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.to_csv.html
+#http://stackoverflow.com/questions/13411544/delete-column-from-pandas-dataframe
+
+#df2['Encounters'] = np.log10(df['Encounters'].groupby(df['sim']).mean())
+#df2 = pd.DataFrame({'Encounters' : df['Encounters'].groupby(df['sim']).mean()})
+df2 = pd.DataFrame({'Encounters' : np.log10(df['Encounters'].groupby(df['sim']).mean())})
+
+df2['SpatialComplexity'] = df['SpatialComplexity'].groupby(df['sim']).unique()
+df2['SpatialComplexity'] = [df2['SpatialComplexity'][i][0] for i in df2['SpatialComplexity'].keys()]
+
+df2['TrophicComplexity'] = df['TrophicComplexity'].groupby(df['sim']).unique()
+df2['TrophicComplexity'] = [df2['TrophicComplexity'][i][0] for i in df2['TrophicComplexity'].keys()]
+
+df2['ResourceComplexity'] = df['ResourceComplexity'].groupby(df['sim']).unique()
+df2['ResourceComplexity'] = [df2['ResourceComplexity'][i][0] for i in df2['ResourceComplexity'].keys()]
+
+
+#-------------------------END DATA FILTERS & TRANSFORMATIONS -------------------
+
+
+#### plot figure 1 #############################################################
+
+fs = 6
 fig = plt.figure()
-
 ax = fig.add_subplot(3, 3, 1)
 
-dat = mdat[mdat['ResourceComplexityLevel'] == 3]
-#dat = dat[dat['TrophicComplexityLevel'] >= 3]
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[df1['SpatialComplexity'].str.contains('-chemotaxis-')] # <---------------
 
-dat['Encounter'] = np.log10(dat['MeanEncounter'])
-dat = dat[np.isfinite(dat['Encounter'])]
+dat1 = df1[df1['ResourceComplexity'].str.contains('-monoculture--polymers--simple-')]
+encounters1 = dat1['Encounters']
 
-dat1 = dat[dat['SpatialComplexityLevel'] == 1]
-encounters1 = dat1['Encounter']
-dat2 = dat[dat['SpatialComplexityLevel'] == 2]
-encounters2 = dat2['Encounter']
-dat3 = dat[dat['SpatialComplexityLevel'] == 3]
-encounters3 = dat3['Encounter']
+dat2 = df1[df1['ResourceComplexity'].str.contains('-polyculture--polymers--simple-')]
+encounters2 = dat2['Encounters']
 
-data_to_plot = [encounters1, encounters2, encounters3]
-ax.boxplot(data_to_plot, showmeans=True, showfliers=False)
-
-ax.set_xticklabels(['White noise', 'Aggregated Resources +\nRandom walk', 'Aggregated Resources +\nChemotaxis'], rotation=45)
-plt.tick_params(axis='both', which='major', labelsize=fs)
-ax.get_xaxis().tick_bottom()
-ax.get_yaxis().tick_left()
-
-
-ax = fig.add_subplot(3, 3, 2)
-
-dat = mdat[mdat['ResourceComplexityLevel'] <= 3]
-
-dat['Encounter'] = np.log10(dat['MeanEncounter'])
-dat = dat[np.isfinite(dat['Encounter'])]
-
-dat1 = dat[dat['ResourceComplexityLevel'] == 1]
-encounters1 = dat1['Encounter']
-dat2 = dat[dat['ResourceComplexityLevel'] == 2]
-encounters2 = dat2['Encounter']
-dat3 = dat[dat['ResourceComplexityLevel'] == 3]
-encounters3 = dat3['Encounter']
+dat3 = df1[df1['ResourceComplexity'].str.contains('-polyculture--polymers--lockandkey-')]
+encounters3 = dat3['Encounters']
 
 data_to_plot = [encounters1, encounters2, encounters3]
-ax.boxplot(data_to_plot, showmeans=True, showfliers=False)
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='b'
+setBoxColors(bp, clr)
+
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[~df1['SpatialComplexity'].str.contains('-chemotaxis-')] # <---------------
+
+dat1 = df1[df1['ResourceComplexity'].str.contains('-monoculture--polymers--simple-')]
+encounters1 = dat1['Encounters']
+
+dat2 = df1[df1['ResourceComplexity'].str.contains('-polyculture--polymers--simple-')]
+encounters2 = dat2['Encounters']
+
+dat3 = df1[df1['ResourceComplexity'].str.contains('-polyculture--polymers--lockandkey-')]
+encounters3 = dat3['Encounters']
+
+data_to_plot = [encounters1, encounters2, encounters3]
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='r'
+setBoxColors(bp, clr)
+
 ax.set_xticklabels(['Monoculture', 'Polyculture', 'Lock & Key'], rotation=45)
 plt.tick_params(axis='both', which='major', labelsize=fs)
 ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
+ax.set_ylabel('Avg encounter', fontsize=8)
 
 
+#### plot figure 2 #############################################################
 
-ax = fig.add_subplot(3, 3, 3)
+ax = fig.add_subplot(3, 3, 2)
 
-dat = dat[dat['ResourceComplexityLevel'] <= 3]
-print dat.shape
-dat['Encounter'] = np.log10(dat['MeanEncounter'])
-dat = dat[np.isfinite(dat['Encounter'])]
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[df1['SpatialComplexity'].str.contains('-chemotaxis-')] # <---------------
 
-dat1 = dat[dat['TrophicComplexityLevel'] == 1]
-encounters1 = dat1['Encounter']
-dat2 = dat[dat['TrophicComplexityLevel'] == 2]
-encounters2 = dat2['Encounter']
-dat3 = dat[dat['TrophicComplexityLevel'] == 3]
-encounters3 = dat3['Encounter']
-dat4 = dat[dat['TrophicComplexityLevel'] == 4]
-encounters4 = dat4['Encounter']
+dat1 = df1[df1['TrophicComplexity'].str.contains('-none-')]
+encounters1 = dat1['Encounters']
+
+dat2 = df1[df1['TrophicComplexity'].str.contains('-crossfeeding-')]
+encounters2 = dat2['Encounters']
+
+dat3 = df1[df1['TrophicComplexity'].str.contains('-scavenging-')]
+encounters3 = dat3['Encounters']
+
+dat4 = df1[df1['TrophicComplexity'].str.contains('-crossfeeding--scavenging-')]
+encounters4 = dat4['Encounters']
 
 data_to_plot = [encounters1, encounters2, encounters3, encounters4]
-ax.boxplot(data_to_plot, showmeans=True, showfliers=False)
-ax.set_xticklabels(['Consumer-Resource', 'Crossfeeding', 'Scavenging', 'Crossfeeding +\nScavenging'], rotation=45)
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='b'
+setBoxColors(bp, clr)
+
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[~df1['SpatialComplexity'].str.contains('-chemotaxis-')] # <---------------
+
+dat1 = df1[df1['TrophicComplexity'].str.contains('-none-')]
+encounters1 = dat1['Encounters']
+
+dat2 = df1[df1['TrophicComplexity'].str.contains('-crossfeeding-')]
+encounters2 = dat2['Encounters']
+
+dat3 = df1[df1['TrophicComplexity'].str.contains('-scavenging-')]
+encounters3 = dat3['Encounters']
+
+dat4 = df1[df1['TrophicComplexity'].str.contains('-crossfeeding--scavenging-')]
+encounters4 = dat4['Encounters']
+
+data_to_plot = [encounters1, encounters2, encounters3, encounters4]
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='r'
+setBoxColors(bp, clr)
+
+ax.set_xticklabels(['Simple\ncommunity', 'Crossfeeding', 'Scavenging', 'Crossfeeding\nScavending'], rotation=45)
 plt.tick_params(axis='both', which='major', labelsize=fs)
 ax.get_xaxis().tick_bottom()
 ax.get_yaxis().tick_left()
+ax.set_ylabel('Avg encounter', fontsize=8)
+
+
+
+#### plot figure 3 #############################################################
+
+ax = fig.add_subplot(3, 3, 3)
+
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[df1['ResourceComplexity'].str.contains('-lockandkey-')] # <---------------
+
+dat1 = df1[df1['SpatialComplexity'].str.contains('-wellmixed-')]
+encounters1 = dat1['Encounters']
+print 3, dat1.shape
+
+dat2 = df1[df1['SpatialComplexity'].str.contains('-brownian-')]
+encounters2 = dat2['Encounters']
+print 3, dat2.shape
+
+dat3 = df1[df1['SpatialComplexity'].str.contains('-chemotaxis-')]
+encounters3 = dat3['Encounters']
+print 3, dat3.shape
+
+data_to_plot = [encounters1, encounters2, encounters3]
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='r'
+setBoxColors(bp, clr)
+
+df1 = df2[np.isfinite(df2['Encounters'])]
+df1 = df1[~df1['ResourceComplexity'].str.contains('-lockandkey-')] # <---------------
+
+dat1 = df1[df1['SpatialComplexity'].str.contains('-wellmixed-')]
+encounters1 = dat1['Encounters']
+print 3, dat1.shape
+
+dat2 = df1[df1['SpatialComplexity'].str.contains('-brownian-')]
+encounters2 = dat2['Encounters']
+print 3, dat2.shape
+
+dat3 = df1[df1['SpatialComplexity'].str.contains('-chemotaxis-')]
+encounters3 = dat3['Encounters']
+print 3, dat3.shape
+
+data_to_plot = [encounters1, encounters2, encounters3]
+bp = ax.boxplot(data_to_plot, showfliers=False)
+
+clr='b'
+setBoxColors(bp, clr)
+
+
+ax.set_xticklabels(['White noise', 'Random walks', 'Chemotaxis'], rotation=45)
+plt.tick_params(axis='both', which='major', labelsize=fs)
+ax.get_xaxis().tick_bottom()
+ax.get_yaxis().tick_left()
+ax.set_ylabel('Avg encounter', fontsize=8)
+
 
 
 #### Final Format and Save #####################################################
 plt.subplots_adjust(wspace=0.4, hspace=0.4)
-#plt.savefig(mydir + '/results/figures/BoxPlot.png', dpi=600, bbox_inches = "tight")
-plt.show()
+plt.savefig(mydir + '/results/figures/BoxPlot.png', dpi=600, bbox_inches = "tight")
+#plt.show()
 #plt.close()
