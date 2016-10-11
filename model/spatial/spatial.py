@@ -1,6 +1,6 @@
 from __future__ import division
 #import sys
-from random import choice, randint
+from random import randint
 import numpy as np
 import math
 
@@ -49,7 +49,7 @@ def nearest_neighbor(xlist1, xlist2, ylist1, ylist2, q=1):
 
 
 
-def morisitas(Xs, Ys, w, h):
+def morisitas(Xs, Ys, w, h, l, const = 10):
 
     '''
     From http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/dispindmorisita.html
@@ -64,14 +64,17 @@ def morisitas(Xs, Ys, w, h):
     For random patterns, Imor = 1 and counts in the samples follow Poisson frequency distribution.
     '''
 
+    w = int(round(w/const))
+    h = int(round(h/const))
+
     Imor = float()
 
     Boxes = [list([]) for _ in xrange(w*h)]
 
     index = 0
     for i, val in enumerate(Xs):
-        X = int(round(Xs[i]))
-        Y = int(round(Ys[i]))
+        X = int(round(Xs[i]/const))
+        Y = int(round(Ys[i]/const))
 
         index = int(round(X + (Y * w)))
 
@@ -91,58 +94,7 @@ def morisitas(Xs, Ys, w, h):
 
     if b <= 1:
         return float('nan')
-        
+
     Imor = len(Boxes) * (a - b)/(b**2 - b)
 
     return Imor
-
-
-
-
-
-def avg_dist(xlist1, xlist2, ylist1, ylist2, q=1):
-
-    """ xlist1 and ylist1 are assumed to be the lists of individual organisms
-    xlist2 and ylist2 are assumed to be the lists of whatever the individual
-    organisms are being measured with respect to their distance to """
-
-    nmax = len(xlist1)
-    rmax = len(xlist2)
-
-    refpoints = min([100, nmax])
-    dist = []
-
-    for n in range(refpoints):
-        for j in range(q):
-
-            i1 = choice(range(nmax))
-            x1 = xlist1[i1]
-            y1 = ylist1[i1]
-
-            i2 = choice(range(rmax))
-            x2 = xlist2[i2]
-            y2 = ylist2[i2]
-
-            dist.append(distance((x1, y1), (x2, y2)))
-
-    return np.mean(dist)
-
-
-"""
-def nearest_neighbor_dist(xlist1, xlist2, ylist1, ylist2, q=1):
-
-    nmax = len(xlist1)
-    refpoints = min([100, nmax])
-
-    for n in range(refpoints):
-        for j in range(q):
-
-            i = choice(range(nmax))
-            x1 = xlist1[i]
-            x2 = xlist2[i]
-            y1 = ylist1[i]
-            y2 = ylist2[i]
-
-
-    return
-"""

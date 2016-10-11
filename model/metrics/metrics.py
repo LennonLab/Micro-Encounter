@@ -1,7 +1,7 @@
 from __future__ import division
 import sys
 import numpy as np
-from random import choice, sample, randint
+from random import choice
 from scipy import stats
 from scipy.stats import gaussian_kde
 from scipy.optimize import fsolve
@@ -11,20 +11,25 @@ import math
 
 def get_complexity_levels():
 
-    SC1 = choice(['-wellmixed-', '-brownian-', '-static-'])
-    SC2 = choice(['-chemotaxis-', '-randwalk-'])
-    SC3 = choice(['-random-', '-aggregated-'])
-    SC = SC1 + SC2 + SC3
+    SC1 = choice(['-wellmixed-', '-brownian-'])
+    #SC1 = '-brownian-'
+
+    SC2 = choice(['-chemotaxis-', '-randwalk-', '-none-'])
+    #SC2 = '-chemotaxis-'
+
+    SC = SC1 + SC2
 
     RC1 = choice(['-monoculture-', '-polyculture-'])
-    RC2 = choice(['-polymers-'])
-    RC3 = choice(['-lockandkey-', '-simple-'])
-    RC = RC1 + RC2 + RC3
+    #RC1 = '-polyculture-'
 
-    TC = choice(['-none-', '-crossfeeding-', '-scavenging-'])
-    #TC = sample(TC, randint(1, len(TC)))
-    #TC = '-'.join(TC)
-    
+    RC2 = choice(['-lockandkey-', '-simple-'])
+    #RC2 = '-lockandkey-'
+
+    RC = RC1 + RC2
+
+    TC = choice(['-none-', '-crossfeeding-', '-scavenging-', '-crossfeeding--scavenging-'])
+    #TC = '-none-'
+
     return [SC, TC, RC]
 
 
@@ -50,19 +55,19 @@ def GetRAD(vector):
 
 
 def per_capita(ValDict, SpeciesIDs):
-    
+
     if len(SpeciesIDs) == 0:
         return float('nan')
-    
+
     species, vals = [ValDict.keys(), ValDict.values()]
     sp_val = 0
-    
+
     for i, sp in enumerate(species):
         sp_val += SpeciesIDs.count(sp) * vals[i]
 
     return sp_val/len(SpeciesIDs) # the rad and the specieslist
-    
-    
+
+
 ############### RARITY #########################################################
 def percent_ones(sad):
     """ percent of species represented by a single individual """

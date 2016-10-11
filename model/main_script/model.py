@@ -1,10 +1,11 @@
 from __future__ import division
 import statsmodels.tsa.stattools as sta
 import linecache
-from random import choice, randint, shuffle, sample
+from random import shuffle
 from math import isnan
 import numpy as np
-from numpy import mean, var
+from numpy import mean
+import time
 import sys
 import os
 
@@ -18,97 +19,121 @@ import spatial
 sys.path.append(mydir + "/model/metrics")
 import metrics
 
+'''
 sys.path.append(mydir + "/model/col_labels")
 labels = linecache.getline(mydir + '/model/col_labels/labels.txt', 1)
 with open(mydir + '/results/simulated_data/SimData.csv', 'w+') as text_file:
     text_file.write(labels)
+'''
 
 #########################  Randomly chosen variables  ##########################
 ComplexityLevels = metrics.get_complexity_levels()
 SC, TC, RC = ComplexityLevels
 
-params = rp.get_rand_params()
-width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = params
+extremes = True
+params = rp.get_rand_params(extremes)
+width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
 
 #######################  Variables, Lists & Dictionaries  ######################
 Ns = []
-ResDict = {}
-ct, IndID, RID, N = [0]*4
+IndDict, ResDict = {}, {}
+ct, N = 0, 0
 x = range(0, 8)
-IndDicts = [{}, {}, {}, {}, {}, {}]
-IndLists = [[], [], [], [], [], []]
-ResLists = [[], [], [], [], []]
+SpDicts = [{}, {}, {}, {}, {}, {}]
+ResLists = [[], [], [], [], [], []]
 
-if 'lockandkey' in RC: 
-    ResDict['dead'] = round(np.random.uniform(0.05, 0.1), 3)
-elif 'simple' in RC: 
+if 'lockandkey' in RC:
+    ResDict['dead'] = np.random.uniform(0.1, 0.5)
+elif 'simple' in RC:
     ResDict['dead'] = 1.0
 
-Nlim, sim, p, ct, RowID = 10000, 1, 0, 0, 0
+numSims, Nlim, sim, p, ct, RowID, PRODI = 10**6, 1000, 0, 0, 0, 0, 0
 BurnIn = 'not done'
 
 #######################  Main Simulation Loop  #################################
-
-while sim:
-    numDead, encounters = 0, 0
+t0 = time.clock()
+while sim < numSims:
+    numDead, encounters, res_in = 0, 0, 0
     ct += 1
     RowID += 1
 
     shuffle(x)
+    t2 = float()
+    t1 = time.clock()
     for xi in x:
+
         # Inflow of resources
-        if xi == 0: ResLists, ResDict, RID = bide.ResIn(ResLists, ResDict, RID, params, ct, ComplexityLevels)
+        if xi == 0: ResLists, ResDict, res_in = bide.ResIn(ResLists, ResDict, params, ct, ComplexityLevels)
 
         # Immigration
-        if xi == 1: IndLists, IndDicts, IndID = bide.immigration(IndLists, IndDicts, IndID, params, ct, ComplexityLevels)
+        elif xi == 1: IndDict, SpDicts = bide.immigration(IndDict, SpDicts, params, ct, ComplexityLevels)
 
         # Individual Dispersal
-        if xi == 2 and 'nodispersal' not in SC: IndLists, IndDicts, IndID, ResList, ResDict, RID, numDead = bide.dispersal(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead)
+        elif xi == 2 and '-none-' not in SC: IndDict, ResList, ResDict, numDead = bide.dispersal(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead)
 
         # Resource Dispersal
-        if xi == 3 and 'static' not in SC: ResLists, ResDict, RID = bide.res_dispersal(ResLists, ResDict, RID, params, ct, ComplexityLevels)
-    
+        elif xi == 3: ResLists = bide.res_dispersal(ResLists, params, ct, ComplexityLevels)
+
         # Consumption
-        if xi == 4: ResLists, ResDict, RID, IndLists, encounters, numDead = bide.consume(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead)
+        elif xi == 4: ResLists, ResDict, IndDict, encounters, numDead = bide.consume(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead)
 
         # Reproduction
-        if xi == 5: PRODI, IndLists, IndDicts, IndID, ResLists, ResDict, RID, numDead = bide.reproduce(IndLists, IndDicts, IndID, ResLists, ResDict, RID, params, ComplexityLevels, numDead)
+        elif xi == 5: PRODI, IndDicts, ResLists, ResDict, numDead = bide.reproduce(IndDict, SpDicts, ResLists, ResDict, params, ComplexityLevels, numDead)
 
         # Maintenance
-        if xi == 6: IndLists, ResLists, ResDict, RID, numDead = bide.maintenance(IndLists, IndDicts, ResLists, ResDict, RID, ComplexityLevels, numDead)
-        
-        # Transition to or from dormancy
-        if xi == 7: IndLists, ResLists, ResDict, RID, numDead = bide.transition(IndLists, IndDicts, ResLists, ResDict, RID, ComplexityLevels, numDead)
+        elif xi == 6: IndDict, ResLists, ResDict, numDead = bide.maintenance(IndDict, SpDicts, ResLists, ResDict, ComplexityLevels, numDead)
 
-    N = len(IndLists[0])
+        # Transition to or from dormancy
+        elif xi == 7: IndDict, ResLists, ResDict, numDead = bide.transition(IndDict, SpDicts, ResLists, ResDict, ComplexityLevels, numDead)
+
+        t2 = time.clock() - t1
+        if t2 >= 0.12: break
+
+    #if t2 < 0.12: time.sleep(0.12 - t2)
+    N = len(IndDict.keys())
     Ns.append(N)
-    
-    if len(Ns) >= 100 and BurnIn == 'not done':
-        
+    Rvs = ResLists[0]
+    Rvs.sort()
+    R = len(Rvs)
+
+    if ct%100 == 0:
+        print 'sim:', sim, 'ct:', ct, ' N:', N, ' R:', R, 'prodi:', PRODI, ' dead:', numDead, 'encounters:', encounters,' ', 'pmax:', round(pmax,2), 'mfact:', mfact
+
+    BurnIn = 'done'
+
+    if len(Ns) >= 500 and BurnIn == 'not done':
             AugmentedDickeyFuller = sta.adfuller(Ns)
             val, p = AugmentedDickeyFuller[0:2]
 
-            if p >= 0.05:
-                Ns.pop(0)
+            if p >= 0.05: Ns.pop(0)
 
             elif p < 0.05 or isnan(p) == True:
                 BurnIn = 'done'
                 Ns = [Ns[-1]] # only keep the most recent N value
                 ct = 0
-                
-    if BurnIn == 'done':
-        Rvals, Rtypes, RX, RY, RIDs = ResLists
-        SpeciesIDs, IndX, IndY, IndIDs, CellQuotas, ADList = IndLists
-        GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = IndDicts
-        
-        Iagg = spatial.morisitas(IndX, IndY, width, height)
-        Ragg = spatial.morisitas(RX, RY, width, height)
 
-        outlist = [RowID, sim, ct, width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std, \
-            ComplexityLevels[0], ComplexityLevels[1], ComplexityLevels[2],\
+    if BurnIn == 'done' and ct%10 == 0:
+        Rvals, Rtypes, RX, RY, RZ, RIDs = ResLists
+
+        IndIDs = IndDict.keys()
+        SpeciesIDs, IndX, IndY, IndZ, ADList, CellQuotas = [], [], [], [], [], []
+
+        [SpeciesIDs.append(IndDict[i]['species']) for i in IndIDs]
+        [IndX.append(IndDict[i]['x']) for i in IndIDs]
+        [IndY.append(IndDict[i]['y']) for i in IndIDs]
+        [IndZ.append(IndDict[i]['z']) for i in IndIDs]
+        [CellQuotas.append(IndDict[i]['quota']) for i in IndIDs]
+        [ADList.append(IndDict[i]['state']) for i in IndIDs]
+
+        GrowthDict, MaintDict, MainFactorDict, RPFDict, DispDict, TrophicDict = SpDicts
+        Iagg = 1 #spatial.morisitas(IndX, IndY, width, height, length)
+        Ragg = 1 #spatial.morisitas(RX, RY, width, height, length)
+
+        outlist = [RowID, sim, ct, width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std, \
+            res_in, ComplexityLevels[0], ComplexityLevels[1], ComplexityLevels[2],\
             mean(DispDict.values()), mean(MaintDict.values()), mean(GrowthDict.values()), \
             metrics.per_capita(GrowthDict, SpeciesIDs), metrics.per_capita(MaintDict, SpeciesIDs),\
-            metrics.per_capita(DispDict, SpeciesIDs), mean(CellQuotas), ADList.count('d'), numDead,\
+            metrics.per_capita(DispDict, SpeciesIDs), mean(CellQuotas), ADList.count('dormant'), numDead,\
             PRODI, N, len(RX), encounters, Iagg, Ragg]
 
         outlist = str(outlist).strip('[]')
@@ -117,22 +142,34 @@ while sim:
         print>>OUT, outlist
         OUT.close()
 
-        if len(Ns) > 50 or N > Nlim:
-            if len(Ns) > 50:
-                print 'sim:',sim, ' N:',N, ' R:',len(ResLists[0]), ' %Dormant:',100*round(IndLists[-1].count('d')/N, 3), ' Encounters:',encounters, ' Prod:',PRODI, ' dead:',numDead
-                    
+        limlist = [N, R]
+        if len(Ns) > 2000 or min(limlist) > Nlim:
+
+            if len(Ns) > 2000:
+                N = int(round(np.mean(Ns)))
+                if N == 0:
+                    N = 1
+
+                print 'sim:',sim, ' N:',N, ' R:',len(ResLists[0]), ' %Dormant:',100*round(ADList.count('dormant')/N, 3), ' Encounters:',encounters, ' Prod:',PRODI, ' dead:',numDead, ' SC:', SC
+
             ComplexityLevels = metrics.get_complexity_levels()
             SC, TC, RC = ComplexityLevels
-            
-            ct, IndID, RID, N = [0]*4
-            width, height, seedCom, m, r, gmax, maintmax, dmax, pmax, mmax, std = rp.get_rand_params()
-    
-            IndDicts = [{}, {}, {}, {}, {}, {}]
-            IndLists = [[], [], [], [], [], []]
-            ResLists = [[], [], [], [], []]
-            if 'lockandkey' in RC: 
-                ResDict['dead'] = round(np.random.uniform(0.1, 0.5), 3)
-            elif 'simple' in RC: 
+
+            ct, N = 0, 0
+            extremes = True
+            params = rp.get_rand_params(extremes)
+            width, height, length, seed, m, r, gmax, mmax, dmax, pmax, mfact, std = params
+            #print params
+
+            SpDicts = [{}, {}, {}, {}, {}, {}]
+            IndDict, ResDict = {}, {}
+
+            ResLists = [[], [], [], [], [], []]
+            Ns = []
+
+            if '-lockandkey-' in RC:
+                ResDict['dead'] = np.random.uniform(0.1, 0.5)
+            elif '-simple-' in RC:
                 ResDict['dead'] = 1.0
 
             BurnIn = 'not done'
