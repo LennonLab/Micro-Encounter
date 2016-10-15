@@ -16,64 +16,70 @@ mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
 #dat = pd.read_csv(mydir + '/results/simulated_data/2016_07_19_SimData.csv')
-dat = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-dat = dat.convert_objects(convert_numeric=True).dropna()
-
+#df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
+#df = pd.read_csv(mydir + '/results/simulated_data/SimData-TSA-Extremes.csv')
+df = pd.read_csv(mydir + '/results/simulated_data/2016_09_18_SimData.csv')
 
 #-------------------------DATA TRANSFORMS---------------------------------------
 
-dat['DormFreq'] = np.log10(dat['MeanDormFreq'])
-dat = dat[np.isfinite(dat['DormFreq'])]
+df2 = pd.DataFrame({'Encounters' : np.log10(df['Encounters'].groupby(df['sim']).mean())})
+df2 = df2[np.isfinite(df2['Encounters'])]
 
-dat['Encounters'] = np.log10(dat['VarEncounter'])
-dat = dat[np.isfinite(dat['Encounters'])]
-dat = dat[dat['Encounters'] < 3]
+#df2['R'] = np.log10(df['R'].groupby(df['sim']).mean())
+#df2 = df2[np.isfinite(df2['R'])]
 
-dat['Res_Inflow'] = np.log10(dat['ResInflow'])
-dat = dat[np.isfinite(dat['Res_Inflow'])]
+df2['R'] = np.log10(df['R'].groupby(df['sim']).mean())
+df2 = df2[np.isfinite(df2['R'])]
 
-dat['AvgResourceParticles'] = np.log10(dat['MeanResourceParticles'])
-dat = dat[np.isfinite(dat['AvgResourceParticles'])]
+df2['ResIn'] = np.log10(df['ResInflow'].groupby(df['sim']).mean())
+#print 10**df2['ResIn']
+#sys.exit()
 
-dat['Production'] = np.log10(dat['MeanIndProduction'])
-dat = dat[np.isfinite(dat['Production'])]
+#df2['P'] = np.log10(df['PRODI'].groupby(df['sim']).mean())
+#df2 = df2[np.isfinite(df2['P'])]
 
-dat['TotalAbundance'] = np.log10(dat['MeanTotalAbundance'])
-dat = dat[np.isfinite(dat['TotalAbundance'])]
 
-dat['ActiveAbundance'] = np.log10(dat['MeanTotalAbundance'] * (1 - dat['MeanDormFreq']))
-dat = dat[np.isfinite(dat['ActiveAbundance'])]
+df2['DormantN'] = df['DormantN'].groupby(df['sim']).mean()
+df2 = df2[np.isfinite(df2['DormantN'])]
+
+df2['N'] = df['N'].groupby(df['sim']).mean()
+df2 = df2[np.isfinite(df2['N'])]
+
+df2['DormFreq'] = np.log10(df2['DormantN']/df2['N'])
+df2 = df2[np.isfinite(df2['DormFreq'])]
+
+df2['N'] = np.log10(df2['N'])
+df2 = df2[np.isfinite(df2['N'])]
 
 #-------------------------END DATA TRANSFORMS-----------------------------------
 
 #-------------------------DATA FILTERS------------------------------------------
+print 'size of dat:', df2.shape
 
-#dat = dat[dat['ResourceComplexityLevel'] == 3]
-#dat = dat[dat['TrophicComplexityLevel'] == 4]
-#dat = dat[dat['SpatialComplexityLevel'] == 2]
-print 'size of dat:', dat.shape
-
+#print df2
+#sys.exit()
 #-------------------------END DATA FILTERS--------------------------------------
 
 
 #### figure ###############################################################
 fig = plt.figure()
-ax = fig.gca(projection='3d')
 
-x = dat['Res_Inflow']
-y = dat['Encounters']
-z = dat['DormFreq']
+x = df2['R']
+y = df2['Encounters']
+z = df2['DormFreq']
 
-#zfilt = lowess(x, z, is_sorted=False, frac=0.1, it=0)
-#z = zfilt[:,0]
+ax1 = fig.add_subplot(1, 1, 1, projection = '3d')
 
-ax.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.0, antialiased=True)
-plt.show()
-
-#fig.colorbar(surf, shrink=0.5, aspect=5)
-ax.set_xlabel('ResInflow')
-ax.set_ylabel('Encounter')
-ax.set_zlabel('%Dormancy')
+ax1.plot_trisurf(x, y, z, cmap=cm.jet, linewidth=0.0, antialiased=True)
+#ax1.set_xlabel('Resources')
+ax1.set_ylabel('Encounters')
+ax1.set_zlabel('%Dormancy')
+plt.tick_params(
+    axis='both',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom='off',      # ticks along the bottom edge are off
+    top='off',         # ticks along the top edge are off
+    labelbottom='off') # labels along the bottom edge are off
 
 plt.show()
 #plt.close()
