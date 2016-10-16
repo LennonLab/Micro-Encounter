@@ -12,24 +12,15 @@ import math
 def get_complexity_levels():
 
     SC1 = choice(['-wellmixed-', '-brownian-'])
-    #SC1 = '-brownian-'
-
     SC2 = choice(['-chemotaxis-', '-randwalk-', '-none-'])
-    #SC2 = '-chemotaxis-'
 
     SC = SC1 + SC2
 
     RC1 = choice(['-monoculture-', '-polyculture-'])
-    #RC1 = '-polyculture-'
-
     RC2 = choice(['-lockandkey-', '-simple-'])
-    #RC2 = '-lockandkey-'
-
     RC = RC1 + RC2
 
     TC = choice(['-none-', '-crossfeeding-', '-scavenging-', '-crossfeeding--scavenging-'])
-    #TC = '-none-'
-
     return [SC, TC, RC]
 
 
