@@ -26,7 +26,7 @@ def setBoxColors(bp, clr):
 
 
 #df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-df = pd.read_csv(mydir + '/results/simulated_data/2016_09_18_SimData.csv')
+df = pd.read_csv(mydir + '/results/simulated_data/2016_10_18_SimData.csv')
 #df = df.convert_objects(convert_numeric=True).dropna()
 
 #-------------------------DATA FILTERS & TRANSFORMATIONS -----------------------

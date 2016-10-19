@@ -10,12 +10,7 @@ mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
 #df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-df = pd.read_csv(mydir + '/results/simulated_data/2016_09_18_SimData.csv')
-#df = df.convert_objects(convert_numeric=True).dropna()
-
-#vlist = df['numDead'].tolist()
-#print list(set(vlist))
-#sys.exit()
+df = pd.read_csv(mydir + '/results/simulated_data/2016_10_18_SimData.csv')
 
 #-------------------------DATA TRANSFORMATIONS -----------------------
 df2 = pd.DataFrame({'Encounters' : np.log10(df['Encounters'].groupby(df['sim']).mean())})
@@ -41,17 +36,22 @@ df2['R'] = df['R'].groupby(df['sim']).mean()
 
 #------------------------- DATA FILTERS -------------------
 
-dat0 = pd.DataFrame(df2)
-df2 = df2[~df2['SpatialComplexity'].str.contains('-wellmixed-')]
+#dat0 = pd.DataFrame(df2)
+df2 = df2[df2['SpatialComplexity'].str.contains('-wellmixed-')]
 
-dat1 = df2[df2['SpatialComplexity'].str.contains('-none-')]
-dat1 = dat1[dat1['ResourceComplexity'].str.contains('-lockandkey-')]
-
+dat0 = df2[df2['SpatialComplexity'].str.contains('-none-')]
+dat1 = df2[df2['SpatialComplexity'].str.contains('-randwalk-')]
 dat2 = df2[df2['SpatialComplexity'].str.contains('-chemotaxis-')]
-#dat2 = dat2[dat2['SpatialComplexity'].str.contains('-brownian-')]
-dat2 = dat2[dat2['ResourceComplexity'].str.contains('-simple-')]
-#dat2 = dat2[dat2['TrophicComplexity'].str.contains('-scavenging-')]
 
+'''
+dat0 = df2[df2['ResourceComplexity'].str.contains('-lockandkey-')]
+
+dat1 = df2[df2['ResourceComplexity'].str.contains('-monoculture-')]
+dat1 = dat1[~dat1['ResourceComplexity'].str.contains('-lockandkey-')]
+
+dat2 = df2[df2['ResourceComplexity'].str.contains('-polyculture-')]
+dat2 = dat2[~dat2['ResourceComplexity'].str.contains('-lockandkey-')]
+'''
 #-------------------------------------------------------------------------------
 
 #### plot figure ###############################################################
@@ -67,12 +67,13 @@ xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 #ylab = '% Dormancy, '+'$log$'+r'$_{10}$'
 ylab = '% Dormancy'
 
-p1 = Rectangle((0, 0), 1, 1, fc='b', ec='b')
-p2 = Rectangle((0, 0), 1, 1, fc='r', ec='r')
-plt.legend([p1, p2], ['No chemotaxis', 'Chemotaxis'], bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=2, mode="expand",prop={'size':fs+5})
+p1 = Rectangle((0, 0), 1, 1, fc='0.4', ec='0.4')
+p2 = Rectangle((0, 0), 1, 1, fc='b', ec='b')
+p3 = Rectangle((0, 0), 1, 1, fc='r', ec='r')
+plt.legend([p1, p2, p3], ['Passive', 'Run and tumble', 'Chemotaxis'], bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=3, mode="expand",prop={'size':fs+5})
 
-plt.xlim(-2.5, 1.5)
-xlim_list = [-2.7, -2.7, 1.7, 1.7]
+plt.xlim(-2.0, 2.0)
+xlim_list = [-2.2, -2.2, 2.2, 2.2]
 plt.ylim(0.0, 0.5)
 ylim_list = [-0.1, 0.7, -0.1, 0.7]
 
@@ -107,10 +108,10 @@ fig.add_subplot(2, 2, 2)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Productivity, '+'$log$'+r'$_{10}$'
 
-plt.xlim(-2.5, 1.5)
-xlim_list = [-2.7, -2.7, 1.7, 1.7]
-plt.ylim(-2.5, 0.5)
-ylim_list = [-2.7, 0.7, -2.7, 0.7]
+plt.xlim(-2.0, 2.0)
+xlim_list = [-2.2, -2.2, 2.2, 2.2]
+plt.ylim(-2.0, 1.5)
+ylim_list = [-2.2, 1.7, -2.2, 1.7]
 
 x0 = dat0['Encounters'].tolist()
 y0 = np.log10(dat0['Prod']).tolist()
@@ -141,8 +142,8 @@ fig.add_subplot(2, 2, 3)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Total abundance, '+'$log$'+r'$_{10}$'
 
-plt.xlim(-2.5, 1.5)
-xlim_list = [-2.7, -2.7, 1.7, 1.7]
+plt.xlim(-2.0, 2.0)
+xlim_list = [-2.2, -2.2, 2.2, 2.2]
 plt.ylim(0.5, 3.2)
 ylim_list = [0.3, 3.4, 0.3, 3.4]
 
@@ -175,10 +176,10 @@ fig.add_subplot(2, 2, 4)
 xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
 ylab = 'Active abundance, '+'$log$'+r'$_{10}$'
 
-plt.xlim(-2.5, 1.5)
-xlim_list = [-2.7, -2.7, 1.7, 1.7]
-plt.ylim(0.5, 3.2)
-ylim_list = [0.3, 3.4, 0.3, 3.4]
+plt.xlim(-2.0, 2.0)
+xlim_list = [-2.2, -2.2, 2.2, 2.2]
+plt.ylim(0.9, 3.2)
+ylim_list = [0.7, 3.4, 0.7, 3.4]
 
 x0 = dat0['Encounters'].tolist()
 y0 = np.log10(dat0['ActiveN']).tolist()

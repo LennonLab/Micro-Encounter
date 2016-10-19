@@ -10,7 +10,7 @@ mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
 #df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-df = pd.read_csv(mydir + '/results/simulated_data/2016_09_18_SimData.csv')
+df = pd.read_csv(mydir + '/results/simulated_data/2016_10_18_SimData.csv')
 #df = df.convert_objects(convert_numeric=True).dropna()
 
 #-------------------------DATA TRANSFORMATIONS -----------------------
@@ -50,6 +50,10 @@ df2 = df2[np.isfinite(df2['Q'])]
 df2['R'] = df['R'].groupby(df['sim']).mean()
 df2 = df2[np.isfinite(df2['R'])]
 
+df2['ResInflow'] = df['ResInflow'].groupby(df['sim']).mean()
+df2 = df2[np.isfinite(df2['ResInflow'])]
+
+
 #------------------------- DATA FILTERS -------------------
 
 dat0 = pd.DataFrame(df2)
@@ -73,14 +77,13 @@ mct = 1
 bns = 'log'
 
 #### PLOT 1 #################################################################
-fig.add_subplot(2, 2, 1)
-xlab = 'Average encounters, '+'$log$'+r'$_{10}$'
-#ylab = '% Dormancy, '+'$log$'+r'$_{10}$'
+fig.add_subplot(3, 3, 1)
+xlab = 'Encounters, '+'$log$'+r'$_{10}$'
 ylab = '% Dormant'
 
 p1 = Rectangle((0, 0), 1, 1, fc='b', ec='b')
 p2 = Rectangle((0, 0), 1, 1, fc='r', ec='r')
-plt.legend([p1, p2], ['Recalcitrant + No dispersal', 'Labile + Chemotaxis'], bbox_to_anchor=(-0.04, 1.05, 2.48, .2), loc=10, ncol=2, mode="expand",prop={'size':fs+5})
+plt.legend([p1, p2], ['Recalcitrant + No dispersal', 'Labile + Chemotaxis'], bbox_to_anchor=(-0.05, 1.12, 3.9, .2), loc=10, ncol=2, mode="expand",prop={'size':fs+3})
 
 plt.xlim(-1.6, 2.2)
 xlim_list = [-1.8, -1.8, 2.4, 2.4]
@@ -105,15 +108,15 @@ x2.extend(xlim_list)
 y2.extend(ylim_list)
 plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
-plt.ylabel(ylab, fontsize=fs+5)
-plt.xlabel(xlab, fontsize=fs+5)
+plt.ylabel(ylab, fontsize=fs+3)
+plt.xlabel(xlab, fontsize=fs+3)
 
-plt.tick_params(axis='both', which='major', labelsize=fs)
+plt.tick_params(axis='both', which='major', labelsize=fs-1)
 
-plt.text(-0.5, -0.23, 'Microscale', fontsize=fs+12)
+plt.text(-1.1, -0.33, 'Microscale', fontsize=fs+10)
 
 #### PLOT 2 ################################
-fig.add_subplot(2, 2, 2)
+fig.add_subplot(3, 3, 2)
 
 ylab = '% Dormant'
 xlab = 'Resources, '+'$log$'+r'$_{10}$'
@@ -125,10 +128,6 @@ ylim_list = [-0.1, 0.64, -0.1, 0.64]
 
 y0 = dat0['%Dormant'].tolist()
 x0 = np.log10(dat0['R']).tolist()
-
-#print min(x0), max(x0)
-#print min(y0), max(y0)
-#sys.exit()
 
 x0.extend(xlim_list)
 y0.extend(ylim_list)
@@ -146,11 +145,52 @@ x2.extend(xlim_list)
 y2.extend(ylim_list)
 plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
 
-plt.ylabel(ylab, fontsize=fs+5)
-plt.xlabel(xlab, fontsize=fs+5)
-plt.tick_params(axis='both', which='major', labelsize=fs)
+plt.ylabel(ylab, fontsize=fs+3)
+plt.xlabel(xlab, fontsize=fs+3)
+plt.tick_params(axis='both', which='major', labelsize=fs-1)
 
-plt.text(1.75, -0.23, 'Macroscale', fontsize=fs+12)
+plt.text(1.25, -0.33, 'Macroscale', fontsize=fs+10)
+
+
+#### PLOT 2 ################################
+fig.add_subplot(3, 3, 3)
+
+ylab = '% Dormant'
+xlab = 'Resource supply, '+'$log$'+r'$_{10}$'
+
+plt.xlim(0.1, 0.9)
+xlim_list = [0.0, 1.5, 0.0, 1.5]
+plt.ylim(0.0, 0.61)
+ylim_list = [-0.1, 0.64, -0.1, 0.64]
+
+y0 = dat0['%Dormant'].tolist()
+x0 = dat0['ResInflow'].tolist()
+
+#print min(x0), max(x0)
+#print min(y0), max(y0)
+#sys.exit()
+
+x0.extend(xlim_list)
+y0.extend(ylim_list)
+plt.hexbin(x0, y0, mincnt=0, gridsize = gd, bins=bns, cmap=plt.cm.binary)
+
+y1 = dat1['%Dormant'].tolist()
+x1 = dat1['ResInflow'].tolist()
+x1.extend(xlim_list)
+y1.extend(ylim_list)
+plt.hexbin(x1, y1, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.winter)
+
+y2 = dat2['%Dormant'].tolist()
+x2 = dat2['ResInflow'].tolist()
+x2.extend(xlim_list)
+y2.extend(ylim_list)
+plt.hexbin(x2, y2, mincnt=mct, gridsize = gd, bins=bns, cmap=plt.cm.autumn)
+
+plt.ylabel(ylab, fontsize=fs+3)
+plt.xlabel(xlab, fontsize=fs+3)
+plt.tick_params(axis='both', which='major', labelsize=fs-1)
+
+plt.text(0.15, -0.33, 'Macroscale', fontsize=fs+10)
 
 #### Final Format and Save #####################################################
 plt.subplots_adjust(wspace=0.4, hspace=0.4)

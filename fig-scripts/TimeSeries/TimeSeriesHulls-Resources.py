@@ -68,23 +68,7 @@ df['%Dormant'] = 100*df['DormantN']/df['N']
 #------------------------- DATA FILTERS -------------------
 
 dat = pd.DataFrame(df)
-#dat = dat[dat['ct'] > 500]
-#dat = dat[dat['Immigration'] < 0.05]
-#dat = dat[dat['MaxMaint'] >= 5]
-#dat = dat[dat['MaxMainFactor'] < 30]
-#dat = dat[dat['width'] <= 250]
-
 dat = dat[dat['SpatialComplexity'].str.contains('-chemotaxis-')]
-#dat = dat[~dat['ResourceComplexity'].str.contains('-simple-')]
-#dat = dat[~dat['ResourceComplexity'].str.contains('-monoculture-')]
-#dat = dat[~dat['TrophicComplexity'].str.contains('-scavenging-')]
-#dat = dat[~dat['TrophicComplexity'].str.contains('-crossfeeding-')]
-
-'''
-dat1 = dat[dat['SpatialComplexity'].str.contains('-chemotaxis-')]
-dat2 = dat[dat['SpatialComplexity'].str.contains('-randwalk-')]
-dat3 = dat[dat['SpatialComplexity'].str.contains('-none-')]
-'''
 
 dat1 = dat[dat['ResourceComplexity'].str.contains('-lockandkey-')]
 
@@ -171,7 +155,7 @@ fig = plot_dat(fig, dat3, datylab, 'c')
 
 plt.ylabel(ylab, fontsize=fs+5)
 plt.xlabel(xlab, fontsize=fs+5)
-plt.ylim(-0.1, 2.1)
+#plt.ylim(-0.1, 2.1)
 plt.tick_params(axis='both', which='major', labelsize=fs)
 
 #### Final Format and Save #####################################################
