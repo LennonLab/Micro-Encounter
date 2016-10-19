@@ -7,7 +7,7 @@ def get_rand_params(extremes):
     """ Get random model parameter values. Others are chosen in bide.py """
 
     seed = 100 # size of starting community
-    dim = randint(1000, 1000)
+    dim = randint(43200, 43200)
     width  = int(dim) # in microns
     height = int(dim) # in microns
     length = int(dim) # in microns

@@ -47,7 +47,7 @@ if 'lockandkey' in RC:
 elif 'simple' in RC:
     ResDict['dead'] = 1.0
 
-numSims, Nlim, sim, p, ct, RowID, PRODI = 10**6, 1000, 0, 0, 0, 0, 0
+numSims, sim, p, ct, RowID, PRODI = 10**6, 0, 0, 0, 0, 0
 BurnIn = 'not done'
 
 #######################  Main Simulation Loop  #################################
@@ -143,7 +143,7 @@ while sim < numSims:
         OUT.close()
 
         limlist = [N, R]
-        if len(Ns) > 2000 or min(limlist) > Nlim:
+        if len(Ns) > 2000:
 
             if len(Ns) > 2000:
                 N = int(round(np.mean(Ns)))

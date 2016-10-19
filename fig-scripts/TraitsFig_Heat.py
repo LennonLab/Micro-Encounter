@@ -10,7 +10,7 @@ mydir = os.path.expanduser('~/GitHub/Micro-Encounter')
 sys.path.append(mydir+'/tools')
 mydir2 = os.path.expanduser("~/")
 #df = pd.read_csv(mydir + '/results/simulated_data/SimData.csv')
-df = pd.read_csv(mydir + '/results/simulated_data/2016_09_18_SimData.csv')
+df = pd.read_csv(mydir + '/results/simulated_data/2016_10_18_SimData.csv')
 #df = df.convert_objects(convert_numeric=True).dropna()
 df = df[df['sim'] > 500]
 
